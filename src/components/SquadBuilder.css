@@ -1,0 +1,283 @@
+.squad-builder {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  background-color: #f5f5f5;
+  font-family: Arial, sans-serif;
+}
+
+.squad-builder-header {
+  background-color: #333;
+  color: white;
+  padding: 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.squad-builder-header h1 {
+  margin: 0;
+  font-size: 28px;
+}
+
+.btn-start-over {
+  padding: 10px 20px;
+  background-color: #666;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: bold;
+  transition: background-color 0.3s;
+}
+
+.btn-start-over:hover {
+  background-color: #888;
+}
+
+.squad-info {
+  background-color: white;
+  padding: 20px;
+  margin: 20px;
+  border-radius: 4px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 30px;
+  flex-wrap: wrap;
+}
+
+.squad-name-section {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.squad-name-section label {
+  font-weight: bold;
+  color: #333;
+  min-width: 100px;
+}
+
+.squad-name-input {
+  padding: 8px 12px;
+  border: 2px solid #ddd;
+  border-radius: 4px;
+  font-size: 14px;
+  min-width: 200px;
+  transition: border-color 0.3s;
+}
+
+.squad-name-input:focus {
+  outline: none;
+  border-color: #333;
+}
+
+.squad-stats {
+  display: flex;
+  gap: 30px;
+}
+
+.stat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.stat-label {
+  font-size: 12px;
+  color: #666;
+  font-weight: bold;
+  text-transform: uppercase;
+}
+
+.stat-value {
+  font-size: 24px;
+  font-weight: bold;
+  color: #333;
+  margin-top: 5px;
+}
+
+.squad-content {
+  flex: 1;
+  padding: 20px;
+}
+
+.characters-section {
+  background-color: white;
+  border-radius: 4px;
+  padding: 20px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  padding-bottom: 15px;
+  border-bottom: 2px solid #ddd;
+}
+
+.section-header h2 {
+  margin: 0;
+  font-size: 22px;
+  color: #333;
+}
+
+.btn-add-character {
+  padding: 10px 20px;
+  background-color: #4caf50;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: bold;
+  transition: background-color 0.3s;
+}
+
+.btn-add-character:hover {
+  background-color: #45a049;
+}
+
+.character-creation-container {
+  margin-bottom: 20px;
+  padding: 20px;
+  background-color: #f9f9f9;
+  border: 2px solid #ddd;
+  border-radius: 4px;
+  max-height: 600px;
+  overflow-y: auto;
+}
+
+.empty-state {
+  text-align: center;
+  padding: 40px;
+  color: #999;
+}
+
+.empty-state p {
+  font-size: 16px;
+  margin: 0 0 20px 0;
+}
+
+.btn-add-first-character {
+  padding: 12px 24px;
+  background-color: #4caf50;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 16px;
+  font-weight: bold;
+  transition: background-color 0.3s;
+}
+
+.btn-add-first-character:hover {
+  background-color: #45a049;
+}
+
+.characters-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 20px;
+}
+
+.character-item {
+  background-color: #f9f9f9;
+  border: 2px solid #ddd;
+  border-radius: 4px;
+  padding: 15px;
+  display: flex;
+  flex-direction: column;
+}
+
+.btn-remove-character {
+  margin-top: 15px;
+  padding: 10px;
+  background-color: #f44336;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: bold;
+  transition: background-color 0.3s;
+}
+
+.btn-remove-character:hover {
+  background-color: #da190b;
+}
+
+.squad-builder-footer {
+  background-color: #333;
+  padding: 20px;
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+  box-shadow: 0 -2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.btn-cancel,
+.btn-save {
+  padding: 12px 24px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 16px;
+  font-weight: bold;
+  transition: all 0.3s;
+}
+
+.btn-cancel {
+  background-color: #666;
+  color: white;
+}
+
+.btn-cancel:hover {
+  background-color: #888;
+}
+
+.btn-save {
+  background-color: #4caf50;
+  color: white;
+}
+
+.btn-save:hover {
+  background-color: #45a049;
+}
+
+@media (max-width: 768px) {
+  .squad-builder-header {
+    flex-direction: column;
+    gap: 15px;
+    text-align: center;
+  }
+
+  .squad-info {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 15px;
+  }
+
+  .squad-stats {
+    justify-content: space-around;
+  }
+
+  .characters-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .squad-builder-footer {
+    flex-direction: column;
+  }
+
+  .btn-cancel,
+  .btn-save {
+    width: 100%;
+  }
+}
