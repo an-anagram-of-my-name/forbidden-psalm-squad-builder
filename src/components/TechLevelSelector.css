@@ -1,0 +1,145 @@
+.tech-level-selector {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  padding: 20px;
+  font-family: Arial, sans-serif;
+}
+
+.selector-container {
+  background-color: white;
+  border-radius: 8px;
+  padding: 40px;
+  max-width: 800px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+}
+
+.selector-container h1 {
+  text-align: center;
+  font-size: 36px;
+  color: #333;
+  margin: 0 0 20px 0;
+}
+
+.selector-description {
+  text-align: center;
+  font-size: 16px;
+  color: #666;
+  margin: 0 0 40px 0;
+  line-height: 1.5;
+}
+
+.tech-options {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 30px;
+}
+
+.tech-card {
+  padding: 30px;
+  border: 3px solid #ddd;
+  border-radius: 8px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  background-color: #f9f9f9;
+}
+
+.tech-card:hover {
+  transform: translateY(-8px);
+  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.15);
+}
+
+.tech-card.past-tech {
+  border-color: #a0522d;
+}
+
+.tech-card.past-tech:hover {
+  border-color: #8b4513;
+  background-color: #fef5f0;
+}
+
+.tech-card.future-tech {
+  border-color: #4169e1;
+}
+
+.tech-card.future-tech:hover {
+  border-color: #1e40af;
+  background-color: #f0f4ff;
+}
+
+.tech-icon {
+  font-size: 64px;
+  margin-bottom: 15px;
+  display: block;
+}
+
+.tech-card h2 {
+  font-size: 28px;
+  margin: 15px 0;
+  color: #333;
+}
+
+.tech-card p {
+  font-size: 14px;
+  color: #666;
+  margin: 15px 0 25px 0;
+  line-height: 1.5;
+}
+
+.tech-examples {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  justify-content: center;
+  margin-top: 15px;
+}
+
+.tech-examples span {
+  display: inline-block;
+  background-color: #e0e0e0;
+  padding: 6px 12px;
+  border-radius: 16px;
+  font-size: 12px;
+  font-weight: bold;
+  color: #333;
+}
+
+.tech-card.past-tech:hover .tech-examples span {
+  background-color: #d4a574;
+  color: white;
+}
+
+.tech-card.future-tech:hover .tech-examples span {
+  background-color: #7b9cff;
+  color: white;
+}
+
+@media (max-width: 768px) {
+  .selector-container {
+    padding: 20px;
+  }
+
+  .selector-container h1 {
+    font-size: 28px;
+  }
+
+  .tech-options {
+    grid-template-columns: 1fr;
+    gap: 20px;
+  }
+
+  .tech-card {
+    padding: 20px;
+  }
+
+  .tech-icon {
+    font-size: 48px;
+  }
+
+  .tech-card h2 {
+    font-size: 22px;
+  }
+}
