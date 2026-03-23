@@ -1,0 +1,13 @@
+.stat-distribution-picker {
+  display: flex;
+  flex-direction: column;
+  padding: 16px;
+}
+
+.stat-distribution-picker select {
+  margin: 8px 0;
+}
+
+.stat-distribution-picker label {
+  font-size: 14px;
+}
