@@ -1,1 +1,31 @@
-{"name":"forbidden-psalm-squad-builder","version":"0.1.0","type":"module","scripts":{"dev":"vite","build":"tsc && vite build","test":"vitest","test:ui":"vitest --ui","preview":"vite preview"},"dependencies":{"react":"^18.2.0","react-dom":"^18.2.0"},"devDependencies":{"@testing-library/jest-dom":"^6.1.5","@testing-library/react":"^14.1.2","@types/node":"^20.10.6","@types/react":"^18.2.45","@types/react-dom":"^18.2.18","@vitejs/plugin-react":"^4.2.1","@vitest/ui":"^1.1.0","typescript":"^5.3.3","vite":"^5.0.8","vitest":"^1.1.0"}}
+{
+  "name": "forbidden-psalm-squad-builder",
+  "version": "0.1.0",
+  "type": "module",
+  "homepage": "https://an-anagram-of-my-name.github.io/forbidden-psalm-squad-builder",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc && vite build",
+    "test": "vitest",
+    "test:ui": "vitest --ui",
+    "preview": "vite preview",
+    "deploy": "npm run build && gh-pages -d dist"
+  },
+  "dependencies": {
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "gh-pages": "^6.1.1"
+  },
+  "devDependencies": {
+    "@testing-library/jest-dom": "^6.1.5",
+    "@testing-library/react": "^14.1.2",
+    "@types/node": "^20.10.6",
+    "@types/react": "^18.2.45",
+    "@types/react-dom": "^18.2.18",
+    "@vitejs/plugin-react": "^4.2.1",
+    "@vitest/ui": "^1.1.0",
+    "typescript": "^5.3.3",
+    "vite": "^5.0.8",
+    "vitest": "^1.1.0"
+  }
+}
