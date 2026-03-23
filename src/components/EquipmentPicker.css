@@ -1,0 +1,316 @@
+.equipment-picker {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    background-color: #f9f9f9;
+    padding: 20px;
+    font-family: Arial, sans-serif;
+}
+
+.picker-header {
+    margin-bottom: 20px;
+}
+
+.picker-header h2 {
+    margin: 0 0 15px 0;
+    font-size: 28px;
+    color: #333;
+}
+
+.slot-info {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.slot-usage {
+    font-size: 14px;
+    font-weight: bold;
+    color: #333;
+    min-width: 100px;
+}
+
+.slot-bar {
+    flex: 1;
+    height: 20px;
+    border: 2px solid #ddd;
+    border-radius: 4px;
+    background-color: #fff;
+    overflow: hidden;
+    max-width: 300px;
+}
+
+.slot-bar.available {
+    border-color: #4caf50;
+}
+
+.slot-bar.full {
+    border-color: #f44336;
+}
+
+.slot-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #4caf50 0%, #45a049 100%);
+    transition: width 0.3s ease;
+}
+
+.slot-bar.full .slot-fill {
+    background: linear-gradient(90deg, #f44336 0%, #da190b 100%);
+}
+
+.picker-tabs {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 20px;
+    border-bottom: 2px solid #ddd;
+}
+
+.tab {
+    padding: 10px 20px;
+    background-color: transparent;
+    border: none;
+    border-bottom: 3px solid transparent;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: bold;
+    color: #666;
+    transition: all 0.3s;
+}
+
+.tab:hover {
+    color: #333;
+}
+
+.tab.active {
+    color: #333;
+    border-bottom-color: #333;
+}
+
+.picker-content {
+    flex: 1;
+    overflow-y: auto;
+    margin-bottom: 20px;
+    padding-right: 10px;
+}
+
+.picker-content::-webkit-scrollbar {
+    width: 8px;
+}
+
+.picker-content::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 4px;
+}
+
+.picker-content::-webkit-scrollbar-thumb {
+    background: #888;
+    border-radius: 4px;
+}
+
+.picker-content::-webkit-scrollbar-thumb:hover {
+    background: #555;
+}
+
+.equipment-section {
+    margin-bottom: 30px;
+}
+
+.equipment-section h3 {
+    font-size: 18px;
+    color: #333;
+    margin: 0 0 15px 0;
+    padding-bottom: 10px;
+    border-bottom: 2px solid #ddd;
+}
+
+.equipment-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 15px;
+}
+
+.equipment-card {
+    position: relative;
+    padding: 15px;
+    border: 2px solid #ddd;
+    border-radius: 4px;
+    background-color: #fff;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+
+.equipment-card:hover:not(.disabled) {
+    border-color: #333;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.equipment-card.selected {
+    border-color: #4caf50;
+    background-color: #e8f5e9;
+    box-shadow: 0 4px 12px rgba(76, 175, 80, 0.3);
+}
+
+.equipment-card.disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    background-color: #f5f5f5;
+}
+
+.equipment-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 10px;
+}
+
+.equipment-name {
+    font-size: 16px;
+    font-weight: bold;
+    color: #333;
+    flex: 1;
+    word-break: break-word;
+}
+
+.equipment-cost {
+    font-size: 14px;
+    font-weight: bold;
+    color: #666;
+    background-color: #f0f0f0;
+    padding: 4px 8px;
+    border-radius: 3px;
+    white-space: nowrap;
+    margin-left: 10px;
+}
+
+.equipment-details {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.detail {
+    font-size: 13px;
+    color: #555;
+    line-height: 1.4;
+}
+
+.detail.special-rules {
+    font-size: 12px;
+    font-style: italic;
+    color: #666;
+    background-color: #f9f9f9;
+    padding: 5px 8px;
+    border-radius: 3px;
+    border-left: 3px solid #999;
+}
+
+.detail.requirement {
+    font-size: 12px;
+    color: #f44336;
+    font-weight: bold;
+    background-color: #ffebee;
+    padding: 5px 8px;
+    border-radius: 3px;
+}
+
+.checkmark {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    width: 24px;
+    height: 24px;
+    background-color: #4caf50;
+    color: white;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    font-size: 14px;
+}
+
+.no-equipment {
+    padding: 30px;
+    text-align: center;
+    color: #999;
+    font-style: italic;
+    background-color: #f5f5f5;
+    border-radius: 4px;
+}
+
+.picker-footer {
+    display: flex;
+    gap: 10px;
+    padding-top: 20px;
+    border-top: 2px solid #ddd;
+}
+
+.btn-clear,
+.btn-confirm {
+    flex: 1;
+    padding: 12px 20px;
+    font-size: 16px;
+    font-weight: bold;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+
+.btn-clear {
+    background-color: #999;
+    color: white;
+}
+
+.btn-clear:hover {
+    background-color: #777;
+}
+
+.btn-confirm {
+    background-color: #4caf50;
+    color: white;
+}
+
+.btn-confirm:hover {
+    background-color: #45a049;
+}
+
+@media (max-width: 768px) {
+    .equipment-picker {
+        padding: 15px;
+    }
+
+    .picker-header h2 {
+        font-size: 22px;
+    }
+
+    .slot-info {
+        flex-direction: column;
+        gap: 8px;
+    }
+
+    .slot-bar {
+        max-width: 100%;
+    }
+
+    .picker-tabs {
+        flex-wrap: wrap;
+    }
+
+    .equipment-grid {
+        grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+        gap: 10px;
+    }
+
+    .equipment-card {
+        padding: 12px;
+    }
+
+    .equipment-name {
+        font-size: 14px;
+    }
+
+    .detail {
+        font-size: 12px;
+    }
+}
