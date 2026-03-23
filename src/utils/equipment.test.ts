@@ -1,15 +1,14 @@
-import { describe, it, expect } from 'vitest';
-import { EquipmentManager } from './EquipmentManager'; // Adjust path as necessary
+import { describe, it } from 'vitest';
 
 describe('Equipment Slot Management', () => {
     it('should add equipment to available slot', () => {
         // Test code here
     });
-    
+
     it('should not exceed slot limits', () => {
         // Test code here
     });
-    
+
     it('should remove equipment from slot', () => {
         // Test code here
     });

@@ -3,7 +3,7 @@
  * Organized by category and tech level
  */
 
-import { Item, Ammo, Armor, Weapon, Consumable } from './index';
+import { Item, Ammo, Armor, Weapon } from './index';
 
 // ============================================================================
 // TECH-AGNOSTIC EQUIPMENT
@@ -17,7 +17,7 @@ export const items28Psalms: Item[] = [
     cost: 3,
     slots: 1,
     category: 'item',
-    techLevel: null,
+    techLevel: undefined,
   },
   {
     id: 'tincture',
@@ -26,7 +26,7 @@ export const items28Psalms: Item[] = [
     cost: 7,
     slots: 1,
     category: 'item',
-    techLevel: null,
+    techLevel: undefined,
   },
   {
     id: 'bandage',
@@ -35,7 +35,7 @@ export const items28Psalms: Item[] = [
     cost: 1,
     slots: 1,
     category: 'item',
-    techLevel: null,
+    techLevel: undefined,
   },
   {
     id: 'potion-stimpack',
@@ -44,7 +44,7 @@ export const items28Psalms: Item[] = [
     cost: 6,
     slots: 1,
     category: 'item',
-    techLevel: null,
+    techLevel: undefined,
   },
   {
     id: 'hacking-deck',
@@ -65,7 +65,7 @@ export const ammo28Psalms: Ammo[] = [
     cost: 1,
     slots: 1,
     category: 'ammo',
-    techLevel: null,
+    techLevel: undefined,
     compatibleWeapons: ['bow', 'crossbow'],
   },
   {
@@ -159,7 +159,7 @@ export const armor28Psalms: Armor[] = [
     slots: 1,
     category: 'armor',
     specialRules: '',
-    techLevel: null,
+    techLevel: undefined,
   },
   {
     id: 'medium-armor',
@@ -169,7 +169,7 @@ export const armor28Psalms: Armor[] = [
     slots: 1,
     category: 'armor',
     specialRules: '',
-    techLevel: null,
+    techLevel: undefined,
   },
   {
     id: 'heavy-armor',
@@ -179,7 +179,7 @@ export const armor28Psalms: Armor[] = [
     slots: 1,
     category: 'armor',
     specialRules: '',
-    techLevel: null,
+    techLevel: undefined,
   },
   {
     id: 'power-plate-armor',
@@ -190,7 +190,7 @@ export const armor28Psalms: Armor[] = [
     category: 'armor',
     specialRules: 'Must have 2+ Strength to use',
     requiredStrength: 2,
-    techLevel: null,
+    techLevel: undefined,
   },
   {
     id: 'homemade-armor',
@@ -201,7 +201,7 @@ export const armor28Psalms: Armor[] = [
     category: 'armor',
     specialRules: '-1 movement',
     movementModifier: -1,
-    techLevel: null,
+    techLevel: undefined,
   },
 ];
 

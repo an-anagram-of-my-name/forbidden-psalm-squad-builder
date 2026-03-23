@@ -43,11 +43,6 @@ const StatDistributionPicker: React.FC<StatDistributionPickerProps> = ({ onStats
         statAssignments.strength !== undefined &&
         statAssignments.toughness !== undefined;
 
-    // Get all assigned modifier values
-    const assignedModifiers = Object.values(statAssignments).filter(
-        (value) => value !== undefined
-    );
-
     // Calculate available modifiers for each stat
     const getAvailableModifiersForStat = (currentStat: StatName) => {
         if (!selectedDistribution) return [];

@@ -180,3 +180,56 @@
 
 .btn-back:hover {
     background-color: #777
+}
+
+.btn-cancel {
+    padding: 12px 30px;
+    font-size: 16px;
+    background-color: #dc3545;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+.btn-cancel:hover {
+    background-color: #c82333;
+}
+
+.btn-create-character {
+    padding: 12px 30px;
+    font-size: 16px;
+    background-color: #333;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+.btn-create-character:hover:not(:disabled) {
+    background-color: #555;
+}
+
+.btn-create-character:disabled {
+    background-color: #ccc;
+    cursor: not-allowed;
+}
+
+.equipment-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.equipment-list li {
+    padding: 8px 0;
+    font-size: 14px;
+    color: #333;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.equipment-list li:last-child {
+    border-bottom: none;
+}

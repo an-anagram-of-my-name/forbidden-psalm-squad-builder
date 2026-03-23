@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Squad, Character, TechLevel, DerivedStats, Stats } from '../types';
+import { Squad, Character, TechLevel } from '../types';
 import TechLevelSelector from './TechLevelSelector';
 import CharacterCreationFlow from './CharacterCreationFlow';
 import CharacterSummary from './CharacterSummary';
