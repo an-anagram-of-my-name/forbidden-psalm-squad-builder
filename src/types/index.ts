@@ -72,6 +72,7 @@ export interface Item extends BaseEquipment {
 export interface Ammo extends BaseEquipment {
   category: 'ammo';
   shots: number;
+  compatibleWeapons: string[];
 }
 
 export interface Armor extends BaseEquipment {
@@ -90,6 +91,7 @@ export interface Weapon extends BaseEquipment {
   isTwoHanded: boolean;
   isRanged: boolean;
   includesAmmoId?: string;
+  ammoTypeId?: string;
 }
 
 export type Equipment = Item | Ammo | Armor | Weapon | Consumable;
