@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
-import { isValidStatDistribution, getValidStatDistributions, getAvailableModifiers, applyFlawFeatModifiers } from './stats';
-import { Stats, Flaw, Feat } from '../types';
+import { isValidStatDistribution, getValidStatDistributions, getAvailableModifiers, applyFlawFeatModifiers, calculateFinalDerivedStats } from './stats';
+import { Stats, Flaw, Feat, Armor } from '../types';
 
 describe('isValidStatDistribution', () => {
     it('accepts [3, 1, 0, -3]', () => {
@@ -126,5 +126,71 @@ describe('applyFlawFeatModifiers', () => {
         const feat: Feat = { type: 'marine', description: '' };
         const result = applyFlawFeatModifiers(baseStats, flaw, feat);
         expect(result.presence).toBe(baseStats.presence - 2);
+    });
+});
+
+describe('calculateFinalDerivedStats', () => {
+    const baseStats: Stats = { agility: 2, presence: 1, strength: 0, toughness: -1 };
+
+    it('returns base derived stats when no flaw, feat, or equipment', () => {
+        const result = calculateFinalDerivedStats(baseStats, null, null, []);
+        expect(result.movement).toBe(5 + baseStats.agility);   // 7
+        expect(result.equipmentSlots).toBe(5 + baseStats.strength); // 5
+        expect(result.hp).toBe(8 + baseStats.toughness);       // 7
+    });
+
+    it('applies flaw/feat stat modifiers to derived stats', () => {
+        const flaw: Flaw = { type: 'too-many-teeth', description: '' };
+        // too-many-teeth applies -2 presence (no agility/toughness change)
+        const result = calculateFinalDerivedStats(baseStats, flaw, null, []);
+        expect(result.movement).toBe(5 + baseStats.agility);   // agility unchanged
+        expect(result.hp).toBe(8 + baseStats.toughness);       // toughness unchanged
+    });
+
+    it('applies equipment movement modifier', () => {
+        const homemadeArmor: Armor = {
+            id: 'homemade',
+            name: 'Homemade',
+            cost: 1,
+            slots: 1,
+            category: 'armor',
+            av: 1,
+            movementModifier: -1,
+        };
+        const result = calculateFinalDerivedStats(baseStats, null, null, [homemadeArmor]);
+        const baseMovement = 5 + baseStats.agility; // 7
+        expect(result.movement).toBe(baseMovement - 1); // 6
+        expect(result.hp).toBe(8 + baseStats.toughness); // hp unchanged
+        expect(result.equipmentSlots).toBe(5 + baseStats.strength); // slots unchanged
+    });
+
+    it('stacks multiple equipment movement modifiers', () => {
+        const armor1: Armor = { id: 'a1', name: 'A1', cost: 1, slots: 1, category: 'armor', av: 1, movementModifier: -1 };
+        const armor2: Armor = { id: 'a2', name: 'A2', cost: 1, slots: 1, category: 'armor', av: 1, movementModifier: -2 };
+        const result = calculateFinalDerivedStats(baseStats, null, null, [armor1, armor2]);
+        const baseMovement = 5 + baseStats.agility; // 7
+        expect(result.movement).toBe(baseMovement - 3); // 4
+    });
+
+    it('ignores equipment without movement modifiers', () => {
+        const plainArmor: Armor = { id: 'plain', name: 'Plain', cost: 1, slots: 1, category: 'armor', av: 1 };
+        const result = calculateFinalDerivedStats(baseStats, null, null, [plainArmor]);
+        expect(result.movement).toBe(5 + baseStats.agility);
+    });
+
+    it('applies full chain: flaw/feat modifiers + equipment modifiers', () => {
+        const flaw: Flaw = { type: 'too-many-teeth', description: '' };
+        const homemadeArmor: Armor = {
+            id: 'homemade',
+            name: 'Homemade',
+            cost: 1,
+            slots: 1,
+            category: 'armor',
+            av: 1,
+            movementModifier: -1,
+        };
+        const result = calculateFinalDerivedStats(baseStats, flaw, null, [homemadeArmor]);
+        // too-many-teeth: -2 presence (no agility change), movement = 7 - 1 = 6
+        expect(result.movement).toBe(5 + baseStats.agility - 1);
     });
 });

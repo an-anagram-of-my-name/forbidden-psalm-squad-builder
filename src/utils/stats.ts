@@ -1,4 +1,4 @@
-import { Stats, DerivedStats, Flaw, Feat } from '../types';
+import { Stats, DerivedStats, Flaw, Feat, Equipment } from '../types';
 import { flaws28Psalms, feats28Psalms } from '../types/featsandflaws28Psalms';
 
 /**
@@ -55,6 +55,56 @@ export function applyFlawFeatModifiers(baseStats: Stats, flaw: Flaw | null, feat
   }
 
   return modified;
+}
+
+/**
+ * Calculate final derived stats with all modifiers applied.
+ *
+ * Full calculation chain:
+ * 1. Apply flaw/feat modifiers to primary stats
+ * 2. Calculate base derived stats from modified primary stats
+ * 3. Sum equipment modifiers (e.g. Homemade armor's -1 movement)
+ * 4. Return derived stats with equipment modifiers applied
+ *
+ * @param baseStats - Base stats from character creation Step 1 (before any modifiers)
+ * @param flaw - Selected flaw (Step 2), or null
+ * @param feat - Selected feat (Step 2), or null
+ * @param equipment - Selected equipment (Step 3)
+ * @returns DerivedStats with all modifiers applied
+ */
+export function calculateFinalDerivedStats(
+  baseStats: Stats,
+  flaw: Flaw | null,
+  feat: Feat | null,
+  equipment: Equipment[]
+): DerivedStats {
+  const effectiveStats = applyFlawFeatModifiers(baseStats, flaw, feat);
+  const derived = calculateDerivedStats(effectiveStats);
+
+  const equipmentModifiers = {
+    movement: 0,
+    hp: 0,
+    equipmentSlots: 0,
+  };
+
+  equipment.forEach((item) => {
+    const it = item as { movementModifier?: number; hpModifier?: number; slotsModifier?: number };
+    if (it.movementModifier !== undefined) {
+      equipmentModifiers.movement += it.movementModifier;
+    }
+    if (it.hpModifier !== undefined) {
+      equipmentModifiers.hp += it.hpModifier;
+    }
+    if (it.slotsModifier !== undefined) {
+      equipmentModifiers.equipmentSlots += it.slotsModifier;
+    }
+  });
+
+  return {
+    hp: derived.hp + equipmentModifiers.hp,
+    movement: derived.movement + equipmentModifiers.movement,
+    equipmentSlots: derived.equipmentSlots + equipmentModifiers.equipmentSlots,
+  };
 }
 
 export function getValidStatDistributions(): number[][] {

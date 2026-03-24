@@ -2,7 +2,7 @@ import React, { useState, useMemo } from 'react';
 import { Character, Equipment, Item, Ammo, Armor, Weapon, Stats } from '../types';
 import { items28Psalms, ammo28Psalms, armor28Psalms, pastTechWeapons28Psalms, futureTechWeapons28Psalms } from '../types/equipment28Psalms';
 import { canUseArmor } from '../utils/equipment';
-import { applyFlawFeatModifiers, calculateDerivedStats } from '../utils/stats';
+import { applyFlawFeatModifiers, calculateFinalDerivedStats } from '../utils/stats';
 import './EquipmentPicker.css';
 
 interface EquipmentPickerProps {
@@ -222,7 +222,7 @@ const EquipmentPicker: React.FC<EquipmentPickerProps> = ({ character, selectedEq
         <div className="current-stats-divider" />
         <div className="current-stats-derived">
           {(() => {
-            const derived = calculateDerivedStats(effectiveStats);
+            const derived = calculateFinalDerivedStats(character.stats, character.flaw, character.feat, selectedEquipment);
             return (
               <>
                 <div className="stat-box derived">
