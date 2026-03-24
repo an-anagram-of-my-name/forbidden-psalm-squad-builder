@@ -103,6 +103,7 @@ npm run build        # Build for production (creates dist/)
 npm run deploy       # Build and deploy to gh-pages
 npm test             # Run tests with vitest
 npm run test:ui      # Run tests with UI
+```
 
 ## Feature: Squad Management - Multiple Saved Squads
 
