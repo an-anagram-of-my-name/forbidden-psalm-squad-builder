@@ -1,12 +1,13 @@
 .character-print-card {
   background: #fff;
-  padding: 20px 24px;
+  padding: 14px 16px;
   break-inside: avoid;
   page-break-inside: avoid;
-  page-break-after: always;
-  break-after: page;
-  font-size: 11pt;
-  line-height: 1.4;
+  font-size: 10pt;
+  line-height: 1.3;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 }
 
 .character-print-card:last-child {
@@ -18,14 +19,14 @@
 .print-card-header {
   display: flex;
   align-items: baseline;
-  gap: 16px;
+  gap: 10px;
   border-bottom: 2px solid #333;
-  padding-bottom: 8px;
-  margin-bottom: 12px;
+  padding-bottom: 6px;
+  margin-bottom: 8px;
 }
 
 .print-card-header h2 {
-  font-size: 20pt;
+  font-size: 14pt;
   font-weight: bold;
   color: #111;
   margin: 0;
@@ -46,36 +47,36 @@
 .print-card-body {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 16px 24px;
+  gap: 10px 16px;
 }
 
 /* Sections */
 .print-section {
-  margin-bottom: 10px;
+  margin-bottom: 6px;
 }
 
 .print-section-title {
-  font-size: 8pt;
+  font-size: 7.5pt;
   font-weight: bold;
   text-transform: uppercase;
   letter-spacing: 0.08em;
   color: #555;
   border-bottom: 1px solid #ccc;
-  padding-bottom: 3px;
-  margin-bottom: 6px;
+  padding-bottom: 2px;
+  margin-bottom: 4px;
 }
 
 /* Stats grid */
 .print-stats-grid {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
-  gap: 6px;
+  gap: 4px;
 }
 
 .print-stat-box {
   border: 1px solid #ccc;
   border-radius: 3px;
-  padding: 4px 6px;
+  padding: 3px 4px;
   text-align: center;
   background: #fff;
 }
@@ -94,7 +95,7 @@
 }
 
 .print-stat-value {
-  font-size: 14pt;
+  font-size: 12pt;
   font-weight: bold;
   color: #111;
   display: block;
@@ -102,31 +103,31 @@
 
 /* HP tracking section */
 .print-hp-section {
-  margin-top: 4px;
+  margin-top: 3px;
 }
 
 .print-hp-label {
-  font-size: 8pt;
+  font-size: 7.5pt;
   font-weight: bold;
   color: #555;
-  margin-bottom: 4px;
+  margin-bottom: 3px;
 }
 
 /* Traits */
 .print-trait {
-  margin-bottom: 8px;
+  margin-bottom: 5px;
 }
 
 .print-trait-name {
-  font-size: 10pt;
+  font-size: 9pt;
   font-weight: bold;
   color: #111;
 }
 
 .print-trait-description {
-  font-size: 9pt;
+  font-size: 8pt;
   color: #333;
-  margin-top: 2px;
+  margin-top: 1px;
 }
 
 /* Equipment spanning full width */
@@ -137,17 +138,17 @@
 
 .print-equipment-list {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-  gap: 8px;
-  margin-top: 4px;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 5px;
+  margin-top: 3px;
 }
 
 /* Equipment items */
 .print-equipment-item {
   border: 1px solid #ccc;
   border-radius: 3px;
-  padding: 6px 8px;
-  font-size: 9pt;
+  padding: 4px 6px;
+  font-size: 8pt;
 }
 
 .print-equipment-item.armor-item {
@@ -158,28 +159,28 @@
 
 .print-equipment-name {
   font-weight: bold;
-  font-size: 9.5pt;
-  margin-bottom: 3px;
+  font-size: 8pt;
+  margin-bottom: 2px;
 }
 
 .print-equipment-category {
-  font-size: 7.5pt;
+  font-size: 7pt;
   text-transform: uppercase;
   letter-spacing: 0.05em;
   color: #888;
-  margin-bottom: 3px;
+  margin-bottom: 2px;
 }
 
 .print-av {
-  font-size: 13pt;
+  font-size: 11pt;
   font-weight: bold;
   color: #8a6000;
-  margin-bottom: 2px;
+  margin-bottom: 1px;
 }
 
 .print-equipment-detail {
   color: #555;
-  font-size: 8.5pt;
+  font-size: 7.5pt;
   margin-top: 1px;
 }
 
@@ -189,7 +190,7 @@
 
 @media print {
   .character-print-card {
-    padding: 10px 12px;
+    border: 1px solid #ccc;
   }
 
   .print-stat-box.derived {
