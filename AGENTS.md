@@ -1829,7 +1829,7 @@ Allow users to generate a printable page for any loaded squad. The page should d
 - **Orientation**: Landscape
 - **Format**: A4 proportions (1:1.414 aspect ratio)
 - **Color**: Full color support
-- **Content**: One or more characters per page, with automatic pagination if needed
+- **Content**: All characters on one page
 
 #### Character Information Display
 
