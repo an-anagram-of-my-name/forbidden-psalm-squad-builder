@@ -1,37 +1,11 @@
 import React, { useState } from 'react';
 import { Flaw, Feat, FlawType, FeatType } from '../types';
+import { flaws28Psalms, feats28Psalms } from '../types/featsandflaws28Psalms';
 import './FlawsAndFeatsPicker.css';
 
 interface FlawsAndFeatsPickerProps {
     onSelectFlawAndFeat: (flaw: Flaw, feat: Feat) => void;
 }
-
-// Hardcoded descriptions for flaws and feats
-const flawDescriptions: Record<FlawType, string> = {
-    'xeno': 'Alien or otherworldly nature',
-    'too-many-teeth': 'Disturbing dental configuration',
-    'dead-man-walking': 'Undead or cursed to walk',
-    'ratman': 'Rodent-like appearance',
-    'crazed': 'Mentally unstable or feral',
-    'worship': 'Fanatical devotion to something',
-    'superstitious': 'Bound by superstitious beliefs',
-    'late': 'Cursed with terrible timing',
-    'purge': 'Driven to destroy something',
-    'weak-bones': 'Fragile skeletal structure',
-};
-
-const featDescriptions: Record<FeatType, string> = {
-    'marine': 'Military or combat training',
-    'zealous': 'Passionate and driven',
-    'unpainted': 'Raw and untested potential',
-    'rogue': 'Cunning and deceptive',
-    'tnt': 'Explosive personality or skills',
-    'gambler': 'Risk-taker with lucky streaks',
-    'mother-of-crows': 'Connected to nature or the occult',
-    'skulls': 'Death-obsessed or fearsome',
-    'bibliotech': 'Scholarly or tech-savvy',
-    'undead': 'Risen from the dead',
-};
 
 const FlawsAndFeatsPicker: React.FC<FlawsAndFeatsPickerProps> = ({ onSelectFlawAndFeat }) => {
     const [selectedFlawType, setSelectedFlawType] = useState<FlawType | null>(null);
@@ -39,13 +13,16 @@ const FlawsAndFeatsPicker: React.FC<FlawsAndFeatsPickerProps> = ({ onSelectFlawA
 
     const handleConfirm = () => {
         if (selectedFlawType && selectedFeatType) {
+            const flawData = flaws28Psalms.find(f => f.type === selectedFlawType);
+            const featData = feats28Psalms.find(f => f.type === selectedFeatType);
+            if (!flawData || !featData) return;
             const flaw: Flaw = {
                 type: selectedFlawType,
-                description: flawDescriptions[selectedFlawType],
+                description: flawData.description,
             };
             const feat: Feat = {
                 type: selectedFeatType,
-                description: featDescriptions[selectedFeatType],
+                description: featData.description,
             };
             onSelectFlawAndFeat(flaw, feat);
         }
@@ -61,16 +38,16 @@ const FlawsAndFeatsPicker: React.FC<FlawsAndFeatsPickerProps> = ({ onSelectFlawA
                 <div className="flaw-picker">
                     <h3>Flaw</h3>
                     <div className="options-list">
-                        {Object.entries(flawDescriptions).map(([flawType, description]) => (
+                        {flaws28Psalms.map((flaw) => (
                             <div
-                                key={flawType}
+                                key={flaw.type}
                                 className={`option ${
-                                    selectedFlawType === flawType ? 'selected' : ''
+                                    selectedFlawType === flaw.type ? 'selected' : ''
                                 }`}
-                                onClick={() => setSelectedFlawType(flawType as FlawType)}
+                                onClick={() => setSelectedFlawType(flaw.type as FlawType)}
                             >
-                                <div className="option-title">{flawType}</div>
-                                <div className="option-description">{description}</div>
+                                <div className="option-title">{flaw.name}</div>
+                                <div className="option-description">{flaw.description}</div>
                             </div>
                         ))}
                     </div>
@@ -79,16 +56,16 @@ const FlawsAndFeatsPicker: React.FC<FlawsAndFeatsPickerProps> = ({ onSelectFlawA
                 <div className="feat-picker">
                     <h3>Feat</h3>
                     <div className="options-list">
-                        {Object.entries(featDescriptions).map(([featType, description]) => (
+                        {feats28Psalms.map((feat) => (
                             <div
-                                key={featType}
+                                key={feat.type}
                                 className={`option ${
-                                    selectedFeatType === featType ? 'selected' : ''
+                                    selectedFeatType === feat.type ? 'selected' : ''
                                 }`}
-                                onClick={() => setSelectedFeatType(featType as FeatType)}
+                                onClick={() => setSelectedFeatType(feat.type as FeatType)}
                             >
-                                <div className="option-title">{featType}</div>
-                                <div className="option-description">{description}</div>
+                                <div className="option-title">{feat.name}</div>
+                                <div className="option-description">{feat.description}</div>
                             </div>
                         ))}
                     </div>
