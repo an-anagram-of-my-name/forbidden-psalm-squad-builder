@@ -1,5 +1,6 @@
 import React from 'react';
 import { Character } from '../types';
+import { applyFlawFeatModifiers } from '../utils/stats';
 import './CharacterSummary.css';
 
 interface CharacterSummaryProps {
@@ -7,8 +8,9 @@ interface CharacterSummaryProps {
 }
 
 const CharacterSummary: React.FC<CharacterSummaryProps> = ({ character }) => {
+  const effectiveStats = applyFlawFeatModifiers(character.stats, character.flaw, character.feat);
   const equipmentCost = character.equipment.reduce((sum, eq) => sum + eq.cost, 0);
-  const slotCapacity = 5 + character.stats.strength;
+  const slotCapacity = 5 + effectiveStats.strength;
   const slotsUsed = character.equipment.reduce((sum, eq) => sum + eq.slots, 0);
 
   return (
@@ -23,19 +25,19 @@ const CharacterSummary: React.FC<CharacterSummaryProps> = ({ character }) => {
         <div className="stats-grid">
           <div className="stat-box">
             <span className="stat-name">AGI</span>
-            <span className="stat-value">{character.stats.agility}</span>
+            <span className="stat-value">{effectiveStats.agility}</span>
           </div>
           <div className="stat-box">
             <span className="stat-name">PRE</span>
-            <span className="stat-value">{character.stats.presence}</span>
+            <span className="stat-value">{effectiveStats.presence}</span>
           </div>
           <div className="stat-box">
             <span className="stat-name">STR</span>
-            <span className="stat-value">{character.stats.strength}</span>
+            <span className="stat-value">{effectiveStats.strength}</span>
           </div>
           <div className="stat-box">
             <span className="stat-name">TOU</span>
-            <span className="stat-value">{character.stats.toughness}</span>
+            <span className="stat-value">{effectiveStats.toughness}</span>
           </div>
         </div>
       </div>
