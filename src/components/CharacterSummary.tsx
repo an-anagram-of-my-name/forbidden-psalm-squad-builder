@@ -11,7 +11,7 @@ const CharacterSummary: React.FC<CharacterSummaryProps> = ({ character }) => {
   const effectiveStats = applyFlawFeatModifiers(character.stats, character.flaw, character.feat);
   const derived = calculateFinalDerivedStats(character.stats, character.flaw, character.feat, character.equipment);
   const equipmentCost = character.equipment.reduce((sum, eq) => sum + eq.cost, 0);
-  const slotCapacity = 5 + effectiveStats.strength;
+  const slotCapacity = derived.equipmentSlots;
   const slotsUsed = character.equipment.reduce((sum, eq) => sum + eq.slots, 0);
 
   const fmt = (v: number) => v > 0 ? `+${v}` : `${v}`;

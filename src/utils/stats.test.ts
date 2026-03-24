@@ -193,4 +193,59 @@ describe('calculateFinalDerivedStats', () => {
         // too-many-teeth: -2 presence (no agility change), movement = 7 - 1 = 6
         expect(result.movement).toBe(5 + baseStats.agility - 1);
     });
+
+    it('applies equipment hp and slots modifiers', () => {
+        const equipmentWithHpAndSlots = {
+            id: 'eq-hp-slots-1',
+            name: 'HP & Slots Booster',
+            cost: 1,
+            slots: 1,
+            category: 'armor',
+            av: 1,
+            hpModifier: 3,
+            slotsModifier: 2,
+        } as Armor & { hpModifier: number; slotsModifier: number };
+
+        const result = calculateFinalDerivedStats(baseStats, null, null, [equipmentWithHpAndSlots]);
+
+        const baseHp = 8 + baseStats.toughness;
+        const baseSlots = 5 + baseStats.strength;
+
+        expect(result.hp).toBe(baseHp + 3);
+        expect(result.equipmentSlots).toBe(baseSlots + 2);
+    });
+
+    it('stacks multiple equipment hp and slots modifiers', () => {
+        const equipment1 = {
+            id: 'eq-hp-slots-2',
+            name: 'HP & Slots Booster 1',
+            cost: 1,
+            slots: 1,
+            category: 'armor',
+            av: 1,
+            hpModifier: 2,
+            slotsModifier: 1,
+        } as Armor & { hpModifier: number; slotsModifier: number };
+
+        const equipment2 = {
+            id: 'eq-hp-slots-3',
+            name: 'HP & Slots Booster 2',
+            cost: 1,
+            slots: 1,
+            category: 'armor',
+            av: 1,
+            hpModifier: -1,
+            slotsModifier: 3,
+        } as Armor & { hpModifier: number; slotsModifier: number };
+
+        const result = calculateFinalDerivedStats(baseStats, null, null, [equipment1, equipment2]);
+
+        const baseHp = 8 + baseStats.toughness;
+        const baseSlots = 5 + baseStats.strength;
+
+        // Total hpModifier = 2 + (-1) = +1
+        // Total slotsModifier = 1 + 3 = +4
+        expect(result.hp).toBe(baseHp + 1);
+        expect(result.equipmentSlots).toBe(baseSlots + 4);
+    });
 });
