@@ -103,3 +103,108 @@ npm run build        # Build for production (creates dist/)
 npm run deploy       # Build and deploy to gh-pages
 npm test             # Run tests with vitest
 npm run test:ui      # Run tests with UI
+
+## Feature: Squad Management - Multiple Saved Squads
+
+### Overview
+Users should be able to save multiple squads and switch between them. Currently, the app supports only one squad being worked on at a time.
+
+### User Stories
+
+**Story 1: List and Switch Squads**
+- A dropdown menu displays all saved squads with:
+  - Squad name
+  - Technology level
+  - Date saved
+- User can select any squad from the dropdown to load it
+- The dropdown is accessible from any page in the app
+
+**Story 2: Create New Squad**
+- "New Squad" appears as the first item in the dropdown
+- Clicking "New Squad" creates a fresh squad with default state
+- Clears the current squad name and squad builder
+
+**Story 3: Auto-Save on Switch**
+- When user attempts to switch to a different squad, the app checks if current squad has unsaved changes
+- If unsaved, current squad is automatically saved before loading the new one
+- User receives visual feedback of the auto-save action
+
+**Story 4: Prevent Duplicate Squad Names**
+- Users cannot save a squad with a name that already exists
+- When attempting to save with duplicate name:
+  - Save button is disabled (visual indication)
+  - Error message displays: "Squad name already exists"
+  - Input field shows error state (e.g., red border, error text)
+- Check for duplicates happens as user types in the squad name input
+
+### Technical Implementation
+
+**Data Structure**
+```typescript
+// src/types/index.ts (add/update)
+interface Squad {
+  id: string;              // UUID or timestamp-based unique identifier
+  name: string;            // User-provided squad name
+  techLevel: number;       // Selected technology level
+  members: SquadMember[];  // Array of squad members
+  dateSaved: string;       // ISO 8601 date string (e.g., "2026-03-24T10:30:00Z")
+}
+
+interface AppState {
+  squads: Squad[];         // Array of all saved squads
+  currentSquadId: string | null;  // ID of currently loaded squad
+}
+```
+
+**localStorage Key**
+- `'forbidden-psalm-state'` - stores the entire AppState with all squads
+
+**UI Components**
+- **Squad Dropdown**: 
+  - Accessible from all pages
+  - Shows "New Squad" as first option
+  - Follows format: "Squad Name (Tech Level X) - 24/03/2026"
+  - Location: Consider top navigation or header area
+
+- **Squad Name Input**:
+  - Existing element: `<input id="squad-name" type="text" class="squad-name-input">`
+  - Add visual error state styling for duplicate names
+  - Add error message element below input
+
+- **Save Squad Button**:
+  - Existing element: `<button class="btn-save">Save Squad</button>`
+  - Disable when squad name is empty or duplicated
+  - Add success feedback when save completes
+
+**Implementation Steps**
+1. Update `AppState` type to support multiple squads
+2. Create helper functions:
+   - `isSquadNameDuplicate(name: string, excludeId?: string): boolean`
+   - `saveSquad(squad: Squad): void`
+   - `loadSquad(squadId: string): void`
+   - `createNewSquad(): Squad`
+3. Add Squad Dropdown component
+4. Update Squad Name input validation and styling
+5. Update Save Squad button logic to:
+   - Validate squad name (not empty, not duplicate)
+   - Generate squad ID and dateSaved
+   - Add/update squad in squads array
+   - Persist to localStorage
+6. Update App.tsx to handle squad switching with auto-save
+7. Migrate existing squad data on first load (if any)
+
+**Error States**
+- Duplicate squad name: Show error message, disable save button, highlight input in red
+- Empty squad name: Disable save button
+- Successful save: Show confirmation message or toast
+
+**Edge Cases**
+- User has unsaved changes in current squad, clicks "New Squad" → auto-save current squad first
+- User renames squad to a name that already exists → error state triggered
+- User deletes all content from squad name input → clear error state, disable save
+- localStorage quota exceeded → show error message to user
+
+### Notes
+- Deletion of squads is currently out of scope
+- Duplicate squad names should be strictly prevented
+- All squads persist via localStorage
