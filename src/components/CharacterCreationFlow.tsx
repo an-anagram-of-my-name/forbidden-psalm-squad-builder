@@ -12,6 +12,9 @@ interface CharacterCreationFlowProps {
     // Squad mode
     techLevel?: TechLevel;
     onCharacterCreated?: (character: Character) => void;
+    // Squad edit mode
+    initialCharacter?: Character | null;
+    onCharacterUpdated?: (character: Character) => void;
     // Preset mode
     initialPreset?: CharacterPreset | null;
     onPresetSaved?: (preset: CharacterPreset) => void;
@@ -25,20 +28,33 @@ const CharacterCreationFlow: React.FC<CharacterCreationFlowProps> = ({
     mode = 'squad',
     techLevel,
     onCharacterCreated,
+    initialCharacter,
+    onCharacterUpdated,
     initialPreset,
     onPresetSaved,
     onCancel,
 }) => {
     const isEditingPreset = mode === 'preset' && !!initialPreset;
+    const isEditingCharacter = mode === 'squad' && !!initialCharacter;
 
     const [currentStep, setCurrentStep] = useState<CreationStep>(
-        isEditingPreset ? 'review' : 'stats'
+        (isEditingPreset || isEditingCharacter) ? 'review' : 'stats'
     );
-    const [characterName, setCharacterName] = useState(initialPreset?.name ?? '');
-    const [stats, setStats] = useState<Stats | null>(initialPreset?.stats ?? null);
-    const [flaw, setFlaw] = useState<Flaw | null>(initialPreset?.flaw ?? null);
-    const [feat, setFeat] = useState<Feat | null>(initialPreset?.feat ?? null);
-    const [equipment, setEquipment] = useState<Equipment[]>(initialPreset?.equipment ?? []);
+    const [characterName, setCharacterName] = useState(
+        initialPreset?.name ?? initialCharacter?.name ?? ''
+    );
+    const [stats, setStats] = useState<Stats | null>(
+        initialPreset?.stats ?? initialCharacter?.stats ?? null
+    );
+    const [flaw, setFlaw] = useState<Flaw | null>(
+        initialPreset?.flaw ?? initialCharacter?.flaw ?? null
+    );
+    const [feat, setFeat] = useState<Feat | null>(
+        initialPreset?.feat ?? initialCharacter?.feat ?? null
+    );
+    const [equipment, setEquipment] = useState<Equipment[]>(
+        initialPreset?.equipment ?? initialCharacter?.equipment ?? []
+    );
     const [selectedTechLevel, setSelectedTechLevel] = useState<TechLevel | null>(
         initialPreset?.techLevel ?? null
     );
@@ -96,6 +112,18 @@ const CharacterCreationFlow: React.FC<CharacterCreationFlowProps> = ({
                 };
                 onPresetSaved?.(preset);
             }
+        } else if (isEditingCharacter) {
+            if (characterName.trim() && stats && flaw && feat && initialCharacter) {
+                const updatedCharacter: Character = {
+                    ...initialCharacter,
+                    name: characterName.trim(),
+                    stats,
+                    flaw,
+                    feat,
+                    equipment,
+                };
+                onCharacterUpdated?.(updatedCharacter);
+            }
         } else {
             if (characterName.trim() && stats && flaw && feat && techLevel) {
                 const newCharacter: Character = {
@@ -134,10 +162,27 @@ const CharacterCreationFlow: React.FC<CharacterCreationFlowProps> = ({
         return applyFlawFeatModifiers(stats, flaw, feat);
     }, [stats, flaw, feat]);
 
+    const getHeaderTitle = (): string => {
+        if (mode === 'preset') {
+            return isEditingPreset ? 'Edit Character Template' : 'New Character Template';
+        }
+        if (isEditingCharacter) {
+            return `Edit Character: ${initialCharacter?.name ?? 'Character'}`;
+        }
+        return 'Create Character';
+    };
+
+    const getSubmitButtonText = (): string => {
+        if (mode === 'preset') {
+            return isEditingPreset ? 'Update Preset' : 'Create Preset';
+        }
+        return isEditingCharacter ? 'Update Character' : 'Create Character';
+    };
+
     return (
         <div className="character-creation-flow">
             <div className="flow-header">
-                <h1>{mode === 'preset' ? (isEditingPreset ? 'Edit Character Template' : 'New Character Template') : 'Create Character'}</h1>
+                <h1>{getHeaderTitle()}</h1>
                 <div className="step-indicator">
                     <div className={`step ${currentStep === 'stats' ? 'active' : currentStepIndex > 0 ? 'completed' : ''}`}>
                         1. Stats
@@ -275,11 +320,7 @@ const CharacterCreationFlow: React.FC<CharacterCreationFlowProps> = ({
                         disabled={!canProceed}
                         className="btn-create-character"
                     >
-                        {mode === 'preset'
-                            ? isEditingPreset
-                                ? 'Update Preset'
-                                : 'Create Preset'
-                            : 'Create Character'}
+                        {getSubmitButtonText()}
                     </button>
                 )}
             </div>
