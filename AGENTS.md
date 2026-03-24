@@ -1774,7 +1774,7 @@ Or just final values with hover tooltips showing modifiers.
 2. **Flaw/Feat Only**: Equipment is empty → final derived accounts for stat modifiers but not equipment
 3. **Equipment Only**: Homemade armor selected with base stats → movement reduced by 1
 4. **Complete Chain**: All modifiers applied → final movement = base + flaw/feat modifiers + equipment modifiers
-5. **Multiple Equipment**: 2+ armor pieces each with movement penalty → penalties stack
+5. **Multiple Equipment Modifiers**: Items with movement penalties (future: if Items get movementModifier support) → penalties stack correctly
 6. **Persistence**: Saved character displays final derived stats correctly in CharacterSummary
 7. **Modification**: Changing equipment in CharacterSummary recalculates if edit feature is used
 
