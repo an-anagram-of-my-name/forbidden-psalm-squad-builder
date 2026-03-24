@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { Character, CharacterPreset, Equipment, Stats, Flaw, Feat, TechLevel } from '../types';
+import { Character, CharacterPreset, Equipment, Stats, Flaw, Feat, TechLevel, FlawType, FeatType } from '../types';
 import StatDistributionPicker from './StatDistributionPicker';
 import FlawsAndFeatsPicker from './FlawsAndFeatsPicker';
 import EquipmentPicker from './EquipmentPicker';
@@ -59,9 +59,8 @@ const CharacterCreationFlow: React.FC<CharacterCreationFlowProps> = ({
         initialPreset?.techLevel ?? null
     );
 
-    const handleStatsSelected = (selectedStats: Stats) => {
-        setStats(selectedStats);
-        setCurrentStep('flaws-feats');
+    const handleStatsChange = (newStats: Stats | null) => {
+        setStats(newStats);
     };
 
     const handleTechLevelSelected = (level: TechLevel) => {
@@ -72,15 +71,33 @@ const CharacterCreationFlow: React.FC<CharacterCreationFlowProps> = ({
         setSelectedTechLevel(level);
     };
 
-    const handleFlawAndFeatSelected = (selectedFlaw: Flaw, selectedFeat: Feat) => {
-        setFlaw(selectedFlaw);
-        setFeat(selectedFeat);
-        setCurrentStep('equipment');
+    const handleFlawFeatChange = (newFlaw: Flaw | null, newFeat: Feat | null) => {
+        setFlaw(newFlaw);
+        setFeat(newFeat);
     };
 
-    const handleEquipmentSelected = (selectedEquipment: Equipment[]) => {
-        setEquipment(selectedEquipment);
+    const handleEquipmentChange = (newEquipment: Equipment[]) => {
+        setEquipment(newEquipment);
+    };
+
+    const handleConfirmStats = () => {
+        if (stats && (mode !== 'preset' || !!selectedTechLevel)) {
+            setCurrentStep('flaws-feats');
+        }
+    };
+
+    const handleConfirmFlawFeat = () => {
+        if (flaw && feat) {
+            setCurrentStep('equipment');
+        }
+    };
+
+    const handleConfirmEquipment = () => {
         setCurrentStep('review');
+    };
+
+    const handleClearAllEquipment = () => {
+        setEquipment([]);
     };
 
     const handleCharacterNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -205,15 +222,21 @@ const CharacterCreationFlow: React.FC<CharacterCreationFlowProps> = ({
             <div className="flow-content">
                 {currentStep === 'stats' && (
                     <StatDistributionPicker
-                        onStatsSelected={handleStatsSelected}
+                        onStatsChange={handleStatsChange}
                         mode={mode}
                         selectedTechLevel={selectedTechLevel ?? undefined}
                         onTechLevelSelected={handleTechLevelSelected}
+                        initialStats={stats ?? undefined}
                     />
                 )}
 
                 {currentStep === 'flaws-feats' && (
-                    <FlawsAndFeatsPicker onSelectFlawAndFeat={handleFlawAndFeatSelected} stats={stats ?? undefined} />
+                    <FlawsAndFeatsPicker
+                        onSelectionChange={handleFlawFeatChange}
+                        stats={stats ?? undefined}
+                        initialFlawType={flaw?.type as FlawType ?? undefined}
+                        initialFeatType={feat?.type as FeatType ?? undefined}
+                    />
                 )}
 
                 {currentStep === 'equipment' && stats && flaw && feat && (mode !== 'preset' || selectedTechLevel) && (
@@ -227,7 +250,8 @@ const CharacterCreationFlow: React.FC<CharacterCreationFlowProps> = ({
                             equipment,
                             techLevel: effectiveTechLevel,
                         }}
-                        onEquipmentSelected={handleEquipmentSelected}
+                        selectedEquipment={equipment}
+                        onEquipmentChange={handleEquipmentChange}
                     />
                 )}
 
@@ -313,6 +337,40 @@ const CharacterCreationFlow: React.FC<CharacterCreationFlowProps> = ({
                     <button onClick={handleBack} className="btn-back">
                         Back
                     </button>
+                )}
+                {currentStep === 'stats' && (
+                    <button
+                        onClick={handleConfirmStats}
+                        disabled={!stats || (mode === 'preset' && !selectedTechLevel)}
+                        className="btn-confirm"
+                    >
+                        Confirm Stats →
+                    </button>
+                )}
+                {currentStep === 'flaws-feats' && (
+                    <button
+                        onClick={handleConfirmFlawFeat}
+                        disabled={!flaw || !feat}
+                        className="btn-confirm"
+                    >
+                        Confirm Selection →
+                    </button>
+                )}
+                {currentStep === 'equipment' && (
+                    <>
+                        <button
+                            onClick={handleClearAllEquipment}
+                            className="btn-secondary"
+                        >
+                            Clear All
+                        </button>
+                        <button
+                            onClick={handleConfirmEquipment}
+                            className="btn-confirm"
+                        >
+                            Confirm Equipment →
+                        </button>
+                    </>
                 )}
                 {currentStep === 'review' && (
                     <button
