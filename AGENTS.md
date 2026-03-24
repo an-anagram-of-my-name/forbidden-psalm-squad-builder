@@ -50,7 +50,8 @@ project/
 - Displays squad selection/creation UI
 - Renders CharacterGrid when a squad is active
 - Passes squad data to child components
-- There should be a maximum of five characters in a squad - this should be enforced by the app
+- There should be a maximum of five characters in a squad - this is enforced by the app
+- **Rule**: Both "+ Add Character" and "Add First Character" buttons must be `disabled` when `squad.characters.length >= 5`, with a tooltip: "Squad has reached the maximum of 5 characters"
 
 **CharacterGrid** → Lists all characters in the current squad
 - Displays each character via CharacterSummary cards

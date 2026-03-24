@@ -268,6 +268,12 @@ const SquadBuilder: React.FC<SquadBuilderProps> = ({
               <button
                 onClick={() => setShowCharacterCreation(true)}
                 className="btn-add-character"
+                disabled={squad.characters.length >= 5}
+                title={
+                  squad.characters.length >= 5
+                    ? 'Squad has reached the maximum of 5 characters'
+                    : undefined
+                }
               >
                 + Add Character
               </button>
@@ -290,6 +296,12 @@ const SquadBuilder: React.FC<SquadBuilderProps> = ({
               <button
                 onClick={() => setShowCharacterCreation(true)}
                 className="btn-add-first-character"
+                disabled={squad.characters.length >= 5}
+                title={
+                  squad.characters.length >= 5
+                    ? 'Squad has reached the maximum of 5 characters'
+                    : undefined
+                }
               >
                 Add First Character
               </button>
