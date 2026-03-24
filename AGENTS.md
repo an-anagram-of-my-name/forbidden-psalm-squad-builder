@@ -9,6 +9,18 @@ This document provides instructions for AI agents working on the forbidden-psalm
 - **Deployment**: GitHub Pages at https://an-anagram-of-my-name.github.io/forbidden-psalm-squad-builder/
 - **Repository**: https://github.com/an-anagram-of-my-name/forbidden-psalm-squad-builder
 
+## Original MVP spec
+- Create Squads of 5 Characters
+- Customise the Characters according to setup rules
+- - Character stats
+  - Character feats and flaws
+  - Character equipment
+- Prepare Character Templates (also called Presets) that can be included into a Squad
+- The final app version will be used for multiple similar games, but MVP is for a game named "28 Psalms"
+
+## Data Persistence
+Code uses localStorage with key 'forbidden-psalm-state'
+
 ## Project Structure
 project/ 
 ├── src/ 
