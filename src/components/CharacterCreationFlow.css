@@ -56,6 +56,7 @@
 .flow-content {
     flex: 1;
     padding: 40px 20px;
+    padding-bottom: 120px;
     max-width: 1200px;
     margin: 0 auto;
     width: 100%;
@@ -242,6 +243,8 @@
     position: sticky;
     bottom: 0;
     z-index: 10;
+    min-height: 60px;
+    flex-wrap: wrap;
 }
 
 .btn-back {
@@ -292,6 +295,41 @@
 .btn-create-character:disabled {
     background-color: #ccc;
     cursor: not-allowed;
+}
+
+.btn-confirm {
+    padding: 12px 30px;
+    font-size: 16px;
+    background-color: #4CAF50;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+.btn-confirm:hover:not(:disabled) {
+    background-color: #45a049;
+}
+
+.btn-confirm:disabled {
+    background-color: #ccc;
+    cursor: not-allowed;
+}
+
+.btn-secondary {
+    padding: 12px 30px;
+    font-size: 16px;
+    background-color: #666;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+.btn-secondary:hover {
+    background-color: #555;
 }
 
 .equipment-list {

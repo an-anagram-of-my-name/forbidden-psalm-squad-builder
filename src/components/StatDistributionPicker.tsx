@@ -11,58 +11,53 @@ const DERIVED_STAT_MAP: Partial<Record<StatName, DerivedStatInfo>> = {
 };
 
 interface StatDistributionPickerProps {
-    onStatsSelected: (stats: Stats) => void;
+    onStatsChange?: (stats: Stats | null) => void;
     mode?: 'squad' | 'preset';
     selectedTechLevel?: TechLevel;
     onTechLevelSelected?: (techLevel: TechLevel) => void;
+    initialStats?: Stats;
 }
 
 const StatDistributionPicker: React.FC<StatDistributionPickerProps> = ({
-    onStatsSelected,
+    onStatsChange,
     mode = 'squad',
     selectedTechLevel,
     onTechLevelSelected,
+    initialStats,
 }) => {
     const distributions = getValidStatDistributions();
-    const [selectedDistribution, setSelectedDistribution] = useState<number[] | null>(null);
-    const [statAssignments, setStatAssignments] = useState<Partial<Stats>>({});
+
+    const getInitialDistribution = (): number[] | null => {
+        if (!initialStats) return null;
+        const statValues = [initialStats.agility, initialStats.presence, initialStats.strength, initialStats.toughness];
+        const sortedValues = [...statValues].sort((a, b) => b - a);
+        return distributions.find(d => {
+            const sortedDist = [...d].sort((a, b) => b - a);
+            return sortedDist.every((v, i) => v === sortedValues[i]);
+        }) ?? null;
+    };
+
+    const [selectedDistribution, setSelectedDistribution] = useState<number[] | null>(getInitialDistribution);
+    const [statAssignments, setStatAssignments] = useState<Partial<Stats>>(initialStats ?? {});
 
     const statNames: StatName[] = ['agility', 'presence', 'strength', 'toughness'];
 
     const handleDistributionSelect = (distribution: number[]) => {
         setSelectedDistribution(distribution);
         setStatAssignments({});
+        onStatsChange?.(null);
     };
 
     const handleStatAssignment = (stat: StatName, modifier: number) => {
-        setStatAssignments({
-            ...statAssignments,
-            [stat]: modifier,
-        });
-    };
-
-    const handleConfirm = () => {
-        if (
-            statAssignments.agility !== undefined &&
-            statAssignments.presence !== undefined &&
-            statAssignments.strength !== undefined &&
-            statAssignments.toughness !== undefined
-        ) {
-            onStatsSelected(statAssignments as Stats);
-        }
+        const newAssignments = { ...statAssignments, [stat]: modifier };
+        setStatAssignments(newAssignments);
+        const isNowComplete = statNames.every(s => newAssignments[s] !== undefined);
+        onStatsChange?.(isNowComplete ? (newAssignments as Stats) : null);
     };
 
     const handleTechLevelSelect = (techLevel: TechLevel) => {
         onTechLevelSelected?.(techLevel);
     };
-
-    const isComplete =
-        statAssignments.agility !== undefined &&
-        statAssignments.presence !== undefined &&
-        statAssignments.strength !== undefined &&
-        statAssignments.toughness !== undefined;
-
-    const isConfirmEnabled = isComplete && (mode !== 'preset' || !!selectedTechLevel);
 
     // Calculate available modifiers for each stat
     const getAvailableModifiersForStat = (currentStat: StatName) => {
@@ -165,13 +160,6 @@ const StatDistributionPicker: React.FC<StatDistributionPickerProps> = ({
                         );
                     })}
 
-                    <button
-                        onClick={handleConfirm}
-                        disabled={!isConfirmEnabled}
-                        className="btn-confirm"
-                    >
-                        Confirm Stats
-                    </button>
                 </div>
             )}
         </div>

@@ -7,15 +7,15 @@ import './EquipmentPicker.css';
 
 interface EquipmentPickerProps {
   character: Character;
-  onEquipmentSelected: (equipment: Equipment[]) => void;
+  selectedEquipment: Equipment[];
+  onEquipmentChange: (equipment: Equipment[]) => void;
 }
 
 type EquipmentTab = 'weapons' | 'armor' | 'items' | 'ammo-consumables';
 
 const CONSUMABLE_IDS = ['molotov', 'black-powder-bomb', 'grenade', 'future-molotov'];
 
-const EquipmentPicker: React.FC<EquipmentPickerProps> = ({ character, onEquipmentSelected }) => {
-  const [selectedEquipment, setSelectedEquipment] = useState<Equipment[]>(character.equipment || []);
+const EquipmentPicker: React.FC<EquipmentPickerProps> = ({ character, selectedEquipment, onEquipmentChange }) => {
   const [activeTab, setActiveTab] = useState<EquipmentTab>('weapons');
 
   const effectiveStats = useMemo(() => {
@@ -81,31 +81,23 @@ const EquipmentPicker: React.FC<EquipmentPickerProps> = ({ character, onEquipmen
     if (isAmmoOrConsumable(equipment)) {
       // Ammo/consumables: always add a new instance (stackable)
       if (slotsUsed + equipment.slots <= slotCapacity) {
-        setSelectedEquipment([...selectedEquipment, equipment]);
+        onEquipmentChange([...selectedEquipment, equipment]);
       }
     } else {
       const isSelected = selectedEquipment.some((eq) => eq.id === equipment.id);
       if (isSelected) {
-        setSelectedEquipment(selectedEquipment.filter((eq) => eq.id !== equipment.id));
+        onEquipmentChange(selectedEquipment.filter((eq) => eq.id !== equipment.id));
       } else {
         // Check if adding this equipment would exceed slot capacity
         if (slotsUsed + equipment.slots <= slotCapacity) {
-          setSelectedEquipment([...selectedEquipment, equipment]);
+          onEquipmentChange([...selectedEquipment, equipment]);
         }
       }
     }
   };
 
   const handleRemoveAll = (equipment: Equipment) => {
-    setSelectedEquipment(selectedEquipment.filter((eq) => eq.id !== equipment.id));
-  };
-
-  const handleConfirm = () => {
-    onEquipmentSelected(selectedEquipment);
-  };
-
-  const handleClear = () => {
-    setSelectedEquipment([]);
+    onEquipmentChange(selectedEquipment.filter((eq) => eq.id !== equipment.id));
   };
 
   const isEquipmentSelected = (equipment: Equipment) => {
@@ -321,15 +313,6 @@ const EquipmentPicker: React.FC<EquipmentPickerProps> = ({ character, onEquipmen
             )}
           </div>
         )}
-      </div>
-
-      <div className="picker-footer">
-        <button onClick={handleClear} className="btn-clear">
-          Clear All
-        </button>
-        <button onClick={handleConfirm} className="btn-confirm">
-          Confirm Equipment
-        </button>
       </div>
     </div>
   );
