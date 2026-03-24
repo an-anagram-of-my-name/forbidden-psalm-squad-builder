@@ -278,3 +278,124 @@ interface AppState {
 - Deletion of squads is currently out of scope
 - Duplicate squad names should be strictly prevented
 - All squads persist via localStorage
+
+
+## Feature: Multiple Ammo & Consumables per Character
+
+### Overview
+Currently, characters can select equipment once. However, in Forbidden Psalm, Ammo and Consumables should be stackable - a character can carry multiple instances of the same ammo type or consumable item. To keep interaction patterns consistent, Ammo and Consumables are managed together on a unified tab.
+
+### Behavior Requirements
+
+**Ammo & Consumables**: Stackable (multiple instances allowed)
+- User can click the ammo/consumable card to add another instance (+1)
+- Each click adds one more instance to equipment list
+- Cost is cumulative (e.g., 2x Bandage = 2 credits)
+- Slots are cumulative (e.g., 2x Bandage = 2 slots)
+- Cannot add more instances if insufficient slots remaining
+- Click the (X) delete icon in lower right corner to remove all instances of that item
+
+**Weapons, Armor, Items**: Remain single-selection (toggle on/off)
+- Can only equip one weapon type at a time
+- Can only equip one armor piece at a time
+- Can only have one instance of each item type
+
+### UI Implementation: EquipmentPicker Card Design
+
+**For Ammo/Consumables:**
+```
+┌──────────────────────────────┐
+│ Bandage           [x2]       │
+│ Cost: 1 cr  Slots: 1         │
+│ Cures Bleeding               │
+│                           ✗  │
+│                          (X) │
+└──────────────────────────────┘
+```
+- Instance count displayed in brackets next to name: `[x2]`
+- (X) delete icon in lower right corner
+- Card is clickable to add instances
+- Clicking (X) removes all instances at once
+
+**For Weapons, Armor, Items:**
+- No delete icon
+- No instance count
+- Card toggles on/off with click (existing behavior)
+
+### Tab Structure Changes
+
+**Current tabs:** Weapons, Armor, Items, Ammo
+
+**New tabs:** Weapons, Armor, Items, Ammo/Consumables
+
+**Move to Ammo/Consumables tab:**
+- All ammo items from `ammo28Psalms` (already in ammo tab)
+- All consumable items from weapons arrays (Molotov, Black Powder Bomb, Grenade, Future Molotov)
+  - Currently stored as Weapon type but should render with ammo/consumable interaction
+  - Remove from weapons tab rendering
+  - Add to ammo/consumables tab rendering
+
+### Implementation Details
+
+**EquipmentPicker.tsx Changes:**
+
+1. **Tab name update:**
+   - Change `'ammo'` tab label to `'Ammo/Consumables'`
+
+2. **Consumables data handling:**
+   - Create helper function to extract consumable items from weapon arrays
+   - Render consumables alongside ammo in the ammo/consumables section
+   - Example:
+     ```typescript
+     const consumables28Psalms = [
+       ...pastTechWeapons28Psalms,
+       ...futureTechWeapons28Psalms
+     ].filter(w => ['molotov', 'black-powder-bomb', 'grenade', 'future-molotov'].includes(w.id));
+     ```
+
+3. **Card rendering logic:**
+   - For ammo/consumable cards:
+     - Count instances: `selectedEquipment.filter(eq => eq.id === equipment.id).length`
+     - Render instance count in header: `{equipment.name} [x{count}]`
+     - Add delete (X) button in lower right with onClick handler
+   - For weapons/armor/items cards:
+     - Keep existing render logic (no count, no delete button)
+
+4. **Click handlers:**
+   - `handleEquipmentToggle()`: 
+     - For ammo/consumables: Always add a new instance (don't check `isSelected`)
+     - For weapons/armor/items: Keep current toggle behavior
+   - New `handleRemoveAll()`:
+     - Remove all instances of a specific equipment by id
+     - `setSelectedEquipment(selectedEquipment.filter(eq => eq.id !== equipment.id))`
+
+5. **Slot validation:**
+   - Existing slot capacity check already works for multiples
+   - Disable add if `remainingSlots < equipment.slots`
+   - Show disabled state on card
+
+### User Workflow in Equipment Picker
+
+1. User navigates to Ammo/Consumables tab
+2. Clicks "Bow Ammo" card → adds one instance, displays as `Bow Ammo [x1]`
+3. Clicks "Bow Ammo" card again → adds another instance, displays as `Bow Ammo [x2]`
+4. Clicks (X) delete icon on "Bow Ammo" → removes all instances, reverts to no selection
+5. If insufficient slots remain, "Bow Ammo" card becomes disabled (cannot click to add)
+6. Confirms equipment selection → all ammo/consumable instances persist to character
+
+### Edge Cases
+
+- User adds 3x Bandage (3 slots), realizes they need a weapon, clicks (X) to remove all bandages
+- User has 1 slot remaining, tries to add another Bandage (1 slot) → succeeds, now 0 slots
+- User tries to add Bandage with 0 slots remaining → card is disabled, click has no effect
+- User goes back from equipment step → selected ammo/consumables persist in EquipmentPicker state
+- CharacterSummary displays all ammo/consumable instances in equipment list (e.g., "Bandage", "Bandage", "Bandage")
+
+### No Data Structure Changes Needed
+
+- Ammo and Consumable types already support multiple entries in Character.equipment array
+- Each instance is stored as a separate equipment object with same id
+- Cost and slot calculations work correctly with duplicates
+
+
+
