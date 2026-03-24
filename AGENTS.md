@@ -1072,3 +1072,440 @@ Each picker (StatDistributionPicker, FlawsAndFeatsPicker, EquipmentPicker) remov
 - Existing picker components refactored to remove buttons
 - No external API changes (callbacks remain same)
 - Improved UX, no breaking changes for existing features
+
+
+## Feature: Display Derived Stats Throughout Character Creation and Summary
+
+### Overview
+Characters have three derived stats (HP, Movement, Equipment Slots) that are calculated from primary stats (Toughness, Agility, Strength respectively). Currently only Equipment Slots is displayed. This feature adds HP and Movement display throughout the character creation wizard and character summary, showing the derived values as users make selections and keeping derived stats visually associated with their source primary stats.
+
+### Data Model
+
+**Primary Stats:**
+- Agility
+- Presence
+- Strength
+- Toughness
+
+**Derived Stats** (calculated from primary stats):
+- **HP** = 8 + Toughness (Toughness → HP)
+- **Movement** = 5 + Agility (Agility → Movement)
+- **Equipment Slots** = 5 + Strength (Strength → Slots)
+
+**Additional Modifiers:**
+- Flaws may modify primary stats (e.g., "Too Many Teeth" applies -2 Presence)
+- Feats may modify primary stats (e.g., "Marine" may apply modifiers)
+- Derived stats recalculate based on modified primary stats
+
+### Visual Design
+
+#### Primary Stat Box
+```
+┌─────────────┐
+│ AGI         │
+│ +2          │
+└─────────────┘
+```
+- Background: White/Light gray
+- Border: 1px solid #ddd
+- Font: Regular weight
+- Used for primary stats only
+
+#### Derived Stat Box (New)
+```
+┌─────────────┐
+│ MOV         │
+│ 7           │
+└─────────────┘
+```
+- Background: Very light blue (#E8F0F8 or similar - not bright)
+- Border: 1px solid #b8d4e8
+- Font: Regular weight
+- Slightly smaller than primary stat boxes (optional)
+- Used for derived stats only
+
+#### Stat Assignment Container
+```
+┌────────────────────────────────────────────┐
+│ [Label] [Selector]     [Derived Stat Box]  │
+│ "Agility"  [+3 +1 0 -3]    [MOV 7]        │
+└────────────────────────────────────────────┘
+```
+- Flex container with proper spacing
+- Selector controls (buttons/dropdowns) in middle
+- Derived stat box on right
+- Used in StatDistributionPicker
+
+### Component Changes
+
+#### 1. StatDistributionPicker
+
+**New Layout Structure:**
+```
+STAT ASSIGNMENT AREA
+├─ Stat Assignment 1: Agility
+│  ├─ Label: "Agility"
+│  ├─ Selector: [+3] [+1] [0] [-3]
+│  └─ Derived: [MOV 7]
+├─ Stat Assignment 2: Presence
+│  ├─ Label: "Presence"
+│  ├─ Selector: [+3] [+1] [0] [-3]
+│  └─ Derived: [--] (no derived stat)
+├─ Stat Assignment 3: Strength
+│  ├─ Label: "Strength"
+│  ├─ Selector: [+3] [+1] [0] [-3]
+│  └─ Derived: [SLOTS 7]
+└─ Stat Assignment 4: Toughness
+   ├─ Label: "Toughness"
+   ├─ Selector: [+3] [+1] [0] [-3]
+   └─ Derived: [HP 10]
+```
+
+**Functionality:**
+- For each stat, display label, selector, and corresponding derived stat box (if applicable)
+- Derived stat values update in real-time as user assigns modifiers
+- Use `calculateDerivedStats(stats)` utility function to compute derived values
+- Display derived stat boxes for:
+  - Agility → Movement
+  - Strength → Equipment Slots
+  - Toughness → HP
+- Presence has no derived stat; either show empty box or omit
+
+**CSS Class Usage:**
+- `.stat-box`: Primary stat boxes (existing, unchanged)
+- `.stat-box.derived`: Derived stat boxes (new, blue-tinted)
+- `.stat-assignment`: Container for label + selector + derived stat (new)
+- `.stat-assignment-label`: Label text styling (new)
+- `.stat-assignment-selector`: Selector controls area (new)
+
+**CSS to Add:**
+```css
+.stat-box.derived {
+    background-color: #E8F0F8;
+    border-color: #b8d4e8;
+}
+
+.stat-assignment {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    padding: 10px;
+    margin: 5px 0;
+    background-color: #fafafa;
+    border-radius: 4px;
+}
+
+.stat-assignment-label {
+    min-width: 80px;
+    font-weight: 500;
+    color: #333;
+}
+
+.stat-assignment-selector {
+    display: flex;
+    gap: 8px;
+    flex: 1;
+}
+
+.stat-assignment-selector button {
+    padding: 8px 12px;
+    min-width: 45px;
+    /* existing button styles */
+}
+```
+
+#### 2. FlawsAndFeatsPicker
+
+**Current Stats Display Update:**
+- Existing `.current-stats` row already displays all primary stats
+- Add derived stats to this same row
+- Insert a visual separator between primary and derived stats
+
+**New Layout:**
+```
+PRIMARY STATS                   │ DERIVED STATS
+[AGI +2] [PRE +1] [STR 0] [TOU -3]  │  [MOV 7] [SLOTS 5] [HP 8]
+```
+
+**Implementation:**
+- Keep existing primary stats display
+- Add derived stat boxes after a separator
+- Use flex gap and `::after` pseudo-element or simple `<div>` spacer for separator
+- Recalculate and display derived stats based on current selections
+
+**Separator Styling:**
+```css
+.current-stats {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-bottom: 20px;
+    align-items: center;
+}
+
+.current-stats-divider {
+    width: 2px;
+    height: 40px;
+    background-color: #ccc;
+    margin: 0 10px;
+}
+
+.current-stats-derived {
+    display: flex;
+    gap: 10px;
+}
+```
+
+**HTML Structure:**
+```tsx
+<div className="current-stats">
+  {/* Primary stats */}
+  <div className="stat-box">...</div>
+  {/* Repeat for all 4 primary stats */}
+  
+  {/* Separator */}
+  <div className="current-stats-divider" />
+  
+  {/* Derived stats */}
+  <div className="current-stats-derived">
+    <div className="stat-box derived">...</div>
+    {/* Repeat for all 3 derived stats */}
+  </div>
+</div>
+```
+
+#### 3. EquipmentPicker
+
+**Apply Same Pattern as FlawsAndFeatsPicker:**
+- Current stats row at top already displays primary stats
+- Add derived stats with separator using same pattern
+- Derived stat boxes shown with blue-tinted styling
+
+#### 4. Review Step
+
+**Stats Review Card Update:**
+```
+STATS (in review-section-card)
+├─ Agility: +2          Movement: 7
+├─ Presence: +1         [no derived]
+├─ Strength: 0          Slots: 5
+└─ Toughness: -3        HP: 8
+```
+
+**Implementation:**
+- Modify stats list display in review-section-card
+- Show primary stat and corresponding derived stat on same line
+- Use 2-column layout within the card:
+  - Left: Primary stat name and value
+  - Right: Derived stat name and value (if applicable)
+
+**CSS:**
+```css
+.stats-list {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 15px 10px;
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.stats-list li {
+    padding: 8px 0;
+    font-size: 16px;
+    color: #333;
+    border-bottom: none;
+    display: flex;
+    justify-content: space-between;
+}
+
+.stats-list li.derived {
+    font-size: 14px;
+    color: #666;
+}
+```
+
+**HTML Structure:**
+```tsx
+<ul className="stats-list">
+  <li>Agility: +2</li>
+  <li className="derived">Movement: 7</li>
+  
+  <li>Presence: +1</li>
+  <li className="derived">---</li>
+  
+  <li>Strength: 0</li>
+  <li className="derived">Slots: 5</li>
+  
+  <li>Toughness: -3</li>
+  <li className="derived">HP: 8</li>
+</ul>
+```
+
+#### 5. CharacterSummary
+
+**Updated Stats Grid Layout:**
+```
+┌─────────────┬─────────────┐
+│ AGI         │ MOV         │
+│ +2          │ 7           │
+└─────────────┴─────────────┘
+┌─────────────┬─────────────┐
+│ PRE         │ ---         │
+│ +1          │             │
+└─────────────┴─────────────┘
+┌─────────────┬─────────────┐
+│ STR         │ SLOTS       │
+│ 0           │ 5           │
+└─────────────┴─────────────┘
+┌─────────────┬─────────────┐
+│ TOU         │ HP          │
+│ -3          │ 8           │
+└─────────────┴─────────────┘
+```
+
+**Implementation:**
+- Change grid from 4 columns to 2 columns
+- Each row contains primary stat + derived stat pair
+- Primary stat boxes: existing white styling
+- Derived stat boxes: blue-tinted styling
+- Order: Agility/Movement, Presence/---, Strength/Slots, Toughness/HP
+
+**CSS:**
+```css
+.stats-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+}
+
+.stat-box {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 8px 16px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    background-color: #fff;
+    min-width: 70px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+}
+
+.stat-box.derived {
+    background-color: #E8F0F8;
+    border-color: #b8d4e8;
+}
+
+.stat-box.placeholder {
+    background-color: #f5f5f5;
+    border-color: #e0e0e0;
+    color: #999;
+}
+
+.stat-name {
+    font-size: 11px;
+    color: #888;
+    text-transform: uppercase;
+    margin-bottom: 4px;
+}
+
+.stat-value {
+    font-size: 18px;
+    font-weight: bold;
+    color: #333;
+}
+```
+
+### Utility Functions
+
+**Existing (Use These):**
+- `calculateDerivedStats(stats: Stats): DerivedStats`
+  - Returns: `{ hp: number, movement: number, equipmentSlots: number }`
+  - Already implemented in `utils/stats.ts`
+  - Use this to get derived stat values
+
+**New Helper (Optional):**
+```typescript
+export function getDerivedStatValue(
+  stat: 'agility' | 'presence' | 'strength' | 'toughness',
+  primaryStats: Stats,
+  flaw: Flaw | null,
+  feat: Feat | null
+): number | null {
+  const effectiveStats = applyFlawFeatModifiers(primaryStats, flaw, feat);
+  const derived = calculateDerivedStats(effectiveStats);
+  
+  switch (stat) {
+    case 'agility': return derived.movement;
+    case 'strength': return derived.equipmentSlots;
+    case 'toughness': return derived.hp;
+    case 'presence': return null; // No derived stat
+  }
+}
+```
+
+### Color Palette for Derived Stats
+
+**Primary Stat Boxes:**
+- Background: #ffffff (white)
+- Border: #ddd
+- Text: #333
+
+**Derived Stat Boxes:**
+- Background: #E8F0F8 (very light blue)
+- Border: #b8d4e8 (light blue)
+- Text: #333
+
+**Alternative if #E8F0F8 too bright:**
+- Background: #EFF4F9
+- Border: #c5d9e8
+
+### Real-Time Updates
+
+**StatDistributionPicker:**
+- Derived stat values update immediately as user selects modifiers
+- No need to wait for step confirmation
+- User sees impact of choices in real-time
+
+**FlawsAndFeatsPicker:**
+- After user selects flaw/feat, recalculate derived stats
+- Display updated values in current-stats row
+- Account for stat modifiers from flaw/feat
+
+**EquipmentPicker:**
+- Derived stats remain static during equipment selection
+- No equipment affects primary stats or derived stats
+- Display values from current character state
+
+**Review:**
+- Display final derived stat values
+- Calculate using final selected stats + flaw/feat modifiers
+
+### Testing Scenarios
+
+1. **StatDistributionPicker**: Select different modifiers; verify derived stats update immediately
+2. **Flaw Impact**: Select flaw with stat modifier; verify primary and derived stats update in FlawsAndFeatsPicker
+3. **All Screens**: Verify derived stats appear consistently (correct color, correct values)
+4. **Review Match**: Derived stats in Review match what was shown in earlier steps
+5. **CharacterSummary**: Derived stats display correctly for saved characters
+6. **Edge Cases**: Presence has no derived stat; ensure UI handles gracefully
+
+### Files to Modify
+
+- `src/components/StatDistributionPicker.tsx` - Add derived stat display
+- `src/components/StatDistributionPicker.css` - Add derived stat and assignment container styling
+- `src/components/FlawsAndFeatsPicker.tsx` - Add derived stats to current-stats row
+- `src/components/FlawsAndFeatsPicker.css` - Add separator and derived stat styling
+- `src/components/EquipmentPicker.tsx` - Add derived stats to current-stats row (same pattern as FlawsAndFeatsPicker)
+- `src/components/EquipmentPicker.css` - Add separator and derived stat styling
+- `src/components/CharacterCreationFlow.tsx` - Update Review step stats display
+- `src/components/CharacterCreationFlow.css` - Update stats-list and review layout
+- `src/components/CharacterSummary.tsx` - Update stats grid layout
+- `src/components/CharacterSummary.css` - Update stats-grid to 2-column layout
+
+### Backward Compatibility
+
+- No breaking changes to component APIs
+- Derived stats are display-only enhancements
+- Existing stat selection logic unchanged
+- Equipment Slots already displayed; HP and Movement are additions
