@@ -159,6 +159,18 @@
   background-color: #45a049;
 }
 
+.btn-add-character:disabled,
+.btn-add-first-character:disabled {
+  background-color: #9e9e9e;
+  cursor: not-allowed;
+  opacity: 0.7;
+}
+
+.btn-add-character:disabled:hover,
+.btn-add-first-character:disabled:hover {
+  background-color: #9e9e9e;
+}
+
 .character-creation-container {
   margin-bottom: 20px;
   padding: 20px;
