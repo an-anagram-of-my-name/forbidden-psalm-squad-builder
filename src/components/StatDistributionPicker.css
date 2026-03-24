@@ -11,3 +11,45 @@
 .stat-distribution-picker label {
   font-size: 14px;
 }
+
+.distributions {
+  display: flex;
+  gap: 12px;
+  margin: 16px 0;
+  flex-wrap: wrap;
+}
+
+.distribution-btn {
+  font-size: 16px;
+  padding: 12px 20px;
+  border: 2px solid #ccc;
+  background-color: #f5f5f5;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-weight: 500;
+}
+
+.distribution-btn:hover:not(:disabled) {
+  background-color: #e0e0e0;
+  border-color: #999;
+  transform: translateY(-2px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.distribution-btn.selected {
+  background-color: #4CAF50;
+  color: white;
+  border-color: #45a049;
+  font-weight: 600;
+}
+
+.distribution-btn.selected:hover {
+  background-color: #45a049;
+  box-shadow: 0 4px 12px rgba(76, 175, 80, 0.3);
+}
+
+.distribution-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
