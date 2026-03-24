@@ -1,36 +1,34 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { Flaw, Feat, FlawType, FeatType, Stats } from '../types';
 import { flaws28Psalms, feats28Psalms } from '../types/featsandflaws28Psalms';
 import { applyFlawFeatModifiers } from '../utils/stats';
 import './FlawsAndFeatsPicker.css';
 
 interface FlawsAndFeatsPickerProps {
-    onSelectFlawAndFeat: (flaw: Flaw, feat: Feat) => void;
+    onSelectionChange?: (flaw: Flaw | null, feat: Feat | null) => void;
     stats?: Stats;
+    initialFlawType?: FlawType;
+    initialFeatType?: FeatType;
 }
 
-const FlawsAndFeatsPicker: React.FC<FlawsAndFeatsPickerProps> = ({ onSelectFlawAndFeat, stats }) => {
-    const [selectedFlawType, setSelectedFlawType] = useState<FlawType | null>(null);
-    const [selectedFeatType, setSelectedFeatType] = useState<FeatType | null>(null);
+const FlawsAndFeatsPicker: React.FC<FlawsAndFeatsPickerProps> = ({ onSelectionChange, stats, initialFlawType, initialFeatType }) => {
+    const [selectedFlawType, setSelectedFlawType] = useState<FlawType | null>(initialFlawType ?? null);
+    const [selectedFeatType, setSelectedFeatType] = useState<FeatType | null>(initialFeatType ?? null);
 
-    const handleConfirm = () => {
+    useEffect(() => {
         if (selectedFlawType && selectedFeatType) {
             const flawData = flaws28Psalms.find(f => f.type === selectedFlawType);
             const featData = feats28Psalms.find(f => f.type === selectedFeatType);
-            if (!flawData || !featData) return;
-            const flaw: Flaw = {
-                type: selectedFlawType,
-                description: flawData.description,
-            };
-            const feat: Feat = {
-                type: selectedFeatType,
-                description: featData.description,
-            };
-            onSelectFlawAndFeat(flaw, feat);
+            if (flawData && featData) {
+                onSelectionChange?.(
+                    { type: selectedFlawType, description: flawData.description },
+                    { type: selectedFeatType, description: featData.description }
+                );
+            }
+        } else {
+            onSelectionChange?.(null, null);
         }
-    };
-
-    const isComplete = selectedFlawType !== null && selectedFeatType !== null;
+    }, [selectedFlawType, selectedFeatType]); // eslint-disable-line react-hooks/exhaustive-deps
 
     const effectiveStats = useMemo(() => {
         if (!stats) return null;
@@ -99,13 +97,6 @@ const FlawsAndFeatsPicker: React.FC<FlawsAndFeatsPickerProps> = ({ onSelectFlawA
                 </div>
             </div>
 
-            <button
-                onClick={handleConfirm}
-                disabled={!isComplete}
-                className="btn-confirm"
-            >
-                Confirm Selection
-            </button>
         </div>
     );
 };
