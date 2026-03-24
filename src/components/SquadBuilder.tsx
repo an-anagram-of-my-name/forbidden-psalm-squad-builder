@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { Squad, Character, TechLevel } from '../types';
+import { Squad, Character, CharacterPreset, TechLevel } from '../types';
 import TechLevelSelector from './TechLevelSelector';
 import CharacterCreationFlow from './CharacterCreationFlow';
 import CharacterSummary from './CharacterSummary';
 import SquadDropdown from './SquadDropdown';
+import PresetDropdown from './PresetDropdown';
 import './SquadBuilder.css';
 
 interface SquadBuilderProps {
@@ -13,6 +14,9 @@ interface SquadBuilderProps {
   onSaveSquad: (squad: Squad) => void;
   onLoadSquad: (squadId: string) => void;
   onNewSquad: () => void;
+  presets: CharacterPreset[];
+  onNewPreset: () => void;
+  onLoadPreset: (presetId: string) => void;
 }
 
 const SquadBuilder: React.FC<SquadBuilderProps> = ({
@@ -22,6 +26,9 @@ const SquadBuilder: React.FC<SquadBuilderProps> = ({
   onSaveSquad,
   onLoadSquad,
   onNewSquad,
+  presets,
+  onNewPreset,
+  onLoadPreset,
 }) => {
   const [currentView, setCurrentView] = useState<'tech-select' | 'squad-builder'>(
     initialSquad ? 'squad-builder' : 'tech-select'
@@ -186,6 +193,12 @@ const SquadBuilder: React.FC<SquadBuilderProps> = ({
         squads={savedSquads}
         currentSquadId={currentSquadId}
         onSelect={handleDropdownSelect}
+      />
+      <PresetDropdown
+        presets={presets}
+        currentPresetId={null}
+        onNewPreset={onNewPreset}
+        onSelectPreset={onLoadPreset}
       />
       {autoSaveMessage && <span className="auto-save-message">{autoSaveMessage}</span>}
     </div>

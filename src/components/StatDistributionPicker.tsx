@@ -1,13 +1,21 @@
 import React, { useState } from 'react';
-import { Stats, StatName } from '../types';
+import { Stats, StatName, TechLevel } from '../types';
 import { getValidStatDistributions, getAvailableModifiers } from '../utils/stats';
 import './StatDistributionPicker.css';
 
 interface StatDistributionPickerProps {
     onStatsSelected: (stats: Stats) => void;
+    mode?: 'squad' | 'preset';
+    selectedTechLevel?: TechLevel;
+    onTechLevelSelected?: (techLevel: TechLevel) => void;
 }
 
-const StatDistributionPicker: React.FC<StatDistributionPickerProps> = ({ onStatsSelected }) => {
+const StatDistributionPicker: React.FC<StatDistributionPickerProps> = ({
+    onStatsSelected,
+    mode = 'squad',
+    selectedTechLevel,
+    onTechLevelSelected,
+}) => {
     const distributions = getValidStatDistributions();
     const [selectedDistribution, setSelectedDistribution] = useState<number[] | null>(null);
     const [statAssignments, setStatAssignments] = useState<Partial<Stats>>({});
@@ -37,11 +45,17 @@ const StatDistributionPicker: React.FC<StatDistributionPickerProps> = ({ onStats
         }
     };
 
+    const handleTechLevelSelect = (techLevel: TechLevel) => {
+        onTechLevelSelected?.(techLevel);
+    };
+
     const isComplete =
         statAssignments.agility !== undefined &&
         statAssignments.presence !== undefined &&
         statAssignments.strength !== undefined &&
         statAssignments.toughness !== undefined;
+
+    const isConfirmEnabled = isComplete && (mode !== 'preset' || !!selectedTechLevel);
 
     // Calculate available modifiers for each stat
     const getAvailableModifiersForStat = (currentStat: StatName) => {
@@ -59,6 +73,31 @@ const StatDistributionPicker: React.FC<StatDistributionPickerProps> = ({ onStats
             <div className="picker-header">
                 <h2>Select Your Stat Distribution</h2>
             </div>
+
+            {mode === 'preset' && (
+                <div className="compact-tech-level-picker">
+                    <label className="compact-tech-label">Tech Level:</label>
+                    <div className="compact-tech-btns">
+                        <button
+                            type="button"
+                            className={`compact-tech-btn ${selectedTechLevel === 'past-tech' ? 'selected' : ''}`}
+                            onClick={() => handleTechLevelSelect('past-tech')}
+                        >
+                            Past-Tech
+                        </button>
+                        <button
+                            type="button"
+                            className={`compact-tech-btn ${selectedTechLevel === 'future-tech' ? 'selected' : ''}`}
+                            onClick={() => handleTechLevelSelect('future-tech')}
+                        >
+                            Future-Tech
+                        </button>
+                    </div>
+                    {!selectedTechLevel && (
+                        <span className="compact-tech-hint">Select a tech level to proceed</span>
+                    )}
+                </div>
+            )}
 
             <div className="distributions">
                 {distributions.map((dist, index) => (
@@ -102,7 +141,7 @@ const StatDistributionPicker: React.FC<StatDistributionPickerProps> = ({ onStats
 
                     <button
                         onClick={handleConfirm}
-                        disabled={!isComplete}
+                        disabled={!isConfirmEnabled}
                         className="btn-confirm"
                     >
                         Confirm Stats
