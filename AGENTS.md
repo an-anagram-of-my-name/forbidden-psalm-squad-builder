@@ -1817,3 +1817,441 @@ Or just final values with hover tooltips showing modifiers.
 ✅ All tests pass for complete stat calculation chain
 ✅ No regression in existing stat calculations
 ✅ Code is extensible for future modifier types (HP, Slots modifiers on other equipment)
+
+## Feature: Generate Printable Squad Sheet
+
+### Overview
+Allow users to generate a printable page for any loaded squad. The page should display all characters with their complete information in a format optimized for A4 landscape printing in full color. Includes an HP tracking bar for use during gameplay.
+
+### Requirements
+
+#### Page Layout
+- **Orientation**: Landscape
+- **Format**: A4 proportions (1:1.414 aspect ratio)
+- **Color**: Full color support
+- **Content**: One or more characters per page, with automatic pagination if needed
+
+#### Character Information Display
+
+For each character, display in an organized layout:
+
+**1. Character Name**
+- Large, prominent heading
+
+**2. Base Stats**
+- Agility, Presence, Strength, Toughness
+- Formatted clearly (table or grid)
+
+**3. Derived Stats**
+- HP (number value, e.g., "6")
+- Movement
+- Equipment Slots
+- Include calculation note if equipment modifiers are present
+
+**4. HP Tracking Bar** ⭐ NEW
+- **Visual Format**: Horizontal or vertical bar made of circles and a skull icon
+- **Composition**: Exactly HP elements total
+  - (HP - 1) empty circles: One per HP point minus one
+  - Exactly 1 skull & crossbones (☠️) icon: Replaces the final element
+  
+- **Purpose**: Players fill in circles with pencil *after* printing to track damage during gameplay
+  
+- **Example Layouts** (all shown empty in app):
+  - 5 HP character: `[○○○○��]` (4 circles, 1 skull = 5 total)
+  - 6 HP character: `[○○○○○☠]` (5 circles, 1 skull = 6 total)
+  - 7 HP character: `[○○○○○○☠]` (6 circles, 1 skull = 7 total)
+  - 11 HP character: `[○○○○○○○○○○☠]` (10 circles, 1 skull = 11 total)
+  
+- **Size Constraints**:
+  - Minimum HP: 5 (5 elements: 4 circles + 1 skull)
+  - Maximum HP: 11 (11 elements: 10 circles + 1 skull)
+  - Total elements = exactly HP value
+  
+- **Printable Aspect**:
+  - Large enough to mark off during gameplay (pen/pencil friendly)
+  - Circles should be approximately 0.3-0.4 inches each
+  - Printed with clear borders/outlines for marking
+  - All circles appear empty in print (player fills as they take damage)
+  - Use contrasting outline style for visibility
+
+**5. Flaw Information**
+- Flaw name (bold/prominent)
+- Full description/effects
+
+**6. Feat Information**
+- Feat name (bold/prominent)
+- Full description/effects
+
+**7. Equipment List**
+- **Armor Section** (highlighted/prominent background color):
+  - Position: First in equipment list
+  - **AV stat must be prominent** (large font, bold, or color-highlighted)
+  - Armor name
+  - All other armor properties (slots, cost, special rules if present)
+  - Movement modifier (if applicable)
+  
+- **Other Equipment** (weapons, items, ammo, consumables):
+  - Organized by category or in single list
+  - Name, slots, cost, relevant special properties
+  
+- **Exclusions**: No ID numbers displayed (e.g., don't show `id: "armor-001"`)
+
+#### Data to Include
+
+**From Character Object**:
+- character.name
+- character.stats (agility, presence, strength, toughness)
+- character.flaw.type + description (from flaws28Psalms lookup)
+- character.feat.type + description (from feats28Psalms lookup)
+- character.equipment[] - all items with full details (from equipment data)
+- character.techLevel (relevant context)
+
+**From Derived Stats**:
+- hp (maximum HP only, for display and HP bar sizing)
+- movement
+- equipmentSlots
+
+**From Flaws/Feats Data**:
+- Look up flaw/feat full information from data files
+- Include complete descriptions for printing
+
+**From Equipment Data**:
+- All equipment properties except IDs
+- Include special rules, requirements, modifiers
+
+#### Visual Design Considerations
+
+**HP Tracking Bar**:
+- Exactly HP elements total: (HP - 1) circles + 1 skull
+- All circles appear empty (unfilled) in the printed version
+- Clear visual distinction with outlined circles (not filled)
+- Empty positions: Hollow/outlined only with white fill
+- Final position: Skull & crossbones icon (☠️)
+- Spacing: Evenly spaced, borders around each circle
+- **Print-Friendly**:
+  - High contrast outlines for clarity
+  - Sized appropriately for pen marking (not too small)
+  - Borders strong enough to be visible and writable over
+  - Player fills circles with pencil to mark damage taken
+
+**Armor Highlighting**:
+- Distinct background color (e.g., light gold/yellow, or different shade)
+- AV displayed prominently:
+  - Larger font than other stats
+  - Bold or color-emphasized
+  - Clear label "AV: X"
+
+**Typography**:
+- Clean, readable fonts
+- Appropriate hierarchy (character name > sections > details)
+- Good contrast for printing
+
+**Spacing**:
+- Compact but readable layout
+- Logical grouping of related information
+- Margins suitable for binding/reading
+- **HP Bar Spacing**: Reserve space proportional to max HP (5-11 total elements)
+
+**Colors**:
+- Professional, printer-friendly palette
+- Sufficient contrast for black & white fallback
+- HP bar: High contrast outlines (dark outline, white/empty fill)
+- Optional: Use tech-level theming (e.g., different color for past-tech vs future-tech)
+
+#### Printing Features
+
+**Browser Print Dialog**:
+- Trigger via standard browser print functionality (Ctrl+P / Cmd+P)
+- Use CSS media queries to optimize for print
+- Remove UI chrome (buttons, sidebars, etc.) from print view
+- Ensure background colors and images print correctly
+
+**Print CSS**:
+- A4 landscape page size specification
+- Proper margins
+- Page break handling between characters
+- Print-specific font sizes for readability
+- HP bar rendering with clear borders (all empty)
+
+#### Component Architecture
+
+**New Components**:
+- `SquadPrintView.tsx` - Main print view component
+  - Displays full squad in print layout
+  - Uses print-friendly styles
+  - Integrates character print layout
+  
+- `CharacterPrintCard.tsx` - Single character print layout
+  - Displays all character information in print format
+  - Self-contained, reusable for each character
+  - Handles equipment organization and highlighting
+  
+- `HPTrackingBar.tsx` - HP tracking bar component
+  - Takes: maxHP (number)
+  - Renders exactly maxHP positions: (maxHP - 1) empty circles and 1 skull icon
+  - All circles always appear empty (no fill)
+  - Can be reused for interactive HP tracking in future
+
+**New Styles**:
+- `SquadPrintView.css` - Layout and page structure for print
+- `CharacterPrintCard.css` - Character-specific print styles
+- `HPTrackingBar.css` - HP bar styling (circles, outlines, borders)
+- Possibly: `print.css` - Global print media queries
+
+**Integration**:
+- Add "Print Squad" button to SquadBuilder component
+- Button triggers print view or opens new window/modal with print view
+- Alternatively: Add print icon/button in squad display area
+- Use React Router or state management to handle print view mode
+
+#### Data Flow
+
+1. User has squad loaded in SquadBuilder
+2. User clicks "Print Squad" button
+3. Print view opens (modal, new tab, or full-page mode)
+4. Print view fetches/uses current squad data:
+   - Squad name
+   - List of characters in squad
+   - For each character:
+     - Stats, flaw, feat, equipment
+     - Calculate derived stats (including max HP)
+5. Print view looks up full descriptions:
+   - Flaws from flaws28Psalms
+   - Feats from feats28Psalms
+   - Equipment details from equipment data sources
+6. CharacterPrintCard renders for each character:
+   - All stats and information
+   - HPTrackingBar component with maxHP value (displays empty circles + skull)
+7. User prints via browser print dialog (Ctrl+P)
+8. Optimized A4 landscape layout is printed with all HP bars empty and ready for player to mark damage with pencil
+
+#### Interaction Patterns
+
+**Option 1: Modal/Overlay Print View**
+```
+SquadBuilder
+  ├─ [Print Squad] button
+  └─ SquadPrintView (modal, overlay, or full page)
+     └─ CharacterPrintCard[] (one per character)
+        └─ HPTrackingBar (shows (HP-1) circles + 1 skull)
+```
+
+**Option 2: New Route/Tab**
+```
+/squad/:id/print route
+- Dedicated print view page
+- Can open in new tab for separate print dialog
+- Cleaner separation of concerns
+```
+
+**Option 3: In-Page Print View**
+```
+SquadBuilder with display mode toggle
+- Toggle between "Edit" and "Print Preview" mode
+- Print preview shows printable layout
+- Print button triggers browser print
+```
+
+#### File Organization
+
+**New Files**:
+- `src/components/SquadPrintView.tsx`
+- `src/components/SquadPrintView.css`
+- `src/components/CharacterPrintCard.tsx`
+- `src/components/CharacterPrintCard.css`
+- `src/components/HPTrackingBar.tsx`
+- `src/components/HPTrackingBar.css`
+
+**Modified Files**:
+- `src/components/SquadBuilder.tsx` - Add print button
+- `src/index.css` or new `src/print.css` - Global print styles
+
+#### HPTrackingBar Component Specification
+
+**Props**:
+```typescript
+interface HPTrackingBarProps {
+  maxHP: number;        // Maximum HP (5-11)
+  orientation?: 'horizontal' | 'vertical';  // Default: horizontal
+}
+```
+
+**Rendering Logic**:
+1. Create exactly maxHP total positions
+2. Render (maxHP - 1) empty circles
+3. Render 1 skull icon as final position
+4. Total elements = maxHP
+5. Space evenly across available width/height
+6. Each position has visible border
+7. All circles appear empty (white fill, dark outline)
+
+**Example Renders** (all empty in app):
+- maxHP = 5: `[○○○○☠]` (4 circles, 1 skull = 5 total)
+- maxHP = 6: `[○○○○○☠]` (5 circles, 1 skull = 6 total)
+- maxHP = 11: `[○○○○○○○○○○☠]` (10 circles, 1 skull = 11 total)
+
+**CSS Styling**:
+```css
+.hp-tracking-bar {
+  display: flex;
+  gap: 4px;
+  align-items: center;
+  margin: 12px 0;
+}
+
+.hp-position {
+  width: 32px;  /* Approximately 0.4 inches at 80 DPI */
+  height: 32px;
+  border: 2px solid #333;
+  border-radius: 50%;  /* circles */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  background-color: #ffffff;
+}
+
+.hp-position.skull {
+  font-size: 24px;
+  background-color: #ffffff;
+}
+
+@media print {
+  .hp-tracking-bar {
+    gap: 6px;
+  }
+  
+  .hp-position {
+    width: 28px;
+    height: 28px;
+    border: 2px solid #000;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+}
+```
+
+#### CSS Media Query (Print)
+
+```css
+@media print {
+  /* Hide non-print elements */
+  body > * { display: none; }
+  #print-root { display: block; }
+  
+  /* Page setup */
+  @page {
+    size: A4 landscape;
+    margin: 0.5in;
+  }
+  
+  /* Optimize fonts and spacing for print */
+  body {
+    font-size: 11pt;
+    line-height: 1.4;
+  }
+  
+  /* Character cards */
+  .character-print-card {
+    page-break-inside: avoid;
+    page-break-after: always;
+  }
+  
+  /* HP bar - ensure crisp rendering */
+  .hp-tracking-bar {
+    margin: 16px 0;
+  }
+  
+  .hp-position {
+    width: 28px;
+    height: 28px;
+    border: 2px solid #000;
+    background-color: #ffffff;
+  }
+  
+  /* Ensure colors print */
+  * {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+    color-adjust: exact;
+  }
+}
+```
+
+#### Functional Requirements
+
+- ✅ Display all characters in current squad
+- ✅ Show base and derived stats for each character
+- ✅ Show HP value (e.g., "6")
+- ✅ Show HP tracking bar with (HP - 1) circles and 1 skull
+- ✅ HP bar contains exactly HP elements total
+- ✅ All circles appear empty (unfilled) - player fills with pencil during play
+- ✅ Last element is skull & crossbones icon
+- ✅ Show full flaw description (not just type)
+- ✅ Show full feat description (not just type)
+- ✅ List all equipment with full details
+- ✅ Armor first in equipment list
+- ✅ Armor AV stat prominent/highlighted
+- ✅ No ID numbers in output
+- ✅ A4 landscape page format
+- ✅ Full color support
+- ✅ Professional, readable layout
+- ✅ Proper pagination for multiple characters
+- ✅ HP bar is print-friendly with clear borders for pencil marking
+
+#### Non-Functional Requirements
+
+- Performance: Print view should render quickly even with large squads
+- Usability: Simple one-click printing
+- Compatibility: Works with standard browser print dialog
+- Accessibility: Print layout readable and printable in grayscale
+- Print Quality: HP bars render crisply with visible borders for pencil marking
+
+#### Testing Scenarios
+
+1. **Single Character Squad**: Print displays cleanly with all sections including empty HP bar
+2. **Multi-Character Squad**: Multiple characters page-break correctly with HP bars
+3. **Equipment Variety**: Different equipment types display appropriately
+4. **Armor Highlighting**: Armor section stands out with AV prominent
+5. **HP Bar Rendering**:
+   - 5 HP character: Bar shows 4 circles + 1 skull (5 total)
+   - 6 HP character: Bar shows 5 circles + 1 skull (6 total)
+   - 11 HP character: Bar shows 10 circles + 1 skull (11 total)
+   - All circles appear empty/unfilled with clear outlines
+6. **Data Lookups**: Flaw/feat descriptions retrieved and displayed correctly
+7. **Print Layout**: Page breaks between characters, no orphaned sections
+8. **Color Printing**: Colors appear correctly when printed in color
+9. **Print Dialog**: Browser print dialog opens with correct settings
+10. **HP Bar Printability**: Borders are visible and clear for pencil marking
+
+#### Future Enhancements (Out of Scope)
+
+- Interactive HP tracking during app usage (not print-based)
+- PDF export directly (without browser print dialog)
+- Custom themes/templates
+- Watermarks or branding
+- Squad summary page before character details
+- Character portrait/icon support
+- QR codes or reference numbers
+- Multi-column layout options
+- Customizable print settings (font size, spacing, etc.)
+- Dynamic HP tracking in print view (clicking to mark damage)
+
+#### Success Criteria
+
+✅ Squad print sheet can be generated with one click
+✅ All required information is displayed for each character
+✅ HP tracking bar displays exactly (HP - 1) circles and 1 skull
+✅ HP bar total elements equals character's max HP value
+✅ HP bar uses empty circles with skull icon
+✅ All circles appear empty in print - ready for player to mark with pencil
+✅ HP bar is large enough and clear enough for pencil marking during gameplay
+✅ Armor is highlighted with prominent AV display
+✅ Layout is optimized for A4 landscape printing
+✅ Output is professional and suitable for tabletop gaming reference
+✅ No IDs or internal data exposed
+✅ Characters are properly paginated
+✅ HP bars print with visible borders and high contrast for pencil marking
+
+
+
