@@ -10,7 +10,9 @@ interface EquipmentPickerProps {
   onEquipmentSelected: (equipment: Equipment[]) => void;
 }
 
-type EquipmentTab = 'weapons' | 'armor' | 'items' | 'ammo';
+type EquipmentTab = 'weapons' | 'armor' | 'items' | 'ammo-consumables';
+
+const CONSUMABLE_IDS = ['molotov', 'black-powder-bomb', 'grenade', 'future-molotov'];
 
 const EquipmentPicker: React.FC<EquipmentPickerProps> = ({ character, onEquipmentSelected }) => {
   const [selectedEquipment, setSelectedEquipment] = useState<Equipment[]>(character.equipment || []);
@@ -44,10 +46,10 @@ const EquipmentPicker: React.FC<EquipmentPickerProps> = ({ character, onEquipmen
     return equipTechLevel === 'past-tech';
   };
 
-  // Get all available weapons (past-tech + future-tech if compatible)
+  // Get all available weapons (past-tech + future-tech if compatible), excluding consumables
   const availableWeapons = useMemo(() => {
     const allWeapons = [...pastTechWeapons28Psalms, ...futureTechWeapons28Psalms];
-    return allWeapons.filter((weapon) => canEquipTech(weapon.techLevel));
+    return allWeapons.filter((weapon) => canEquipTech(weapon.techLevel) && !CONSUMABLE_IDS.includes(weapon.id));
   }, [character.techLevel]);
 
   // Get all available armor (all are tech-agnostic)
@@ -65,17 +67,37 @@ const EquipmentPicker: React.FC<EquipmentPickerProps> = ({ character, onEquipmen
     return ammo28Psalms.filter((ammo) => canEquipTech(ammo.techLevel));
   }, [character.techLevel]);
 
-  const handleEquipmentToggle = (equipment: Equipment) => {
-    const isSelected = selectedEquipment.some((eq) => eq.id === equipment.id);
+  // Get all available consumables (from weapon arrays, filtered by tech level)
+  const availableConsumables = useMemo(() => {
+    const allWeapons = [...pastTechWeapons28Psalms, ...futureTechWeapons28Psalms];
+    return allWeapons.filter((weapon) => canEquipTech(weapon.techLevel) && CONSUMABLE_IDS.includes(weapon.id));
+  }, [character.techLevel]);
 
-    if (isSelected) {
-      setSelectedEquipment(selectedEquipment.filter((eq) => eq.id !== equipment.id));
-    } else {
-      // Check if adding this equipment would exceed slot capacity
+  const isAmmoOrConsumable = (equipment: Equipment): boolean => {
+    return equipment.category === 'ammo' || CONSUMABLE_IDS.includes(equipment.id);
+  };
+
+  const handleEquipmentToggle = (equipment: Equipment) => {
+    if (isAmmoOrConsumable(equipment)) {
+      // Ammo/consumables: always add a new instance (stackable)
       if (slotsUsed + equipment.slots <= slotCapacity) {
         setSelectedEquipment([...selectedEquipment, equipment]);
       }
+    } else {
+      const isSelected = selectedEquipment.some((eq) => eq.id === equipment.id);
+      if (isSelected) {
+        setSelectedEquipment(selectedEquipment.filter((eq) => eq.id !== equipment.id));
+      } else {
+        // Check if adding this equipment would exceed slot capacity
+        if (slotsUsed + equipment.slots <= slotCapacity) {
+          setSelectedEquipment([...selectedEquipment, equipment]);
+        }
+      }
     }
+  };
+
+  const handleRemoveAll = (equipment: Equipment) => {
+    setSelectedEquipment(selectedEquipment.filter((eq) => eq.id !== equipment.id));
   };
 
   const handleConfirm = () => {
@@ -98,6 +120,8 @@ const EquipmentPicker: React.FC<EquipmentPickerProps> = ({ character, onEquipmen
 
   const renderEquipmentCard = (equipment: Equipment) => {
     const isSelected = isEquipmentSelected(equipment);
+    const isStackable = isAmmoOrConsumable(equipment);
+    const instanceCount = isStackable ? selectedEquipment.filter((eq) => eq.id === equipment.id).length : 0;
 
     let canAdd: boolean;
     let strengthFails = false;
@@ -107,6 +131,8 @@ const EquipmentPicker: React.FC<EquipmentPickerProps> = ({ character, onEquipmen
       strengthFails = requiredStr !== undefined && !canUseArmor(effectiveStats.strength, requiredStr);
       const blockedByOtherArmor = isArmorSelected && !isSelected;
       canAdd = !strengthFails && !blockedByOtherArmor;
+    } else if (isStackable) {
+      canAdd = slotsUsed + equipment.slots <= slotCapacity;
     } else {
       canAdd = canAddMore || isSelected;
     }
@@ -114,15 +140,18 @@ const EquipmentPicker: React.FC<EquipmentPickerProps> = ({ character, onEquipmen
     return (
       <div
         key={equipment.id}
-        className={`equipment-card ${isSelected ? 'selected' : ''} ${!canAdd ? 'disabled' : ''}`}
+        className={`equipment-card ${isSelected || instanceCount > 0 ? 'selected' : ''} ${!canAdd ? 'disabled' : ''}`}
         onClick={() => {
-          if (canAdd || isSelected) {
+          if (canAdd || (isSelected && !isStackable)) {
             handleEquipmentToggle(equipment);
           }
         }}
       >
         <div className="equipment-header">
-          <div className="equipment-name">{equipment.name}</div>
+          <div className="equipment-name">
+            {equipment.name}
+            {isStackable && instanceCount > 0 && <span className="instance-count"> [x{instanceCount}]</span>}
+          </div>
           <div className="equipment-cost">{equipment.cost} cr</div>
         </div>
 
@@ -168,7 +197,19 @@ const EquipmentPicker: React.FC<EquipmentPickerProps> = ({ character, onEquipmen
           )}
         </div>
 
-        {isSelected && <div className="checkmark">✓</div>}
+        {!isStackable && isSelected && <div className="checkmark">✓</div>}
+        {isStackable && instanceCount > 0 && (
+          <button
+            className="remove-all-btn"
+            title="Remove all"
+            onClick={(e) => {
+              e.stopPropagation();
+              handleRemoveAll(equipment);
+            }}
+          >
+            ✕
+          </button>
+        )}
       </div>
     );
   };
@@ -198,13 +239,13 @@ const EquipmentPicker: React.FC<EquipmentPickerProps> = ({ character, onEquipmen
       </div>
 
       <div className="picker-tabs">
-        {(['weapons', 'armor', 'items', 'ammo'] as EquipmentTab[]).map((tab) => (
+        {(['weapons', 'armor', 'items', 'ammo-consumables'] as EquipmentTab[]).map((tab) => (
           <button
             key={tab}
             className={`tab ${activeTab === tab ? 'active' : ''}`}
             onClick={() => setActiveTab(tab)}
           >
-            {tab.charAt(0).toUpperCase() + tab.slice(1)}
+            {tab === 'ammo-consumables' ? 'Ammo/Consumables' : tab.charAt(0).toUpperCase() + tab.slice(1)}
           </button>
         ))}
       </div>
@@ -246,15 +287,15 @@ const EquipmentPicker: React.FC<EquipmentPickerProps> = ({ character, onEquipmen
           </div>
         )}
 
-        {activeTab === 'ammo' && (
+        {activeTab === 'ammo-consumables' && (
           <div className="equipment-section">
-            <h3>Ammo</h3>
+            <h3>Ammo & Consumables</h3>
             <p className="ammo-note">Note: Ranged weapons include one free ammo stack</p>
             <div className="equipment-grid">
-              {availableAmmo.map((ammo) => renderEquipmentCard(ammo))}
+              {[...availableAmmo, ...availableConsumables].map((item) => renderEquipmentCard(item))}
             </div>
-            {availableAmmo.length === 0 && (
-              <div className="no-equipment">No ammo available for your tech level</div>
+            {availableAmmo.length === 0 && availableConsumables.length === 0 && (
+              <div className="no-equipment">No ammo or consumables available for your tech level</div>
             )}
           </div>
         )}
