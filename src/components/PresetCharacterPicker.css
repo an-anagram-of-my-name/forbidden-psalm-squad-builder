@@ -124,7 +124,7 @@
   flex-shrink: 0;
 }
 
-.btn-secondary {
+.preset-picker-footer .btn-secondary {
   padding: 10px 24px;
   font-size: 15px;
   background-color: #666;
@@ -135,6 +135,6 @@
   transition: background-color 0.2s;
 }
 
-.btn-secondary:hover {
+.preset-picker-footer .btn-secondary:hover {
   background-color: #555;
 }
