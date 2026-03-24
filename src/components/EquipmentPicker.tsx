@@ -1,6 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { Character, Equipment, Item, Ammo, Armor, Weapon } from '../types';
 import { items28Psalms, ammo28Psalms, armor28Psalms, pastTechWeapons28Psalms, futureTechWeapons28Psalms } from '../types/equipment28Psalms';
+import { canUseArmor } from '../utils/equipment';
 import './EquipmentPicker.css';
 
 interface EquipmentPickerProps {
@@ -84,11 +85,26 @@ const EquipmentPicker: React.FC<EquipmentPickerProps> = ({ character, onEquipmen
     return selectedEquipment.some((eq) => eq.id === equipment.id);
   };
 
+  const isArmorSelected = useMemo(() => {
+    return selectedEquipment.some((eq) => eq.category === 'armor');
+  }, [selectedEquipment]);
+
   const canAddMore = remainingSlots > 0;
 
   const renderEquipmentCard = (equipment: Equipment) => {
     const isSelected = isEquipmentSelected(equipment);
-    const canAdd = canAddMore || isSelected;
+
+    let canAdd: boolean;
+    let strengthFails = false;
+
+    if (equipment.category === 'armor') {
+      const requiredStr = (equipment as Armor).requiredStrength;
+      strengthFails = requiredStr !== undefined && !canUseArmor(character.stats.strength, requiredStr);
+      const blockedByOtherArmor = isArmorSelected && !isSelected;
+      canAdd = !strengthFails && !blockedByOtherArmor;
+    } else {
+      canAdd = canAddMore || isSelected;
+    }
 
     return (
       <div
@@ -126,7 +142,7 @@ const EquipmentPicker: React.FC<EquipmentPickerProps> = ({ character, onEquipmen
               {(equipment as Armor).specialRules && (
                 <div className="detail special-rules">{(equipment as Armor).specialRules}</div>
               )}
-              {(equipment as Armor).requiredStrength && (
+              {strengthFails && (
                 <div className="detail requirement">Requires {(equipment as Armor).requiredStrength}+ Strength</div>
               )}
             </>
