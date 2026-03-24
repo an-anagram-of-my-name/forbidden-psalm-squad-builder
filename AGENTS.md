@@ -2253,5 +2253,315 @@ interface HPTrackingBarProps {
 ✅ Characters are properly paginated
 ✅ HP bars print with visible borders and high contrast for pencil marking
 
+## Feature: Add Characters to Squad from Presets
 
+### Overview
+Allow users to add saved character presets directly to a squad during the squad building process. This provides a quick way to populate squads with pre-built characters, improving workflow efficiency when building multiple squads.
+
+### Requirements
+
+#### UI Changes to SquadBuilder
+
+**Section Header Button Addition**:
+- Next to existing "+ Add Character" button, add a new "+ From Preset" button
+- Both buttons in the same section-header area
+- Buttons side-by-side or stacked layout (design choice)
+
+**Button States**:
+- "+ From Preset" button is **disabled** when squad already has 5 members
+- Show tooltip when disabled: "Squad has reached the maximum of 5 characters"
+- "+ From Preset" button is enabled when squad has fewer than 5 members
+
+#### Preset Picker Modal/View
+
+**New Component: PresetCharacterPicker**
+- Opens as a modal overlay when "+ From Preset" button is clicked
+- Displays all saved presets from the `presets` prop
+- Tech-level filtering: Hide presets with incompatible tech-level (doesn't match squad tech-level)
+- Uses CharacterSummary components for each preset display
+- CharacterSummary components rendered at **smaller scale** (visually zoomed out) to fit more on screen
+  - Suggested: 70-80% of normal size, or CSS transform: scale(0.75)
+  - Allow for compact grid display
+
+**Selection Behavior**:
+- User clicks on a preset's CharacterSummary to select it
+- Clicking adds that preset to the squad as a new character
+- Modal closes immediately after selection
+- Squad updates with new character
+- Squad's character count and total cost update
+
+**Character Conversion**:
+- When preset is selected, convert CharacterPreset to Character:
+  - Copy all fields: name, stats, flaw, feat, equipment
+  - Set character.techLevel to squad's techLevel (consistency check - already matching due to filtering)
+  - Generate new character.id (Date.now().toString())
+  - Character joins squad with all preset configuration intact
+
+#### CharacterSummary Component Changes
+
+**Remove Item Count Display**:
+- Delete the "Items:" line that shows `character.equipment.length` (lines 81-84 in current code)
+- This frees up space in the summary card
+
+**Add Equipment List (Names Only)**:
+- Replace the removed "Items:" row with a full equipment list
+- Display all equipment by **name only** (no costs, no additional properties)
+- Format as a simple list of names:
+  - Vertical list with one item per line
+  - Or comma-separated inline list (design choice)
+  - Example: "Sword, Shield, First Aid Kit" or separate lines
+- Keep existing "Cost:" and "Slots:" rows below the equipment list
+
+**Updated Equipment Section Looks Like**:
+```
+Equipment
+- Sword
+- Shield  
+- First Aid Kit
+Cost: 25 cr
+Slots: 3 / 7
+```
+
+Or inline:
+```
+Equipment
+Sword, Shield, First Aid Kit
+Cost: 25 cr
+Slots: 3 / 7
+```
+
+#### Data Flow
+
+1. User clicks "+ From Preset" button in SquadBuilder
+2. PresetCharacterPicker modal opens
+3. Modal receives:
+   - `presets`: CharacterPreset[] - all available presets
+   - `squadTechLevel`: TechLevel - current squad's tech level
+   - `onSelectPreset`: (preset: CharacterPreset) => void - callback on selection
+   - Optional: `isDisabled`: boolean - if squad is full (disable entire picker or show message)
+4. Modal filters presets by tech-level (only show matches)
+5. Renders each matching preset as a smaller CharacterSummary
+6. User clicks a preset's summary
+7. `onSelectPreset` callback fired with selected preset
+8. SquadBuilder converts preset to character and adds to squad
+9. Modal closes
+10. Squad display updates (character count, total cost)
+
+#### Component Architecture
+
+**Modified Components**:
+- `SquadBuilder.tsx`:
+  - Add "+ From Preset" button next to "+ Add Character"
+  - Add `showPresetPicker` state
+  - Add `handleSelectPresetForSquad` function to convert preset to character
+  - Pass presets and squad.techLevel to PresetCharacterPicker
+  
+- `CharacterSummary.tsx`:
+  - Remove item count display (lines 81-84)
+  - Add equipment list display (names only)
+  - Adjust CSS for compact layout with equipment list
+
+**New Component**:
+- `PresetCharacterPicker.tsx`:
+  - Modal/overlay component
+  - Displays presets filtered by tech-level
+  - Uses CharacterSummary at smaller scale
+  - Clickable preset items
+  - Close button/background click to dismiss
+  
+- `PresetCharacterPicker.css`:
+  - Modal styling
+  - Grid/flex layout for preset cards
+  - Scale/zoom styling for CharacterSummary
+  - Responsive sizing
+
+#### Implementation Details
+
+**Preset Filtering**:
+```typescript
+const compatiblePresets = presets.filter(p => p.techLevel === squadTechLevel);
+```
+
+**Preset to Character Conversion**:
+```typescript
+const presetToCharacter = (preset: CharacterPreset): Character => {
+  return {
+    id: Date.now().toString(),
+    name: preset.name,
+    stats: preset.stats,
+    flaw: preset.flaw,
+    feat: preset.feat,
+    equipment: preset.equipment,
+    techLevel: preset.techLevel,
+  };
+};
+```
+
+**CharacterSummary Props Enhancement** (optional, for reusability):
+```typescript
+interface CharacterSummaryProps {
+  character: Character;
+  scale?: number;  // Optional: apply transform scale
+  showEquipmentList?: boolean;  // Optional: show equipment names
+}
+```
+
+**CSS Scale Example**:
+```css
+.character-summary.compact {
+  transform: scale(0.75);
+  transform-origin: top left;
+}
+```
+
+#### UI/UX Considerations
+
+**Preset Picker Modal**:
+- Clear title: "Select a Character Preset"
+- Tech-level indicator in filter feedback: "Showing 3 of 5 presets (Past-Tech)"
+- Empty state if no compatible presets: "No compatible presets for this tech-level"
+- Grid layout to maximize visible presets (3-4 columns suggested)
+- Each preset card clickable (entire CharacterSummary clickable)
+- Visual feedback on hover (cursor: pointer, background highlight)
+
+**CharacterSummary at Smaller Scale**:
+- Rendered at 70-80% of normal size
+- Text remains readable
+- All information visible but compact
+- Maintains layout integrity (no wrapping issues)
+- Grid spacing: compact but not cramped
+
+**Integration with Squad Builder**:
+- Buttons consistent styling with existing "+ Add Character" button
+- Picker modal overlays existing content
+- Clear close options (X button, Cancel, click outside)
+- No scroll jump or layout shift when modal opens
+
+#### State Management
+
+**SquadBuilder adds**:
+```typescript
+const [showPresetPicker, setShowPresetPicker] = useState(false);
+
+const handleSelectPresetForSquad = (preset: CharacterPreset) => {
+  if (!squad) return;
+  
+  const newCharacter = presetToCharacter(preset);
+  const alignedCharacter: Character = {
+    ...newCharacter,
+    techLevel: squad.techLevel,
+  };
+  
+  setSquad({
+    ...squad,
+    characters: [...squad.characters, alignedCharacter],
+    updatedAt: new Date(),
+  });
+  setIsSaved(false);
+  setShowPresetPicker(false);
+};
+```
+
+#### Functional Requirements
+
+- ✅ "+ From Preset" button visible next to "+ Add Character"
+- ✅ Button disabled when squad has 5 members
+- ✅ Clicking opens preset picker modal
+- ✅ Modal shows only presets with matching tech-level
+- ✅ Presets displayed as smaller CharacterSummary components
+- ✅ User can click preset to add to squad
+- ✅ Modal closes after selection
+- ✅ New character added to squad with all preset data
+- ✅ Squad character count updates
+- ✅ Squad total cost updates
+- ✅ CharacterSummary displays full equipment list (names only)
+- ✅ CharacterSummary no longer shows item count
+- ✅ Presets with incompatible tech-level are hidden
+
+#### Non-Functional Requirements
+
+- Performance: Preset picker renders quickly even with many presets
+- Usability: Clear visual feedback on interaction
+- Consistency: New character integrates seamlessly with squad
+- Accessibility: Modal keyboard navigation (Escape to close, etc.)
+
+#### Testing Scenarios
+
+1. **Button Visibility**: "+ From Preset" button appears in section-header alongside "+ Add Character"
+2. **Button Disabled State**: Button disabled when squad has exactly 5 members
+3. **Preset Picker Opens**: Clicking button opens modal with preset list
+4. **Tech-Level Filtering**: Only presets matching squad tech-level are shown
+5. **Empty State**: If no compatible presets, show helpful message
+6. **Multiple Presets**: Several presets display in compact grid layout
+7. **Compact Sizing**: CharacterSummary components render at smaller scale, readable
+8. **Selection**: Clicking preset adds character to squad
+9. **Modal Closes**: Picker closes immediately after selection
+10. **Squad Updates**: Character count and total cost reflect new member
+11. **Equipment Display**: New character in summary shows equipment list (names)
+12. **No Item Count**: "Items:" count removed from CharacterSummary
+13. **Multiple Additions**: Can add multiple presets (up to 5 total)
+14. **Persistence**: Added preset character persists when squad is saved
+
+#### Edge Cases
+
+- Squad with 5 members: Button disabled, no action on click
+- No compatible presets: Modal shows empty state
+- Preset with no equipment: Equipment section empty/minimal
+- Preset with many equipment items: Equipment list wraps appropriately
+- Squad with mixed origin characters: Presets and manually-created characters coexist
+- Tech-level mismatch: Presets filtered out, not shown in picker
+
+#### Files to Modify
+
+1. **src/components/SquadBuilder.tsx**:
+   - Add `showPresetPicker` state
+   - Add "+ From Preset" button in section-header
+   - Add `handleSelectPresetForSquad` handler
+   - Render PresetCharacterPicker modal when `showPresetPicker` is true
+
+2. **src/components/CharacterSummary.tsx**:
+   - Remove item count display (lines 81-84)
+   - Add equipment list display (names only)
+   - Optional: Add `scale` prop for sizing control
+
+3. **src/components/CharacterSummary.css**:
+   - Update layout to accommodate equipment list
+   - Add optional `.compact` scale style
+
+#### Files to Create
+
+1. **src/components/PresetCharacterPicker.tsx**:
+   - New modal component for preset selection
+   - Props: presets, squadTechLevel, onSelectPreset, onCancel
+   - Filters and displays compatible presets
+   - Handles preset selection click
+
+2. **src/components/PresetCharacterPicker.css**:
+   - Modal styling and layout
+   - Grid layout for preset cards
+   - CharacterSummary scale styling
+   - Responsive design
+
+#### Future Enhancements (Out of Scope)
+
+- Sorting/filtering presets in picker (by cost, power level, etc.)
+- Search presets by name
+- Preview detailed stats before adding
+- Batch add multiple presets
+- Preset categories/folders
+- Duplicate preset in modal for immediate editing
+- Drag-and-drop reordering after adding to squad
+
+#### Success Criteria
+
+✅ "+ From Preset" button is visible and functional
+✅ Button disabled when squad has 5 members
+✅ Preset picker modal displays only compatible presets
+✅ Presets rendered at compact size with full information
+✅ User can select and add preset to squad
+✅ Squad updates correctly with new character
+✅ CharacterSummary shows equipment list (names only)
+✅ Item count removed from CharacterSummary
+✅ Modal closes after selection
+✅ No breaking changes to existing functionality
 
