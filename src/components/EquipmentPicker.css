@@ -230,6 +230,37 @@
     font-size: 14px;
 }
 
+.instance-count {
+    font-size: 14px;
+    font-weight: bold;
+    color: #4caf50;
+}
+
+.remove-all-btn {
+    position: absolute;
+    bottom: 8px;
+    right: 8px;
+    width: 24px;
+    height: 24px;
+    background-color: #f44336;
+    color: white;
+    border: none;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    font-size: 12px;
+    cursor: pointer;
+    transition: background-color 0.2s;
+    padding: 0;
+    line-height: 1;
+}
+
+.remove-all-btn:hover {
+    background-color: #da190b;
+}
+
 .no-equipment {
     padding: 30px;
     text-align: center;
