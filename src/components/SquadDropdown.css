@@ -1,0 +1,34 @@
+.squad-dropdown-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.squad-dropdown-label {
+  color: white;
+  font-weight: bold;
+  font-size: 14px;
+  white-space: nowrap;
+}
+
+.squad-dropdown-select {
+  padding: 8px 12px;
+  border: 2px solid #888;
+  border-radius: 4px;
+  background-color: #444;
+  color: white;
+  font-size: 14px;
+  cursor: pointer;
+  min-width: 220px;
+  transition: border-color 0.2s;
+}
+
+.squad-dropdown-select:focus {
+  outline: none;
+  border-color: #aaa;
+}
+
+.squad-dropdown-select option {
+  background-color: #333;
+  color: white;
+}

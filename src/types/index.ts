@@ -130,9 +130,11 @@ export interface Squad {
   techLevel: TechLevel;
   createdAt: Date;
   updatedAt: Date;
+  dateSaved?: string;
 }
 
 export interface AppState {
   presets: CharacterPreset[];
   squads: Squad[];
+  currentSquadId: string | null;
 }

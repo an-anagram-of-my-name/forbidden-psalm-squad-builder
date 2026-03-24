@@ -14,11 +14,20 @@
   justify-content: space-between;
   align-items: center;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  flex-wrap: wrap;
+  gap: 10px;
 }
 
 .squad-builder-header h1 {
   margin: 0;
   font-size: 28px;
+}
+
+.squad-builder-header-right {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  flex-wrap: wrap;
 }
 
 .btn-start-over {
@@ -52,8 +61,14 @@
 
 .squad-name-section {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   gap: 10px;
+}
+
+.squad-name-input-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
 }
 
 .squad-name-section label {
@@ -251,11 +266,56 @@
   background-color: #45a049;
 }
 
+.squad-name-input--error {
+  border-color: #e53935 !important;
+}
+
+.squad-name-error {
+  font-size: 12px;
+  color: #e53935;
+  font-weight: bold;
+}
+
+.squad-nav-bar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.auto-save-message {
+  font-size: 13px;
+  color: #a5d6a7;
+  font-style: italic;
+  white-space: nowrap;
+}
+
+.save-message {
+  font-size: 14px;
+  color: #a5d6a7;
+  font-style: italic;
+  margin-right: 10px;
+}
+
+.btn-save:disabled {
+  background-color: #9e9e9e;
+  cursor: not-allowed;
+  opacity: 0.7;
+}
+
+.btn-save:disabled:hover {
+  background-color: #9e9e9e;
+}
+
 @media (max-width: 768px) {
   .squad-builder-header {
     flex-direction: column;
     gap: 15px;
     text-align: center;
+  }
+
+  .squad-builder-header-right {
+    flex-direction: column;
+    align-items: center;
   }
 
   .squad-info {
