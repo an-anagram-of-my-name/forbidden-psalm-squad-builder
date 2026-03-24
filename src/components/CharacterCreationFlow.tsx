@@ -4,6 +4,7 @@ import StatDistributionPicker from './StatDistributionPicker';
 import FlawsAndFeatsPicker from './FlawsAndFeatsPicker';
 import EquipmentPicker from './EquipmentPicker';
 import { applyFlawFeatModifiers } from '../utils/stats';
+import { characterNames28Psalms } from '../types/characterNames28Psalms';
 import './CharacterCreationFlow.css';
 
 interface CharacterCreationFlowProps {
@@ -68,6 +69,11 @@ const CharacterCreationFlow: React.FC<CharacterCreationFlowProps> = ({
 
     const handleCharacterNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         setCharacterName(e.target.value);
+    };
+
+    const handleGenerateName = () => {
+        const randomName = characterNames28Psalms[Math.floor(Math.random() * characterNames28Psalms.length)];
+        setCharacterName(randomName);
     };
 
     const effectiveTechLevel: TechLevel = mode === 'preset'
@@ -188,13 +194,22 @@ const CharacterCreationFlow: React.FC<CharacterCreationFlowProps> = ({
 
                         <div className="character-name-input">
                             <label>Character Name</label>
-                            <input
-                                type="text"
-                                value={characterName}
-                                onChange={handleCharacterNameChange}
-                                placeholder="Enter character name"
-                                className="name-input"
-                            />
+                            <div className="name-input-row">
+                                <input
+                                    type="text"
+                                    value={characterName}
+                                    onChange={handleCharacterNameChange}
+                                    placeholder="Enter character name"
+                                    className="name-input"
+                                />
+                                <button
+                                    onClick={handleGenerateName}
+                                    className="btn-generate-name"
+                                    type="button"
+                                >
+                                    Generate Name
+                                </button>
+                            </div>
                         </div>
 
                         <div className="review-grid">
