@@ -535,3 +535,244 @@ Both Squad and Preset controls are visible simultaneously in the nav bar.
 | Starting Step | Stats | Stats (new) or Review (editing) |
 | Storage | In squad.characters | In appState.presets |
 | Editing Entry | Via squad → character | Direct from Preset Dropdown |
+
+
+
+## Feature: Edit Squad Characters
+
+### Overview
+Characters in a squad can now be edited inline. Users can click an "Edit" button on any character card to open the character creation flow at the Review step, make changes to any aspect of the character (stats, flaws, feats, equipment, name), and save the updated character back to the squad. This mirrors the existing preset editing workflow but applies to squad members.
+
+### Key Concepts
+- **Edit Mode**: Character editing starts at the Review step with all character data pre-populated
+- **Tech Level is Locked**: The character's tech level cannot be changed (it's fixed to the squad's tech level)
+- **One at a Time**: Only one character can be edited at a time; editing a second character cancels the first
+- **Unsaved Changes Tracking**: Edits to a character mark the squad as unsaved (triggers autosave on navigation away)
+- **State Preservation**: All character data persists through the edit flow, allowing users to navigate back through steps to modify any field
+
+### UI Components
+
+#### CharacterSummary Changes (Modified)
+- **Display**: Unchanged - still shows stats, traits, equipment summary
+- **Controls Below Summary**: Two buttons side-by-side:
+  - **Edit Button** (primary action): Opens character editor at Review step
+  - **Remove Button** (secondary action): Deletes character from squad
+
+#### SquadBuilder Character Grid (Modified)
+- **Character Cards Layout**: Each character displayed in grid with summary card + buttons
+- **Buttons Container**: `.character-actions` div below card contains Edit and Remove buttons
+- **Conditional Rendering**: 
+  - When no character is being edited: show all character cards with Edit/Remove buttons
+  - When one character is being edited: hide character grid, show CharacterCreationFlow overlay
+  - Character being edited is no longer visible in the grid (replaced by editor)
+
+#### CharacterCreationFlow for Edit Mode (Modified)
+- Existing component already supports edit mode for presets
+- For character editing: pass `initialCharacter` prop (new prop alongside `initialPreset`)
+- Behavior matches preset editing but with squad-specific logic
+- Header updates to show "Edit Character: [CharacterName]"
+- Tech level remains hidden/read-only (locked to squad's tech level)
+
+### State Management in SquadBuilder
+
+**New State Variables:**
+```typescript
+const [editingCharacterId, setEditingCharacterId] = useState<string | null>(null);
+```
+
+**New Handlers:**
+- `handleEditCharacter(character: Character)`: Opens editor for character
+  - Sets `editingCharacterId`
+  - Shows CharacterCreationFlow
+- `handleCharacterUpdated(updatedCharacter: Character)`: Saves edited character
+  - Replaces old character in squad with updated version
+  - Marks squad as unsaved
+  - Closes editor (`setEditingCharacterId(null)`)
+  - Shows success message
+- `handleCancelEdit()`: Closes editor without saving
+  - Clears `editingCharacterId`
+  - Returns to character grid view
+
+### User Workflows
+
+#### Editing an Existing Character
+1. User clicks "Edit" button on character card in grid
+2. Character grid disappears, CharacterCreationFlow opens at Review step
+3. All character data pre-filled (name, stats, flaw, feat, equipment)
+4. User can:
+   - Change character name directly
+   - Click "Back" to navigate to Equipment step and modify equipped items
+   - Click "Back" again to modify Flaws/Feats
+   - Click "Back" again to modify Stats and tech level (tech level selector hidden/disabled)
+5. User navigates back to Review step with all changes intact
+6. Clicks "Update Character" button
+7. Character is updated in squad with new data
+8. Editor closes, character grid re-displays with updated character card
+9. Squad marked as unsaved (if not already)
+10. Brief success message: "Character updated"
+
+#### Canceling an Edit
+1. During edit, user clicks "Cancel" button
+2. Unsaved changes discarded (no confirmation needed for edits - only prompt on squad navigation away)
+3. Editor closes, character grid returns
+4. Character remains unchanged in squad
+
+#### Editing Multiple Characters Sequentially
+1. User edits Character A and saves
+2. Grid returns with Character A updated
+3. User immediately clicks Edit on Character B
+4. Character B editor opens at Review step
+5. Previous edit state is completely cleared
+
+### Implementation Details
+
+**CharacterSummary.tsx Modifications:**
+- Add `onEdit?: (character: Character) => void` to props
+- Render Edit button conditionally (only if `onEdit` callback provided)
+- Keep Remove button rendering unchanged
+- New button group styling with `.character-actions` container
+
+**SquadBuilder.tsx Modifications:**
+- Add `editingCharacterId: string | null` state
+- Add three handler functions (see State Management section above)
+- Modify character grid rendering (lines 324-336):
+  - Wrap each character card in `.character-item` with Edit + Remove buttons
+  - Use `.character-actions` container for buttons side-by-side
+- Add conditional rendering:
+  - If `editingCharacterId === null`: show character grid
+  - If `editingCharacterId !== null`: show CharacterCreationFlow in modal/overlay
+- Pass `onEdit={handleEditCharacter}` to CharacterSummary components
+- Render CharacterCreationFlow when editing:
+  ```typescript
+  {editingCharacterId && (
+    <div className="character-edit-overlay">
+      <CharacterCreationFlow
+        mode="squad"
+        techLevel={squad.techLevel}
+        initialCharacter={squad.characters.find(c => c.id === editingCharacterId)}
+        onCharacterUpdated={handleCharacterUpdated}
+        onCancel={handleCancelEdit}
+      />
+    </div>
+  )}
+  ```
+
+**CharacterCreationFlow.tsx Modifications:**
+- Add `initialCharacter?: Character | null` prop to interface
+- Add `onCharacterUpdated?: (character: Character) => void` callback
+- Detect edit mode: `const isEditingCharacter = !!initialCharacter && mode === 'squad'`
+- When editing character (squad mode):
+  - Start at Review step: `isEditingCharacter ? 'review' : 'stats'`
+  - Pre-fill state from `initialCharacter`
+  - Keep `selectedTechLevel` from squad (read from `techLevel` prop, not user-selectable)
+  - Hide or disable tech level selector in Stats step
+  - Button text on Review: "Update Character" (instead of "Create Character")
+- Update `handleCreateCharacter`:
+  ```typescript
+  if (isEditingCharacter) {
+    const updatedCharacter: Character = {
+      ...initialCharacter!,
+      name: characterName.trim(),
+      stats,
+      flaw,
+      feat,
+      equipment,
+      // techLevel stays the same (from prop)
+    };
+    onCharacterUpdated?.(updatedCharacter);
+  } else {
+    // existing new character logic
+  }
+  ```
+
+**CSS Changes:**
+
+New styles in `SquadBuilder.css`:
+```css
+.character-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.btn-edit-character {
+  flex: 1;
+  padding: 8px 16px;
+  background-color: #4CAF50; /* or your primary color */
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: 500;
+}
+
+.btn-edit-character:hover {
+  background-color: #45a049;
+  opacity: 0.9;
+}
+
+.btn-edit-character:active {
+  transform: scale(0.98);
+}
+
+.character-edit-overlay {
+  position: relative;
+  z-index: 10;
+  background: white;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  padding: 20px;
+  margin: 20px 0;
+}
+```
+
+Updates to `CharacterCreationFlow.css`:
+- Add styling for read-only/disabled tech level selector in edit mode
+- Ensure Review step header shows "Edit Character: [Name]" when editing
+- Keep footer buttons sticky (from previous enhancement)
+
+### Edge Cases
+
+**Tech Level Selector Behavior in Edit Mode:**
+- In Stats step while editing: tech level selector shown but disabled
+- Visual indication: grayed out, tooltip: "Tech level is locked to squad's tech level"
+- Attempting to proceed skips tech level selection (already have it from squad)
+
+**Character Deletion While Editing:**
+- Not possible: cannot delete a character that's currently being edited
+- Could add safeguard: disable Remove button while any character is being edited
+
+**Squad Navigation During Edit:**
+- If user navigates away from squad while editing: lose edit changes (no warning, similar to new character creation)
+- Edit state cleared on squad switch
+
+**Duplicate Character Names:**
+- Allowed: multiple characters in same squad can have same name (unlike squad names)
+- No validation needed
+
+**Empty Squad Name with Edited Character:**
+- User can edit character without squad having a valid name
+- Squad still needs valid name to save (existing behavior unchanged)
+
+### Differences from Preset Editing
+
+| Aspect | Preset Editing | Character Editing |
+|--------|----------------|-------------------|
+| Starting Step | Review | Review |
+| Tech Level | User-selectable | Locked to squad's tech level |
+| Pre-filled Data | All preset fields | All character fields |
+| Button Text | "Update Preset" | "Update Character" |
+| Success Message | "Preset updated" | "Character updated" |
+| State Reset | On new preset load | On grid return |
+| Squad Impact | N/A (presets separate) | Marks squad unsaved |
+
+### Testing Scenarios
+
+1. **Basic Edit**: Edit character name, verify changes saved
+2. **Multi-step Edit**: Navigate back through steps, modify stats, verify all changes persist
+3. **Sequential Edits**: Edit multiple characters one after another
+4. **Cancel Edit**: Start editing, click Cancel, verify no changes saved
+5. **Unsaved Changes**: Edit character, switch squads (no warning, changes lost)
+6. **Auto-save**: Edit character and save, navigate away, verify squad auto-saved
+7. **Tech Level Lock**: Verify tech level cannot be changed during edit
+8. **Equipment Changes**: Edit character equipment (add/remove items), verify slots still validated
