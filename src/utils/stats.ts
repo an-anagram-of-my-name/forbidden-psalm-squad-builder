@@ -1,4 +1,5 @@
-import { Stats, DerivedStats } from '../types';
+import { Stats, DerivedStats, Flaw, Feat } from '../types';
+import { flaws28Psalms, feats28Psalms } from '../types/featsandflaws28Psalms';
 
 /**
  * Calculate derived stats from base stats
@@ -27,8 +28,35 @@ export function isValidStatDistribution(values: number[]): boolean {
 }
 
 /**
- * Get the two valid stat distributions
+ * Apply stat modifiers from a flaw and/or feat to base stats.
+ * Returns a new Stats object with modifiers applied.
  */
+export function applyFlawFeatModifiers(baseStats: Stats, flaw: Flaw | null, feat: Feat | null): Stats {
+  const modified: Stats = { ...baseStats };
+
+  if (flaw) {
+    const flawData = flaws28Psalms.find((f) => f.type === flaw.type);
+    if (flawData?.statModifiers) {
+      modified.agility += flawData.statModifiers.agility ?? 0;
+      modified.presence += flawData.statModifiers.presence ?? 0;
+      modified.strength += flawData.statModifiers.strength ?? 0;
+      modified.toughness += flawData.statModifiers.toughness ?? 0;
+    }
+  }
+
+  if (feat) {
+    const featData = feats28Psalms.find((f) => f.type === feat.type);
+    if (featData?.statModifiers) {
+      modified.agility += featData.statModifiers.agility ?? 0;
+      modified.presence += featData.statModifiers.presence ?? 0;
+      modified.strength += featData.statModifiers.strength ?? 0;
+      modified.toughness += featData.statModifiers.toughness ?? 0;
+    }
+  }
+
+  return modified;
+}
+
 export function getValidStatDistributions(): number[][] {
   return [
     [3, 1, 0, -3],

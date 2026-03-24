@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { Flaw, Feat, FlawType, FeatType, Stats } from '../types';
 import { flaws28Psalms, feats28Psalms } from '../types/featsandflaws28Psalms';
+import { applyFlawFeatModifiers } from '../utils/stats';
 import './FlawsAndFeatsPicker.css';
 
 interface FlawsAndFeatsPickerProps {
@@ -31,18 +32,30 @@ const FlawsAndFeatsPicker: React.FC<FlawsAndFeatsPickerProps> = ({ onSelectFlawA
 
     const isComplete = selectedFlawType !== null && selectedFeatType !== null;
 
+    const effectiveStats = useMemo(() => {
+        if (!stats) return null;
+        // Create minimal objects with just the type needed for modifier lookup
+        const flawObj: Flaw | null = selectedFlawType
+            ? { type: selectedFlawType, description: '' }
+            : null;
+        const featObj: Feat | null = selectedFeatType
+            ? { type: selectedFeatType, description: '' }
+            : null;
+        return applyFlawFeatModifiers(stats, flawObj, featObj);
+    }, [stats, selectedFlawType, selectedFeatType]);
+
     return (
         <div className="flaws-and-feats-picker">
             <div className="picker-header">
                 <h2>Select Flaw & Feat</h2>
             </div>
 
-            {stats && (
+            {effectiveStats && (
                 <div className="current-stats">
                     {(['agility', 'presence', 'strength', 'toughness'] as (keyof Stats)[]).map((stat) => (
                         <div key={stat} className="stat-box">
                             <div className="stat-label">{stat.charAt(0).toUpperCase() + stat.slice(1)}</div>
-                            <div className="stat-value">{stats[stat] > 0 ? `+${stats[stat]}` : stats[stat]}</div>
+                            <div className="stat-value">{effectiveStats[stat] > 0 ? `+${effectiveStats[stat]}` : effectiveStats[stat]}</div>
                         </div>
                     ))}
                 </div>

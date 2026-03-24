@@ -4,11 +4,19 @@
 
 import { FlawType, FeatType } from './index';
 
+export interface StatModifiers {
+  agility?: number;
+  presence?: number;
+  strength?: number;
+  toughness?: number;
+}
+
 export interface FlawData {
   number: number;
   name: string;
   description: string;
   type: FlawType;
+  statModifiers?: StatModifiers;
 }
 
 export interface FeatData {
@@ -16,6 +24,7 @@ export interface FeatData {
   name: string;
   description: string;
   type: FeatType;
+  statModifiers?: StatModifiers;
 }
 
 export const flaws28Psalms: FlawData[] = [
@@ -30,6 +39,7 @@ export const flaws28Psalms: FlawData[] = [
     name: 'Too Many Teeth',
     description: 'Warband member suffers -2 to Presence.',
     type: 'too-many-teeth',
+    statModifiers: { presence: -2 },
   },
   {
     number: 3,

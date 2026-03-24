@@ -1,7 +1,8 @@
 import React, { useState, useMemo } from 'react';
-import { Character, Equipment, Item, Ammo, Armor, Weapon } from '../types';
+import { Character, Equipment, Item, Ammo, Armor, Weapon, Stats } from '../types';
 import { items28Psalms, ammo28Psalms, armor28Psalms, pastTechWeapons28Psalms, futureTechWeapons28Psalms } from '../types/equipment28Psalms';
 import { canUseArmor } from '../utils/equipment';
+import { applyFlawFeatModifiers } from '../utils/stats';
 import './EquipmentPicker.css';
 
 interface EquipmentPickerProps {
@@ -15,15 +16,19 @@ const EquipmentPicker: React.FC<EquipmentPickerProps> = ({ character, onEquipmen
   const [selectedEquipment, setSelectedEquipment] = useState<Equipment[]>(character.equipment || []);
   const [activeTab, setActiveTab] = useState<EquipmentTab>('weapons');
 
+  const effectiveStats = useMemo(() => {
+    return applyFlawFeatModifiers(character.stats, character.flaw, character.feat);
+  }, [character.stats, character.flaw, character.feat]);
+
   // Calculate total slots used
   const slotsUsed = useMemo(() => {
     return selectedEquipment.reduce((total, eq) => total + eq.slots, 0);
   }, [selectedEquipment]);
 
-  // Calculate slot capacity: 5 + Strength modifier
+  // Calculate slot capacity: 5 + Strength modifier (using effective stats)
   const slotCapacity = useMemo(() => {
-    return 5 + character.stats.strength;
-  }, [character.stats.strength]);
+    return 5 + effectiveStats.strength;
+  }, [effectiveStats.strength]);
 
   const remainingSlots = slotCapacity - slotsUsed;
 
@@ -99,7 +104,7 @@ const EquipmentPicker: React.FC<EquipmentPickerProps> = ({ character, onEquipmen
 
     if (equipment.category === 'armor') {
       const requiredStr = (equipment as Armor).requiredStrength;
-      strengthFails = requiredStr !== undefined && !canUseArmor(character.stats.strength, requiredStr);
+      strengthFails = requiredStr !== undefined && !canUseArmor(effectiveStats.strength, requiredStr);
       const blockedByOtherArmor = isArmorSelected && !isSelected;
       canAdd = !strengthFails && !blockedByOtherArmor;
     } else {
@@ -175,10 +180,10 @@ const EquipmentPicker: React.FC<EquipmentPickerProps> = ({ character, onEquipmen
       </div>
 
       <div className="current-stats">
-        {(['agility', 'presence', 'strength', 'toughness'] as (keyof typeof character.stats)[]).map((stat) => (
+        {(['agility', 'presence', 'strength', 'toughness'] as (keyof Stats)[]).map((stat) => (
           <div key={stat} className="stat-box">
             <div className="stat-label">{stat.charAt(0).toUpperCase() + stat.slice(1)}</div>
-            <div className="stat-value">{character.stats[stat] > 0 ? `+${character.stats[stat]}` : character.stats[stat]}</div>
+            <div className="stat-value">{effectiveStats[stat] > 0 ? `+${effectiveStats[stat]}` : effectiveStats[stat]}</div>
           </div>
         ))}
       </div>

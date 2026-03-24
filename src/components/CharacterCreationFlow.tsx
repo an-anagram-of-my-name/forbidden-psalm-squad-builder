@@ -1,8 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { Character, Equipment, Stats, Flaw, Feat, TechLevel } from '../types';
 import StatDistributionPicker from './StatDistributionPicker';
 import FlawsAndFeatsPicker from './FlawsAndFeatsPicker';
 import EquipmentPicker from './EquipmentPicker';
+import { applyFlawFeatModifiers } from '../utils/stats';
 import './CharacterCreationFlow.css';
 
 interface CharacterCreationFlowProps {
@@ -71,6 +72,11 @@ const CharacterCreationFlow: React.FC<CharacterCreationFlowProps> = ({ techLevel
     const stepOrder: CreationStep[] = ['stats', 'flaws-feats', 'equipment', 'review'];
     const currentStepIndex = stepOrder.indexOf(currentStep);
 
+    const effectiveStats = useMemo(() => {
+        if (!stats) return null;
+        return applyFlawFeatModifiers(stats, flaw, feat);
+    }, [stats, flaw, feat]);
+
     return (
         <div className="character-creation-flow">
             <div className="flow-header">
@@ -138,12 +144,12 @@ const CharacterCreationFlow: React.FC<CharacterCreationFlowProps> = ({ techLevel
                         <div className="review-grid">
                             <div className="review-section-card">
                                 <h3>Stats</h3>
-                                {stats && (
+                                {effectiveStats && (
                                     <ul className="stats-list">
-                                        <li>Agility: {stats.agility > 0 ? '+' : ''}{stats.agility}</li>
-                                        <li>Presence: {stats.presence > 0 ? '+' : ''}{stats.presence}</li>
-                                        <li>Strength: {stats.strength > 0 ? '+' : ''}{stats.strength}</li>
-                                        <li>Toughness: {stats.toughness > 0 ? '+' : ''}{stats.toughness}</li>
+                                        <li>Agility: {effectiveStats.agility > 0 ? '+' : ''}{effectiveStats.agility}</li>
+                                        <li>Presence: {effectiveStats.presence > 0 ? '+' : ''}{effectiveStats.presence}</li>
+                                        <li>Strength: {effectiveStats.strength > 0 ? '+' : ''}{effectiveStats.strength}</li>
+                                        <li>Toughness: {effectiveStats.toughness > 0 ? '+' : ''}{effectiveStats.toughness}</li>
                                     </ul>
                                 )}
                             </div>

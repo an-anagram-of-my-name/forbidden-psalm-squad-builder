@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest';
-import { isValidStatDistribution, getValidStatDistributions, getAvailableModifiers } from './stats';
+import { isValidStatDistribution, getValidStatDistributions, getAvailableModifiers, applyFlawFeatModifiers } from './stats';
+import { Stats, Flaw, Feat } from '../types';
 
 describe('isValidStatDistribution', () => {
     it('accepts [3, 1, 0, -3]', () => {
@@ -82,5 +83,48 @@ describe('StatDistributionPicker duplicate value validation', () => {
     it('returns empty array when all values are consumed', () => {
         const available = getAvailableModifiers(dist, [2, 2, -1, -2]);
         expect(available).toEqual([]);
+    });
+});
+
+describe('applyFlawFeatModifiers', () => {
+    const baseStats: Stats = { agility: 2, presence: 1, strength: 0, toughness: -1 };
+
+    it('returns base stats unchanged when flaw and feat are null', () => {
+        const result = applyFlawFeatModifiers(baseStats, null, null);
+        expect(result).toEqual(baseStats);
+    });
+
+    it('does not mutate the baseStats object', () => {
+        const original = { ...baseStats };
+        applyFlawFeatModifiers(baseStats, { type: 'too-many-teeth', description: '' }, null);
+        expect(baseStats).toEqual(original);
+    });
+
+    it('applies Too Many Teeth flaw: -2 to presence', () => {
+        const flaw: Flaw = { type: 'too-many-teeth', description: '' };
+        const result = applyFlawFeatModifiers(baseStats, flaw, null);
+        expect(result.presence).toBe(baseStats.presence - 2);
+        expect(result.agility).toBe(baseStats.agility);
+        expect(result.strength).toBe(baseStats.strength);
+        expect(result.toughness).toBe(baseStats.toughness);
+    });
+
+    it('returns base stats unchanged for a flaw with no statModifiers', () => {
+        const flaw: Flaw = { type: 'xeno', description: '' };
+        const result = applyFlawFeatModifiers(baseStats, flaw, null);
+        expect(result).toEqual(baseStats);
+    });
+
+    it('returns base stats unchanged for a feat with no statModifiers', () => {
+        const feat: Feat = { type: 'marine', description: '' };
+        const result = applyFlawFeatModifiers(baseStats, null, feat);
+        expect(result).toEqual(baseStats);
+    });
+
+    it('stacks flaw and feat modifiers together', () => {
+        const flaw: Flaw = { type: 'too-many-teeth', description: '' };
+        const feat: Feat = { type: 'marine', description: '' };
+        const result = applyFlawFeatModifiers(baseStats, flaw, feat);
+        expect(result.presence).toBe(baseStats.presence - 2);
     });
 });
