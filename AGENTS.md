@@ -1509,3 +1509,311 @@ export function getDerivedStatValue(
 - Derived stats are display-only enhancements
 - Existing stat selection logic unchanged
 - Equipment Slots already displayed; HP and Movement are additions
+
+## Feature: Apply Equipment Modifiers to Derived Stats
+
+### Overview
+Equipment items (primarily armor) can apply modifiers to derived stats. Currently, `Homemade` armor has a `-1 movement` modifier that is defined in the equipment data but not applied to the final Movement stat displayed to users. This feature ensures that all equipment-based modifiers (movement, HP, equipment slots) are properly calculated and applied to derived stats throughout the character creation flow and summary.
+
+### Problem Statement
+- Equipment types already support optional modifier properties (`movementModifier` on Armor)
+- The derived stats calculation chain handles base stats → flaw/feat modifiers → derived stats
+- **Gap**: Equipment modifiers are not applied to derived stats, so Homemade armor's `-1 movement` is ignored
+- `getCharacterMovement()` in `utils/equipment.ts` exists but is not integrated into the derived stats calculation pipeline
+- Users don't see equipment penalties reflected in their final Movement stat
+
+### Data Model
+
+**Equipment Modifier Properties** (already exist in types):
+- `Armor` interface (line 82 in src/types/index.ts): `movementModifier?: number`
+- Other equipment types (Weapon, Item, Ammo, Consumable) may support modifiers in future
+
+**Future-Proofing for Other Modifiers**:
+- HP modifiers (e.g., armor that provides +2 HP or penalties)
+- Equipment Slots modifiers (e.g., harness that adds +1 slot)
+- Future derived stat modifiers for game expansions
+
+### Stat Modifier Calculation Chain
+
+**Current (Incomplete)**:
+```
+Base Stats (from Step 1)
+    ↓
++ Flaw/Feat Modifiers (from Step 2) via applyFlawFeatModifiers()
+    ↓
+= Effective Stats (modified primary stats)
+    ↓
+calculateDerivedStats(effectiveStats)
+    ↓
+= Derived Stats (HP, Movement, Slots)
+    ↓
+X STOP - Equipment modifiers not applied
+```
+
+**New (Complete)**:
+```
+Base Stats (from Step 1)
+    ↓
++ Flaw/Feat Modifiers (from Step 2) via applyFlawFeatModifiers()
+    ↓
+= Effective Stats (modified primary stats)
+    ↓
+calculateDerivedStats(effectiveStats)
+    ↓
+= Base Derived Stats (HP, Movement, Slots)
+    ↓
++ Equipment Modifiers (from Step 3) via calculateFinalDerivedStats()
+    ↓
+= Final Derived Stats (with all modifiers applied)
+```
+
+### Implementation Details
+
+#### 1. Type System (types/index.ts)
+
+**No type changes needed** - Armor already has `movementModifier?: number` (line 82)
+
+**Future Enhancement** (out of scope for this feature, but designed for):
+```typescript
+// Optional: Add modifier support to other equipment types
+export interface Weapon extends BaseEquipment {
+  // ... existing properties
+  movementModifier?: number;
+  hpModifier?: number;
+  slotsModifier?: number;
+}
+
+export interface Item extends BaseEquipment {
+  // ... existing properties
+  movementModifier?: number;
+  hpModifier?: number;
+  slotsModifier?: number;
+}
+```
+
+#### 2. Utility Functions (utils/stats.ts)
+
+**Add new function** `calculateFinalDerivedStats()`:
+
+```typescript
+/**
+ * Calculate final derived stats with all modifiers applied.
+ * 
+ * Chain:
+ * 1. Base stats
+ * 2. Apply flaw/feat modifiers to primary stats
+ * 3. Calculate base derived stats from modified primary stats
+ * 4. Apply equipment modifiers to derived stats
+ * 5. Return final derived stats
+ * 
+ * @param baseStats - Base stats from Step 1 (before any modifiers)
+ * @param flaw - Selected flaw (Step 2)
+ * @param feat - Selected feat (Step 2)
+ * @param equipment - Selected equipment (Step 3)
+ * @returns Final DerivedStats with all modifiers applied
+ */
+export function calculateFinalDerivedStats(
+  baseStats: Stats,
+  flaw: Flaw | null,
+  feat: Feat | null,
+  equipment: Equipment[]
+): DerivedStats {
+  // Step 1: Apply flaw/feat modifiers to primary stats
+  const effectiveStats = applyFlawFeatModifiers(baseStats, flaw, feat);
+  
+  // Step 2: Calculate base derived stats from modified primary stats
+  const derived = calculateDerivedStats(effectiveStats);
+  
+  // Step 3: Sum equipment modifiers for each derived stat
+  const equipmentModifiers = {
+    movement: 0,
+    hp: 0,
+    equipmentSlots: 0,
+  };
+  
+  equipment.forEach((item) => {
+    if (item.movementModifier) {
+      equipmentModifiers.movement += item.movementModifier;
+    }
+    if (item.hpModifier) {
+      equipmentModifiers.hp += item.hpModifier;
+    }
+    if (item.slotsModifier) {
+      equipmentModifiers.equipmentSlots += item.slotsModifier;
+    }
+  });
+  
+  // Step 4: Apply equipment modifiers to derived stats
+  return {
+    hp: derived.hp + equipmentModifiers.hp,
+    movement: derived.movement + equipmentModifiers.movement,
+    equipmentSlots: derived.equipmentSlots + equipmentModifiers.equipmentSlots,
+  };
+}
+```
+
+**Deprecate/Update existing function** `getCharacterMovement()` in utils/equipment.ts:
+
+Current implementation (lines 26-35) only accounts for armor penalties. Mark as deprecated since `calculateFinalDerivedStats()` is now the source of truth:
+
+```typescript
+/**
+ * @deprecated Use calculateFinalDerivedStats() instead.
+ * This only handles armor penalties and is not part of the stat modification chain.
+ */
+export function getCharacterMovement(baseMovement: number, equippedItems: Equipment[]): number {
+    // ... existing implementation unchanged for backward compatibility
+}
+```
+
+#### 3. Component Changes
+
+**EquipmentPicker.tsx**:
+- After user selects equipment, display final derived stats using `calculateFinalDerivedStats()`
+- Current stats row shows: base stats + flaw/feat modifiers + equipment modifiers
+- Example: If Agility is +2 and Homemade armor is equipped:
+  - Base Movement: 5 + 2 = 7
+  - Homemade modifier: -1
+  - Final Movement: 7 - 1 = 6
+
+**CharacterCreationFlow.tsx (Review Step)**:
+- Display final derived stats using `calculateFinalDerivedStats()`
+- Shows complete calculation accounting for all modifiers
+
+**CharacterSummary.tsx**:
+- Display final derived stats using `calculateFinalDerivedStats()`
+- Uses full equipment list from saved character
+- Shows actual in-game stat values
+
+#### 4. Data Flow Example
+
+**Scenario**: Character with Agility +2, wearing Homemade armor
+
+**Stats Step (Step 1)**:
+- User assigns: Agility +2
+- Base stats: agility: 2
+- Base derived: movement = 5 + 2 = 7
+- Display: "Movement: 7"
+
+**Flaws & Feats Step (Step 2)**:
+- User selects flaw: "Weak Bones" (no agility modifier)
+- Effective stats: agility: 2 (no change)
+- Effective derived: movement = 5 + 2 = 7
+- Display: "Movement: 7"
+
+**Equipment Step (Step 3)**:
+- User equips: Homemade armor (movementModifier: -1)
+- Call `calculateFinalDerivedStats(baseStats, flaw, feat, equipment)`
+- Final derived: movement = 7 + (-1) = 6
+- Display: "Movement: 6" with note: "Base 7, Homemade -1"
+
+**Review Step (Step 4)**:
+- Display final derived stats: movement = 6
+
+**CharacterSummary** (saved character):
+- Display final derived stats: movement = 6
+- Accounts for all modifiers: base + flaw/feat + equipment
+
+### Usage Pattern
+
+**In Components**:
+
+```typescript
+// When displaying final stats (EquipmentPicker, Review, CharacterSummary)
+const finalDerived = calculateFinalDerivedStats(
+  character.stats,
+  character.flaw,
+  character.feat,
+  selectedEquipment  // Current equipment selection
+);
+
+// Display finalDerived.movement instead of base movement
+// Show breakdown if desired: Base {derived.movement} + Equipment {equipmentModifiers.movement}
+```
+
+**Before Equipment Step** (Stats, Flaws & Feats):
+```typescript
+// Use existing functions for incomplete picture
+const effectiveStats = applyFlawFeatModifiers(baseStats, flaw, feat);
+const derived = calculateDerivedStats(effectiveStats);
+// Display derived.movement (equipment not selected yet, so no modifiers)
+```
+
+### Behavioral Requirements
+
+1. **Real-Time Updates**: Movement (and other derived stats) update immediately when equipment is selected/deselected in EquipmentPicker
+2. **Negative Modifiers**: Modifiers are applied as-is (negative for penalties, positive for bonuses)
+3. **Multiple Equipment**: All equipped items contribute their modifiers (e.g., 2 armor pieces each -1 movement = -2 total)
+4. **Zero Modifiers**: Equipment without modifiers has no effect on derived stats
+5. **Consistency**: Same calculation used everywhere (Stats display, Review, CharacterSummary)
+
+### Display Requirements
+
+**Show Equipment Impact** (Optional enhancement - UX improvement):
+
+Consider showing breakdown in tooltips or parentheses:
+```
+Movement: 6 (Base 7 - Homemade 1)
+HP: 10 (Base 10)
+Slots: 7 (Base 7)
+```
+
+Or just final values with hover tooltips showing modifiers.
+
+### Edge Cases
+
+1. **No Equipment**: Modifiers sum to 0, final = base
+2. **Multiple Modifiers Same Type**: Sum all contributions
+3. **Conflicting Modifiers**: Sum algebraically (e.g., +1 and -2 = -1 net)
+4. **Equipment Without Modifiers**: Ignored in calculation
+5. **Null Equipment Array**: Treat as empty array (no modifiers)
+
+### Testing Scenarios
+
+1. **Base Only**: No flaw/feat/equipment → final derived = base derived
+2. **Flaw/Feat Only**: Equipment is empty → final derived accounts for stat modifiers but not equipment
+3. **Equipment Only**: Homemade armor selected with base stats → movement reduced by 1
+4. **Complete Chain**: All modifiers applied → final movement = base + flaw/feat modifiers + equipment modifiers
+5. **Multiple Equipment**: 2+ armor pieces each with movement penalty → penalties stack
+6. **Persistence**: Saved character displays final derived stats correctly in CharacterSummary
+7. **Modification**: Changing equipment in CharacterSummary recalculates if edit feature is used
+
+### Backward Compatibility
+
+- `calculateDerivedStats()` unchanged (still used for intermediate calculations)
+- `getCharacterMovement()` deprecated but still works
+- Existing stat displays updated to use new calculation
+- No breaking changes to component APIs
+
+### Files to Modify
+
+1. **src/utils/stats.ts**
+   - Add `calculateFinalDerivedStats()` function
+   - Mark `getCharacterMovement()` as deprecated (if used elsewhere)
+
+2. **src/components/EquipmentPicker.tsx**
+   - Use `calculateFinalDerivedStats()` when displaying current stats
+   - Show final movement accounting for equipped armor
+
+3. **src/components/CharacterCreationFlow.tsx**
+   - Use `calculateFinalDerivedStats()` in Review step
+
+4. **src/components/CharacterSummary.tsx**
+   - Use `calculateFinalDerivedStats()` for final stat display
+
+### Future Enhancements (Out of Scope)
+
+- Add `hpModifier` and `slotsModifier` to Weapon, Item, Consumable types
+- Support equipment that grants bonuses (+1 movement boots, etc.)
+- UI breakdown showing modifier sources
+- Equipment modifier requirements (e.g., "Can't use this armor if Toughness < 2")
+- Stacking limits (e.g., "Movement can't go below 1" safety floor)
+
+### Success Criteria
+
+✅ Homemade armor's `-1 movement` is reflected in EquipmentPicker display
+✅ Final Movement stat in Review step accounts for equipment modifiers
+✅ CharacterSummary displays correct Movement with equipment modifiers applied
+✅ All tests pass for complete stat calculation chain
+✅ No regression in existing stat calculations
+✅ Code is extensible for future modifier types (HP, Slots modifiers on other equipment)
