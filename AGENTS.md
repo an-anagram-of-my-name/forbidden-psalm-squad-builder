@@ -38,6 +38,75 @@ project/
 ├── tsconfig.json 
 └── .github/workflows/ # GitHub Actions
 
+## Component Architecture & User Flow
+
+### Application Entry Point
+**App.tsx** → Main orchestrator managing app state (squads, presets, currentSquadId)
+- Manages localStorage persistence
+- Delegates UI rendering to SquadBuilder
+
+### Squad Management & Display
+**SquadBuilder** → Main container component
+- Displays squad selection/creation UI
+- Renders CharacterGrid when a squad is active
+- Passes squad data to child components
+
+**CharacterGrid** → Lists all characters in the current squad
+- Displays each character via CharacterSummary cards
+- Handles character selection and navigation to detail view
+
+**CharacterSummary** → Quick character overview card
+- Shows: Name, tech level, stats (with flaw/feat modifiers applied), flaw/feat types, equipment count, slot usage
+- Used in squad overview for at-a-glance character info
+- **Important**: Must use `applyFlawFeatModifiers()` for stat display
+
+### Character Creation Flow
+**CharacterCreationFlow** → Four-step wizard guiding character creation
+
+1. **Step 1: Stats Selection**
+   - Component: `StatDistributionPicker`
+   - User selects point distribution and assigns to stats
+   - Stores base stats (no modifiers yet)
+
+2. **Step 2: Flaws & Feats Selection**
+   - Component: `FlawsAndFeatsPicker`
+   - User selects one flaw and one feat
+   - Displays **effective stats** (base + flaw/feat modifiers) in real-time preview
+   - Preview updates as user selects/changes flaw/feat
+
+3. **Step 3: Equipment Selection**
+   - Component: `EquipmentPicker`
+   - User selects weapons, armor, items, ammo
+   - Displays **effective stats** accounting for flaw/feat modifiers
+   - Slot capacity calculated using effective strength
+   - Armor strength requirements checked against effective strength
+
+4. **Step 4: Review & Finalization**
+   - CharacterCreationFlow renders review card
+   - Shows **effective stats** (base + flaw/feat modifiers)
+   - User enters character name and creates character
+
+### Data Flow for Stat Modifiers
+```
+Base Stats (from Step 1)
+    ↓
++ Flaw Modifiers (from Step 2)
++ Feat Modifiers (from Step 2)
+    ↓
+= Effective Stats (displayed in Steps 2, 3, 4 and CharacterSummary)
+```
+
+**Utility Function**: `applyFlawFeatModifiers(baseStats, flaw, feat)` in `utils/stats.ts`
+- Looks up flaw/feat data to find statModifiers
+- Applies modifiers to base stats
+- Used by: FlawsAndFeatsPicker, EquipmentPicker, CharacterCreationFlow Review, CharacterSummary
+
+### Component Dependency Notes
+- **FlawsAndFeatsPicker** receives: `stats` (base stats from Step 1)
+- **EquipmentPicker** receives: `character` object with stats, flaw, feat
+- **CharacterSummary** receives: `character` object with full data
+- All components that display stats should use effective stats, not base stats
+
 **Important**: Do NOT place application code files (App.tsx, main.tsx, etc.) at the root. All source code must be in `src/`.
 
 ## Key Configuration Details
