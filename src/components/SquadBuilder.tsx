@@ -164,6 +164,14 @@ const SquadBuilder: React.FC<SquadBuilderProps> = ({
     onNewSquad();
   };
 
+  const handleCancel = () => {
+    setCurrentView('tech-select');
+    setSquad(null);
+    setIsSaved(true);
+    setNameError('');
+    setShowCharacterCreation(false);
+  };
+
   const calculateSquadStats = () => {
     if (!squad || squad.characters.length === 0) {
       return {
@@ -237,7 +245,7 @@ const SquadBuilder: React.FC<SquadBuilderProps> = ({
         <div className="squad-builder-header-right">
           {dropdownBar}
           <button onClick={handleStartOver} className="btn-start-over">
-            Start Over
+            New Squad
           </button>
         </div>
       </div>
@@ -338,7 +346,7 @@ const SquadBuilder: React.FC<SquadBuilderProps> = ({
       </div>
 
       <div className="squad-builder-footer">
-        <button onClick={handleStartOver} className="btn-cancel">
+        <button onClick={handleCancel} className="btn-cancel">
           Cancel
         </button>
         {saveMessage && <span className="save-message">{saveMessage}</span>}

@@ -225,6 +225,9 @@
     padding: 20px;
     background-color: #f0f0f0;
     border-top: 1px solid #ddd;
+    position: sticky;
+    bottom: 0;
+    z-index: 10;
 }
 
 .btn-back {
