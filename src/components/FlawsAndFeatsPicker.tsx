@@ -1,7 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { Flaw, Feat, FlawType, FeatType, Stats } from '../types';
 import { flaws28Psalms, feats28Psalms } from '../types/featsandflaws28Psalms';
-import { applyFlawFeatModifiers } from '../utils/stats';
+import { applyFlawFeatModifiers, calculateDerivedStats } from '../utils/stats';
 import './FlawsAndFeatsPicker.css';
 
 interface FlawsAndFeatsPickerProps {
@@ -58,6 +58,28 @@ const FlawsAndFeatsPicker: React.FC<FlawsAndFeatsPickerProps> = ({ onSelectFlawA
                             <div className="stat-value">{effectiveStats[stat] > 0 ? `+${effectiveStats[stat]}` : effectiveStats[stat]}</div>
                         </div>
                     ))}
+                    <div className="current-stats-divider" />
+                    <div className="current-stats-derived">
+                        {(() => {
+                            const derived = calculateDerivedStats(effectiveStats);
+                            return (
+                                <>
+                                    <div className="stat-box derived">
+                                        <div className="stat-label">MOV</div>
+                                        <div className="stat-value">{derived.movement}</div>
+                                    </div>
+                                    <div className="stat-box derived">
+                                        <div className="stat-label">SLOTS</div>
+                                        <div className="stat-value">{derived.equipmentSlots}</div>
+                                    </div>
+                                    <div className="stat-box derived">
+                                        <div className="stat-label">HP</div>
+                                        <div className="stat-value">{derived.hp}</div>
+                                    </div>
+                                </>
+                            );
+                        })()}
+                    </div>
                 </div>
             )}
 

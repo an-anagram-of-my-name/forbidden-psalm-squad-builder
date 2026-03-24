@@ -3,7 +3,7 @@ import { Character, CharacterPreset, Equipment, Stats, Flaw, Feat, TechLevel } f
 import StatDistributionPicker from './StatDistributionPicker';
 import FlawsAndFeatsPicker from './FlawsAndFeatsPicker';
 import EquipmentPicker from './EquipmentPicker';
-import { applyFlawFeatModifiers } from '../utils/stats';
+import { applyFlawFeatModifiers, calculateDerivedStats } from '../utils/stats';
 import { characterNames28Psalms } from '../types/characterNames28Psalms';
 import './CharacterCreationFlow.css';
 
@@ -260,14 +260,22 @@ const CharacterCreationFlow: React.FC<CharacterCreationFlowProps> = ({
                         <div className="review-grid">
                             <div className="review-section-card">
                                 <h3>Stats</h3>
-                                {effectiveStats && (
-                                    <ul className="stats-list">
-                                        <li>Agility: {effectiveStats.agility > 0 ? '+' : ''}{effectiveStats.agility}</li>
-                                        <li>Presence: {effectiveStats.presence > 0 ? '+' : ''}{effectiveStats.presence}</li>
-                                        <li>Strength: {effectiveStats.strength > 0 ? '+' : ''}{effectiveStats.strength}</li>
-                                        <li>Toughness: {effectiveStats.toughness > 0 ? '+' : ''}{effectiveStats.toughness}</li>
-                                    </ul>
-                                )}
+                                {effectiveStats && (() => {
+                                    const derived = calculateDerivedStats(effectiveStats);
+                                    const fmt = (v: number) => v > 0 ? `+${v}` : `${v}`;
+                                    return (
+                                        <ul className="stats-list">
+                                            <li>Agility: {fmt(effectiveStats.agility)}</li>
+                                            <li className="derived">Movement: {derived.movement}</li>
+                                            <li>Presence: {fmt(effectiveStats.presence)}</li>
+                                            <li className="derived derived-empty">—</li>
+                                            <li>Strength: {fmt(effectiveStats.strength)}</li>
+                                            <li className="derived">Slots: {derived.equipmentSlots}</li>
+                                            <li>Toughness: {fmt(effectiveStats.toughness)}</li>
+                                            <li className="derived">HP: {derived.hp}</li>
+                                        </ul>
+                                    );
+                                })()}
                             </div>
 
                             <div className="review-section-card">

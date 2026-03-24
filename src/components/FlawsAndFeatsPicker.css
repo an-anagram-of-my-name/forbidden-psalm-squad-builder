@@ -97,7 +97,21 @@
     background-color: #555;
 }
 
-.btn-confirm:disabled {
+.current-stats-divider {
+    width: 2px;
+    height: 40px;
     background-color: #ccc;
-    cursor: not-allowed;
+    margin: 0 6px;
+    align-self: center;
+}
+
+.current-stats-derived {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.stat-box.derived {
+    background-color: #E8F0F8;
+    border-color: #b8d4e8;
 }
