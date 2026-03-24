@@ -100,7 +100,7 @@ const CharacterCreationFlow: React.FC<CharacterCreationFlowProps> = ({ techLevel
                 )}
 
                 {currentStep === 'flaws-feats' && (
-                    <FlawsAndFeatsPicker onSelectFlawAndFeat={handleFlawAndFeatSelected} />
+                    <FlawsAndFeatsPicker onSelectFlawAndFeat={handleFlawAndFeatSelected} stats={stats ?? undefined} />
                 )}
 
                 {currentStep === 'equipment' && stats && flaw && feat && (
@@ -120,7 +120,9 @@ const CharacterCreationFlow: React.FC<CharacterCreationFlowProps> = ({ techLevel
 
                 {currentStep === 'review' && (
                     <div className="review-section">
-                        <h2>Review Your Character</h2>
+                        <div className="picker-header">
+                            <h2>Review Your Character</h2>
+                        </div>
 
                         <div className="character-name-input">
                             <label>Character Name</label>

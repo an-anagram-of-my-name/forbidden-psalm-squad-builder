@@ -172,13 +172,23 @@ const EquipmentPicker: React.FC<EquipmentPickerProps> = ({ character, onEquipmen
     <div className="equipment-picker">
       <div className="picker-header">
         <h2>Select Equipment</h2>
-        <div className="slot-info">
-          <div className="slot-usage">
-            {slotsUsed} / {slotCapacity} slots used
+      </div>
+
+      <div className="current-stats">
+        {(['agility', 'presence', 'strength', 'toughness'] as (keyof typeof character.stats)[]).map((stat) => (
+          <div key={stat} className="stat-box">
+            <div className="stat-label">{stat.charAt(0).toUpperCase() + stat.slice(1)}</div>
+            <div className="stat-value">{character.stats[stat] > 0 ? `+${character.stats[stat]}` : character.stats[stat]}</div>
           </div>
-          <div className={`slot-bar ${remainingSlots > 0 ? 'available' : 'full'}`}>
-            <div className="slot-fill" style={{ width: `${(slotsUsed / slotCapacity) * 100}%` }}></div>
-          </div>
+        ))}
+      </div>
+
+      <div className="slot-info">
+        <div className="slot-usage">
+          {slotsUsed} / {slotCapacity} slots used
+        </div>
+        <div className={`slot-bar ${remainingSlots > 0 ? 'available' : 'full'}`}>
+          <div className="slot-fill" style={{ width: `${(slotsUsed / slotCapacity) * 100}%` }}></div>
         </div>
       </div>
 
