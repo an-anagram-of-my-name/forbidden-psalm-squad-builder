@@ -123,6 +123,20 @@
   gap: 6px;
 }
 
+.equipment-list {
+  list-style: none;
+  margin: 0 0 4px 0;
+  padding: 6px 8px;
+  background-color: #f9f9f9;
+  border-radius: 3px;
+  font-size: 13px;
+  color: #333;
+}
+
+.equipment-list-item {
+  padding: 2px 0;
+}
+
 .info-row {
   display: flex;
   justify-content: space-between;
