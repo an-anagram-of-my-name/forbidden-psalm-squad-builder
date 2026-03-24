@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { Character, Equipment, Stats, Flaw, Feat, TechLevel } from '../types';
+import { Character, CharacterPreset, Equipment, Stats, Flaw, Feat, TechLevel } from '../types';
 import StatDistributionPicker from './StatDistributionPicker';
 import FlawsAndFeatsPicker from './FlawsAndFeatsPicker';
 import EquipmentPicker from './EquipmentPicker';
@@ -7,24 +7,52 @@ import { applyFlawFeatModifiers } from '../utils/stats';
 import './CharacterCreationFlow.css';
 
 interface CharacterCreationFlowProps {
-    techLevel: TechLevel;
-    onCharacterCreated: (character: Character) => void;
+    mode?: 'squad' | 'preset';
+    // Squad mode
+    techLevel?: TechLevel;
+    onCharacterCreated?: (character: Character) => void;
+    // Preset mode
+    initialPreset?: CharacterPreset | null;
+    onPresetSaved?: (preset: CharacterPreset) => void;
+    // Common
     onCancel: () => void;
 }
 
 type CreationStep = 'stats' | 'flaws-feats' | 'equipment' | 'review';
 
-const CharacterCreationFlow: React.FC<CharacterCreationFlowProps> = ({ techLevel, onCharacterCreated, onCancel }) => {
-    const [currentStep, setCurrentStep] = useState<CreationStep>('stats');
-    const [characterName, setCharacterName] = useState('');
-    const [stats, setStats] = useState<Stats | null>(null);
-    const [flaw, setFlaw] = useState<Flaw | null>(null);
-    const [feat, setFeat] = useState<Feat | null>(null);
-    const [equipment, setEquipment] = useState<Equipment[]>([]);
+const CharacterCreationFlow: React.FC<CharacterCreationFlowProps> = ({
+    mode = 'squad',
+    techLevel,
+    onCharacterCreated,
+    initialPreset,
+    onPresetSaved,
+    onCancel,
+}) => {
+    const isEditingPreset = mode === 'preset' && !!initialPreset;
+
+    const [currentStep, setCurrentStep] = useState<CreationStep>(
+        isEditingPreset ? 'review' : 'stats'
+    );
+    const [characterName, setCharacterName] = useState(initialPreset?.name ?? '');
+    const [stats, setStats] = useState<Stats | null>(initialPreset?.stats ?? null);
+    const [flaw, setFlaw] = useState<Flaw | null>(initialPreset?.flaw ?? null);
+    const [feat, setFeat] = useState<Feat | null>(initialPreset?.feat ?? null);
+    const [equipment, setEquipment] = useState<Equipment[]>(initialPreset?.equipment ?? []);
+    const [selectedTechLevel, setSelectedTechLevel] = useState<TechLevel | null>(
+        initialPreset?.techLevel ?? null
+    );
 
     const handleStatsSelected = (selectedStats: Stats) => {
         setStats(selectedStats);
         setCurrentStep('flaws-feats');
+    };
+
+    const handleTechLevelSelected = (level: TechLevel) => {
+        if (level !== selectedTechLevel) {
+            // Reset equipment when tech level changes
+            setEquipment([]);
+        }
+        setSelectedTechLevel(level);
     };
 
     const handleFlawAndFeatSelected = (selectedFlaw: Flaw, selectedFeat: Feat) => {
@@ -42,18 +70,39 @@ const CharacterCreationFlow: React.FC<CharacterCreationFlowProps> = ({ techLevel
         setCharacterName(e.target.value);
     };
 
+    const effectiveTechLevel: TechLevel = mode === 'preset'
+        ? selectedTechLevel!   // safe: equipment step is only shown when selectedTechLevel is set
+        : techLevel!;
+
     const handleCreateCharacter = () => {
-        if (characterName.trim() && stats && flaw && feat) {
-            const newCharacter: Character = {
-                id: Date.now().toString(),
-                name: characterName,
-                stats,
-                flaw,
-                feat,
-                equipment,
-                techLevel,
-            };
-            onCharacterCreated(newCharacter);
+        if (mode === 'preset') {
+            if (characterName.trim() && stats && flaw && feat && selectedTechLevel) {
+                const preset: CharacterPreset = {
+                    id: initialPreset?.id ?? Date.now().toString(),
+                    name: characterName.trim(),
+                    stats,
+                    flaw,
+                    feat,
+                    equipment,
+                    techLevel: selectedTechLevel,
+                    createdAt: initialPreset?.createdAt ?? new Date(),
+                    updatedAt: new Date(),
+                };
+                onPresetSaved?.(preset);
+            }
+        } else {
+            if (characterName.trim() && stats && flaw && feat && techLevel) {
+                const newCharacter: Character = {
+                    id: Date.now().toString(),
+                    name: characterName.trim(),
+                    stats,
+                    flaw,
+                    feat,
+                    equipment,
+                    techLevel,
+                };
+                onCharacterCreated?.(newCharacter);
+            }
         }
     };
 
@@ -67,7 +116,9 @@ const CharacterCreationFlow: React.FC<CharacterCreationFlowProps> = ({ techLevel
         }
     };
 
-    const canProceed = currentStep === 'review' && characterName.trim().length > 0;
+    const canProceed = currentStep === 'review' &&
+        characterName.trim().length > 0 &&
+        (mode !== 'preset' || !!selectedTechLevel);
 
     const stepOrder: CreationStep[] = ['stats', 'flaws-feats', 'equipment', 'review'];
     const currentStepIndex = stepOrder.indexOf(currentStep);
@@ -80,7 +131,7 @@ const CharacterCreationFlow: React.FC<CharacterCreationFlowProps> = ({ techLevel
     return (
         <div className="character-creation-flow">
             <div className="flow-header">
-                <h1>Create Character</h1>
+                <h1>{mode === 'preset' ? (isEditingPreset ? 'Edit Character Template' : 'New Character Template') : 'Create Character'}</h1>
                 <div className="step-indicator">
                     <div className={`step ${currentStep === 'stats' ? 'active' : currentStepIndex > 0 ? 'completed' : ''}`}>
                         1. Stats
@@ -102,14 +153,19 @@ const CharacterCreationFlow: React.FC<CharacterCreationFlowProps> = ({ techLevel
 
             <div className="flow-content">
                 {currentStep === 'stats' && (
-                    <StatDistributionPicker onStatsSelected={handleStatsSelected} />
+                    <StatDistributionPicker
+                        onStatsSelected={handleStatsSelected}
+                        mode={mode}
+                        selectedTechLevel={selectedTechLevel ?? undefined}
+                        onTechLevelSelected={handleTechLevelSelected}
+                    />
                 )}
 
                 {currentStep === 'flaws-feats' && (
                     <FlawsAndFeatsPicker onSelectFlawAndFeat={handleFlawAndFeatSelected} stats={stats ?? undefined} />
                 )}
 
-                {currentStep === 'equipment' && stats && flaw && feat && (
+                {currentStep === 'equipment' && stats && flaw && feat && (mode !== 'preset' || selectedTechLevel) && (
                     <EquipmentPicker
                         character={{
                             id: '',
@@ -118,7 +174,7 @@ const CharacterCreationFlow: React.FC<CharacterCreationFlowProps> = ({ techLevel
                             flaw,
                             feat,
                             equipment,
-                            techLevel,
+                            techLevel: effectiveTechLevel,
                         }}
                         onEquipmentSelected={handleEquipmentSelected}
                     />
@@ -204,7 +260,11 @@ const CharacterCreationFlow: React.FC<CharacterCreationFlowProps> = ({ techLevel
                         disabled={!canProceed}
                         className="btn-create-character"
                     >
-                        Create Character
+                        {mode === 'preset'
+                            ? isEditingPreset
+                                ? 'Update Preset'
+                                : 'Create Preset'
+                            : 'Create Character'}
                     </button>
                 )}
             </div>

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { AppState, Squad } from './types';
+import { AppState, Squad, CharacterPreset } from './types';
 import SquadBuilder from './components/SquadBuilder';
+import PresetFlow from './components/PresetFlow';
 import './App.css';
 
 const App: React.FC = () => {
@@ -9,6 +10,8 @@ const App: React.FC = () => {
     squads: [],
     currentSquadId: null,
   });
+  const [showPresetFlow, setShowPresetFlow] = useState(false);
+  const [currentPresetId, setCurrentPresetId] = useState<string | null>(null);
 
   // Load app state from localStorage on mount
   useEffect(() => {
@@ -55,7 +58,44 @@ const App: React.FC = () => {
     setAppState((prev) => ({ ...prev, currentSquadId: null }));
   };
 
+  const handleNewPreset = () => {
+    setCurrentPresetId(null);
+    setShowPresetFlow(true);
+  };
+
+  const handleLoadPreset = (presetId: string) => {
+    setCurrentPresetId(presetId);
+    setShowPresetFlow(true);
+  };
+
+  const handleSavePreset = (preset: CharacterPreset) => {
+    setAppState((prev) => {
+      const presets = prev.presets.filter((p) => p.id !== preset.id);
+      return { ...prev, presets: [...presets, preset] };
+    });
+    setShowPresetFlow(false);
+    setCurrentPresetId(null);
+  };
+
+  const handleCancelPreset = () => {
+    setShowPresetFlow(false);
+    setCurrentPresetId(null);
+  };
+
   const currentSquad = appState.squads.find((s) => s.id === appState.currentSquadId) ?? null;
+  const currentPreset = appState.presets.find((p) => p.id === currentPresetId) ?? null;
+
+  if (showPresetFlow) {
+    return (
+      <div className="app">
+        <PresetFlow
+          preset={currentPreset}
+          onSavePreset={handleSavePreset}
+          onCancel={handleCancelPreset}
+        />
+      </div>
+    );
+  }
 
   return (
     <div className="app">
@@ -66,6 +106,9 @@ const App: React.FC = () => {
         onSaveSquad={handleSaveSquad}
         onLoadSquad={handleLoadSquad}
         onNewSquad={handleNewSquad}
+        presets={appState.presets}
+        onNewPreset={handleNewPreset}
+        onLoadPreset={handleLoadPreset}
       />
     </div>
   );
