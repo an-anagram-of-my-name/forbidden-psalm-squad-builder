@@ -1,0 +1,43 @@
+.hp-tracking-bar {
+  display: flex;
+  gap: 5px;
+  align-items: center;
+  flex-wrap: wrap;
+  margin: 8px 0;
+}
+
+.hp-position {
+  width: 30px;
+  height: 30px;
+  border: 2px solid #333;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  background-color: #ffffff;
+  flex-shrink: 0;
+}
+
+.hp-position.skull {
+  font-size: 20px;
+  background-color: #ffffff;
+}
+
+@media print {
+  .hp-tracking-bar {
+    gap: 6px;
+  }
+
+  .hp-position {
+    width: 28px;
+    height: 28px;
+    border: 2px solid #000;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  .hp-position.skull {
+    font-size: 18px;
+  }
+}

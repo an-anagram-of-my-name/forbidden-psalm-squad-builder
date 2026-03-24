@@ -5,6 +5,7 @@ import CharacterCreationFlow from './CharacterCreationFlow';
 import CharacterSummary from './CharacterSummary';
 import SquadDropdown from './SquadDropdown';
 import PresetDropdown from './PresetDropdown';
+import SquadPrintView from './SquadPrintView';
 import './SquadBuilder.css';
 
 interface SquadBuilderProps {
@@ -40,6 +41,7 @@ const SquadBuilder: React.FC<SquadBuilderProps> = ({
   const [nameError, setNameError] = useState('');
   const [autoSaveMessage, setAutoSaveMessage] = useState('');
   const [saveMessage, setSaveMessage] = useState('');
+  const [showPrintView, setShowPrintView] = useState(false);
 
   // Sync local squad state when the parent switches to a different squad
   useEffect(() => {
@@ -311,20 +313,30 @@ const SquadBuilder: React.FC<SquadBuilderProps> = ({
         <div className="characters-section">
           <div className="section-header">
             <h2>Squad Members</h2>
-            {!showCharacterCreation && !editingCharacterId && (
-              <button
-                onClick={() => setShowCharacterCreation(true)}
-                className="btn-add-character"
-                disabled={squad.characters.length >= 5}
-                title={
-                  squad.characters.length >= 5
-                    ? 'Squad has reached the maximum of 5 characters'
-                    : undefined
-                }
-              >
-                + Add Character
-              </button>
-            )}
+            <div className="section-header-actions">
+              {!showCharacterCreation && !editingCharacterId && squad.characters.length > 0 && (
+                <button
+                  onClick={() => setShowPrintView(true)}
+                  className="btn-print-squad"
+                >
+                  🖨 Print Squad
+                </button>
+              )}
+              {!showCharacterCreation && !editingCharacterId && (
+                <button
+                  onClick={() => setShowCharacterCreation(true)}
+                  className="btn-add-character"
+                  disabled={squad.characters.length >= 5}
+                  title={
+                    squad.characters.length >= 5
+                      ? 'Squad has reached the maximum of 5 characters'
+                      : undefined
+                  }
+                >
+                  + Add Character
+                </button>
+              )}
+            </div>
           </div>
 
           {showCharacterCreation && (
@@ -411,6 +423,10 @@ const SquadBuilder: React.FC<SquadBuilderProps> = ({
           Save Squad
         </button>
       </div>
+
+      {showPrintView && (
+        <SquadPrintView squad={squad} onClose={() => setShowPrintView(false)} />
+      )}
     </div>
   );
 };

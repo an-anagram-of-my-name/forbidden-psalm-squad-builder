@@ -1,0 +1,210 @@
+import React from 'react';
+import { Character, Equipment, Armor, Weapon } from '../types';
+import { applyFlawFeatModifiers, calculateFinalDerivedStats } from '../utils/stats';
+import { flaws28Psalms, feats28Psalms } from '../types/featsandflaws28Psalms';
+import HPTrackingBar from './HPTrackingBar';
+import './CharacterPrintCard.css';
+
+interface CharacterPrintCardProps {
+  character: Character;
+}
+
+function fmt(v: number): string {
+  return v > 0 ? `+${v}` : `${v}`;
+}
+
+function renderEquipmentDetails(item: Equipment): React.ReactNode {
+  const details: React.ReactNode[] = [];
+
+  details.push(
+    <div key="cost-slots" className="print-equipment-detail">
+      <strong>Cost:</strong> {item.cost} cr &nbsp;|&nbsp; <strong>Slots:</strong> {item.slots}
+    </div>
+  );
+
+  if (item.category === 'armor') {
+    const armor = item as Armor;
+    if (armor.specialRules) {
+      details.push(
+        <div key="special" className="print-equipment-detail">
+          <strong>Rules:</strong> {armor.specialRules}
+        </div>
+      );
+    }
+    if (armor.movementModifier !== undefined) {
+      details.push(
+        <div key="mov" className="print-equipment-detail">
+          <strong>Movement:</strong> {armor.movementModifier > 0 ? '+' : ''}{armor.movementModifier}
+        </div>
+      );
+    }
+    if (armor.requiredStrength !== undefined) {
+      details.push(
+        <div key="str" className="print-equipment-detail">
+          <strong>Req. STR:</strong> {armor.requiredStrength}+
+        </div>
+      );
+    }
+  } else if (item.category === 'weapon') {
+    const weapon = item as Weapon;
+    details.push(
+      <div key="damage" className="print-equipment-detail">
+        <strong>Damage:</strong> {weapon.damage} &nbsp;|&nbsp; <strong>Mod:</strong> {weapon.modifier.toUpperCase()}
+      </div>
+    );
+    if (weapon.specialRules.length > 0) {
+      details.push(
+        <div key="rules" className="print-equipment-detail">
+          <strong>Rules:</strong> {weapon.specialRules.join(', ')}
+        </div>
+      );
+    }
+    if (weapon.isTwoHanded) {
+      details.push(
+        <div key="2h" className="print-equipment-detail">Two-handed</div>
+      );
+    }
+  } else if (item.category === 'item' || item.category === 'consumable') {
+    const itemWithAbility = item as { ability: string };
+    details.push(
+      <div key="ability" className="print-equipment-detail">
+        {itemWithAbility.ability}
+      </div>
+    );
+  } else if (item.category === 'ammo') {
+    const ammo = item as { shots: number; compatibleWeapons: string[] };
+    details.push(
+      <div key="shots" className="print-equipment-detail">
+        <strong>Shots:</strong> {ammo.shots}
+      </div>
+    );
+    if (ammo.compatibleWeapons.length > 0) {
+      details.push(
+        <div key="compat" className="print-equipment-detail">
+          <strong>For:</strong> {ammo.compatibleWeapons.join(', ')}
+        </div>
+      );
+    }
+  }
+
+  return details;
+}
+
+const CharacterPrintCard: React.FC<CharacterPrintCardProps> = ({ character }) => {
+  const effectiveStats = applyFlawFeatModifiers(character.stats, character.flaw, character.feat);
+  const derived = calculateFinalDerivedStats(
+    character.stats,
+    character.flaw,
+    character.feat,
+    character.equipment
+  );
+
+  // Look up full flaw/feat descriptions from data
+  const flawData = flaws28Psalms.find((f) => f.type === character.flaw.type);
+  const featData = feats28Psalms.find((f) => f.type === character.feat.type);
+
+  // Sort equipment: armor first, then rest
+  const sortedEquipment = [...character.equipment].sort((a, b) => {
+    if (a.category === 'armor' && b.category !== 'armor') return -1;
+    if (a.category !== 'armor' && b.category === 'armor') return 1;
+    return 0;
+  });
+
+  return (
+    <div className="character-print-card">
+      <div className="print-card-header">
+        <h2>{character.name}</h2>
+        <span className="print-tech-badge">{character.techLevel}</span>
+      </div>
+
+      <div className="print-card-body">
+        {/* Stats column */}
+        <div>
+          <div className="print-section">
+            <div className="print-section-title">Stats</div>
+            <div className="print-stats-grid">
+              <div className="print-stat-box">
+                <span className="print-stat-label">AGI</span>
+                <span className="print-stat-value">{fmt(effectiveStats.agility)}</span>
+              </div>
+              <div className="print-stat-box derived">
+                <span className="print-stat-label">MOV</span>
+                <span className="print-stat-value">{derived.movement}</span>
+              </div>
+              <div className="print-stat-box">
+                <span className="print-stat-label">PRE</span>
+                <span className="print-stat-value">{fmt(effectiveStats.presence)}</span>
+              </div>
+              <div className="print-stat-box">
+                <span className="print-stat-label">STR</span>
+                <span className="print-stat-value">{fmt(effectiveStats.strength)}</span>
+              </div>
+              <div className="print-stat-box derived">
+                <span className="print-stat-label">SLOTS</span>
+                <span className="print-stat-value">{derived.equipmentSlots}</span>
+              </div>
+              <div className="print-stat-box">
+                <span className="print-stat-label">TOU</span>
+                <span className="print-stat-value">{fmt(effectiveStats.toughness)}</span>
+              </div>
+              <div className="print-stat-box derived">
+                <span className="print-stat-label">HP</span>
+                <span className="print-stat-value">{derived.hp}</span>
+              </div>
+            </div>
+          </div>
+
+          <div className="print-section print-hp-section">
+            <div className="print-section-title">HP Tracker</div>
+            <HPTrackingBar maxHP={derived.hp} />
+          </div>
+        </div>
+
+        {/* Traits column */}
+        <div>
+          <div className="print-section">
+            <div className="print-section-title">Flaw</div>
+            <div className="print-trait">
+              <div className="print-trait-name">{flawData?.name ?? character.flaw.type}</div>
+              <div className="print-trait-description">
+                {flawData?.description ?? character.flaw.description}
+              </div>
+            </div>
+          </div>
+
+          <div className="print-section">
+            <div className="print-section-title">Feat</div>
+            <div className="print-trait">
+              <div className="print-trait-name">{featData?.name ?? character.feat.type}</div>
+              <div className="print-trait-description">
+                {featData?.description ?? character.feat.description}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Equipment spanning full width */}
+        <div className="print-section print-equipment-section">
+          <div className="print-section-title">Equipment</div>
+          <div className="print-equipment-list">
+            {sortedEquipment.map((item, idx) => (
+              <div
+                key={`${item.id}-${idx}`}
+                className={`print-equipment-item${item.category === 'armor' ? ' armor-item' : ''}`}
+              >
+                <div className="print-equipment-category">{item.category}</div>
+                <div className="print-equipment-name">{item.name}</div>
+                {item.category === 'armor' && (
+                  <div className="print-av">AV: {(item as Armor).av}</div>
+                )}
+                {renderEquipmentDetails(item)}
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default CharacterPrintCard;
