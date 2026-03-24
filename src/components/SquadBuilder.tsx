@@ -35,6 +35,7 @@ const SquadBuilder: React.FC<SquadBuilderProps> = ({
   );
   const [squad, setSquad] = useState<Squad | null>(initialSquad);
   const [showCharacterCreation, setShowCharacterCreation] = useState(false);
+  const [editingCharacterId, setEditingCharacterId] = useState<string | null>(null);
   const [isSaved, setIsSaved] = useState(true);
   const [nameError, setNameError] = useState('');
   const [autoSaveMessage, setAutoSaveMessage] = useState('');
@@ -47,6 +48,7 @@ const SquadBuilder: React.FC<SquadBuilderProps> = ({
     setIsSaved(true);
     setNameError('');
     setShowCharacterCreation(false);
+    setEditingCharacterId(null);
   }, [initialSquad, currentSquadId]);
 
   const isNameDuplicate = (name: string, excludeId?: string): boolean => {
@@ -120,6 +122,30 @@ const SquadBuilder: React.FC<SquadBuilderProps> = ({
       updatedAt: new Date(),
     });
     setIsSaved(false);
+  };
+
+  const handleEditCharacter = (character: Character) => {
+    setShowCharacterCreation(false);
+    setEditingCharacterId(character.id);
+  };
+
+  const handleCharacterUpdated = (updatedCharacter: Character) => {
+    if (!squad) return;
+    setSquad({
+      ...squad,
+      characters: squad.characters.map((c) =>
+        c.id === updatedCharacter.id ? updatedCharacter : c
+      ),
+      updatedAt: new Date(),
+    });
+    setIsSaved(false);
+    setEditingCharacterId(null);
+    setSaveMessage('Character updated');
+    setTimeout(() => setSaveMessage(''), 3000);
+  };
+
+  const handleCancelEdit = () => {
+    setEditingCharacterId(null);
   };
 
   const handleSquadNameChange = (newName: string) => {
@@ -285,7 +311,7 @@ const SquadBuilder: React.FC<SquadBuilderProps> = ({
         <div className="characters-section">
           <div className="section-header">
             <h2>Squad Members</h2>
-            {!showCharacterCreation && (
+            {!showCharacterCreation && !editingCharacterId && (
               <button
                 onClick={() => setShowCharacterCreation(true)}
                 className="btn-add-character"
@@ -311,7 +337,7 @@ const SquadBuilder: React.FC<SquadBuilderProps> = ({
             </div>
           )}
 
-          {squad.characters.length === 0 && !showCharacterCreation && (
+          {squad.characters.length === 0 && !showCharacterCreation && !editingCharacterId && (
             <div className="empty-state">
               <p>No characters in this squad yet.</p>
               <button
@@ -329,19 +355,39 @@ const SquadBuilder: React.FC<SquadBuilderProps> = ({
             </div>
           )}
 
-          <div className="characters-grid">
-            {squad.characters.map((character) => (
-              <div key={character.id} className="character-item">
-                <CharacterSummary character={character} />
-                <button
-                  onClick={() => handleRemoveCharacter(character.id)}
-                  className="btn-remove-character"
-                >
-                  Remove
-                </button>
-              </div>
-            ))}
-          </div>
+          {editingCharacterId ? (
+            <div className="character-edit-overlay">
+              <CharacterCreationFlow
+                mode="squad"
+                techLevel={squad.techLevel}
+                initialCharacter={squad.characters.find((c) => c.id === editingCharacterId)}
+                onCharacterUpdated={handleCharacterUpdated}
+                onCancel={handleCancelEdit}
+              />
+            </div>
+          ) : (
+            <div className="characters-grid">
+              {squad.characters.map((character) => (
+                <div key={character.id} className="character-item">
+                  <CharacterSummary character={character} />
+                  <div className="character-actions">
+                    <button
+                      onClick={() => handleEditCharacter(character)}
+                      className="btn-edit-character"
+                    >
+                      Edit
+                    </button>
+                    <button
+                      onClick={() => handleRemoveCharacter(character.id)}
+                      className="btn-remove-character"
+                    >
+                      Remove
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       </div>
 
