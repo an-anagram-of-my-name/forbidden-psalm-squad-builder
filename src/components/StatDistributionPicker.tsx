@@ -56,7 +56,9 @@ const StatDistributionPicker: React.FC<StatDistributionPickerProps> = ({ onStats
 
     return (
         <div className="stat-distribution-picker">
-            <h2>Select Your Stat Distribution</h2>
+            <div className="picker-header">
+                <h2>Select Your Stat Distribution</h2>
+            </div>
 
             <div className="distributions">
                 {distributions.map((dist, index) => (

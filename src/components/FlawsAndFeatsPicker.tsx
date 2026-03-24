@@ -1,13 +1,14 @@
 import React, { useState } from 'react';
-import { Flaw, Feat, FlawType, FeatType } from '../types';
+import { Flaw, Feat, FlawType, FeatType, Stats } from '../types';
 import { flaws28Psalms, feats28Psalms } from '../types/featsandflaws28Psalms';
 import './FlawsAndFeatsPicker.css';
 
 interface FlawsAndFeatsPickerProps {
     onSelectFlawAndFeat: (flaw: Flaw, feat: Feat) => void;
+    stats?: Stats;
 }
 
-const FlawsAndFeatsPicker: React.FC<FlawsAndFeatsPickerProps> = ({ onSelectFlawAndFeat }) => {
+const FlawsAndFeatsPicker: React.FC<FlawsAndFeatsPickerProps> = ({ onSelectFlawAndFeat, stats }) => {
     const [selectedFlawType, setSelectedFlawType] = useState<FlawType | null>(null);
     const [selectedFeatType, setSelectedFeatType] = useState<FeatType | null>(null);
 
@@ -32,7 +33,20 @@ const FlawsAndFeatsPicker: React.FC<FlawsAndFeatsPickerProps> = ({ onSelectFlawA
 
     return (
         <div className="flaws-and-feats-picker">
-            <h2>Select Flaw & Feat</h2>
+            <div className="picker-header">
+                <h2>Select Flaw & Feat</h2>
+            </div>
+
+            {stats && (
+                <div className="current-stats">
+                    {(['agility', 'presence', 'strength', 'toughness'] as (keyof Stats)[]).map((stat) => (
+                        <div key={stat} className="stat-box">
+                            <div className="stat-label">{stat.charAt(0).toUpperCase() + stat.slice(1)}</div>
+                            <div className="stat-value">{stats[stat] > 0 ? `+${stats[stat]}` : stats[stat]}</div>
+                        </div>
+                    ))}
+                </div>
+            )}
 
             <div className="picker-container">
                 <div className="flaw-picker">
