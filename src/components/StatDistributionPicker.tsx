@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Stats, StatName } from '../types';
-import { getValidStatDistributions } from '../utils/stats';
+import { getValidStatDistributions, getAvailableModifiers } from '../utils/stats';
 import './StatDistributionPicker.css';
 
 interface StatDistributionPickerProps {
@@ -46,13 +46,12 @@ const StatDistributionPicker: React.FC<StatDistributionPickerProps> = ({ onStats
     // Calculate available modifiers for each stat
     const getAvailableModifiersForStat = (currentStat: StatName) => {
         if (!selectedDistribution) return [];
-        
-        return selectedDistribution.filter((mod) => {
-            const isAssignedToOtherStat = statNames.some(
-                (stat) => stat !== currentStat && statAssignments[stat] === mod
-            );
-            return !isAssignedToOtherStat;
-        });
+
+        const otherAssignments = statNames
+            .filter((stat) => stat !== currentStat && statAssignments[stat] !== undefined)
+            .map((stat) => statAssignments[stat]!);
+
+        return getAvailableModifiers(selectedDistribution, otherAssignments);
     };
 
     return (
