@@ -1,0 +1,208 @@
+.character-print-card {
+  background: #fff;
+  padding: 20px 24px;
+  break-inside: avoid;
+  page-break-inside: avoid;
+  page-break-after: always;
+  break-after: page;
+  font-size: 11pt;
+  line-height: 1.4;
+}
+
+.character-print-card:last-child {
+  page-break-after: auto;
+  break-after: auto;
+}
+
+/* Header */
+.print-card-header {
+  display: flex;
+  align-items: baseline;
+  gap: 16px;
+  border-bottom: 2px solid #333;
+  padding-bottom: 8px;
+  margin-bottom: 12px;
+}
+
+.print-card-header h2 {
+  font-size: 20pt;
+  font-weight: bold;
+  color: #111;
+  margin: 0;
+}
+
+.print-tech-badge {
+  font-size: 9pt;
+  color: #666;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  background: #f0f0f0;
+  padding: 2px 8px;
+  border-radius: 3px;
+  border: 1px solid #ccc;
+}
+
+/* Two-column body layout */
+.print-card-body {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px 24px;
+}
+
+/* Sections */
+.print-section {
+  margin-bottom: 10px;
+}
+
+.print-section-title {
+  font-size: 8pt;
+  font-weight: bold;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #555;
+  border-bottom: 1px solid #ccc;
+  padding-bottom: 3px;
+  margin-bottom: 6px;
+}
+
+/* Stats grid */
+.print-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 6px;
+}
+
+.print-stat-box {
+  border: 1px solid #ccc;
+  border-radius: 3px;
+  padding: 4px 6px;
+  text-align: center;
+  background: #fff;
+}
+
+.print-stat-box.derived {
+  background: #e8f0f8;
+  border-color: #b8d4e8;
+}
+
+.print-stat-label {
+  font-size: 7pt;
+  color: #888;
+  text-transform: uppercase;
+  display: block;
+  font-weight: bold;
+}
+
+.print-stat-value {
+  font-size: 14pt;
+  font-weight: bold;
+  color: #111;
+  display: block;
+}
+
+/* HP tracking section */
+.print-hp-section {
+  margin-top: 4px;
+}
+
+.print-hp-label {
+  font-size: 8pt;
+  font-weight: bold;
+  color: #555;
+  margin-bottom: 4px;
+}
+
+/* Traits */
+.print-trait {
+  margin-bottom: 8px;
+}
+
+.print-trait-name {
+  font-size: 10pt;
+  font-weight: bold;
+  color: #111;
+}
+
+.print-trait-description {
+  font-size: 9pt;
+  color: #333;
+  margin-top: 2px;
+}
+
+/* Equipment spanning full width */
+.print-equipment-section {
+  grid-column: 1 / -1;
+  margin-bottom: 0;
+}
+
+.print-equipment-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 8px;
+  margin-top: 4px;
+}
+
+/* Equipment items */
+.print-equipment-item {
+  border: 1px solid #ccc;
+  border-radius: 3px;
+  padding: 6px 8px;
+  font-size: 9pt;
+}
+
+.print-equipment-item.armor-item {
+  background: #fff8dc;
+  border-color: #c8a000;
+  border-width: 2px;
+}
+
+.print-equipment-name {
+  font-weight: bold;
+  font-size: 9.5pt;
+  margin-bottom: 3px;
+}
+
+.print-equipment-category {
+  font-size: 7.5pt;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #888;
+  margin-bottom: 3px;
+}
+
+.print-av {
+  font-size: 13pt;
+  font-weight: bold;
+  color: #8a6000;
+  margin-bottom: 2px;
+}
+
+.print-equipment-detail {
+  color: #555;
+  font-size: 8.5pt;
+  margin-top: 1px;
+}
+
+.print-equipment-detail strong {
+  color: #333;
+}
+
+@media print {
+  .character-print-card {
+    padding: 10px 12px;
+  }
+
+  .print-stat-box.derived {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+    background: #e8f0f8;
+    border-color: #b8d4e8;
+  }
+
+  .print-equipment-item.armor-item {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+    background: #fff8dc;
+    border-color: #c8a000;
+  }
+}

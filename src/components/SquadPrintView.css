@@ -1,0 +1,134 @@
+.squad-print-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.75);
+  z-index: 100;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 20px;
+}
+
+/* Toolbar shown on screen only */
+.squad-print-toolbar {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  margin-bottom: 16px;
+  background: #fff;
+  padding: 12px 20px;
+  border-radius: 6px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+  width: 100%;
+  max-width: 1122px; /* ~A4 landscape width in px at 96dpi ≈ 1122px */
+}
+
+.squad-print-toolbar h2 {
+  flex: 1;
+  font-size: 16px;
+  margin: 0;
+}
+
+.btn-print {
+  padding: 8px 20px;
+  background-color: #2196f3;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: bold;
+}
+
+.btn-print:hover {
+  background-color: #1976d2;
+}
+
+.btn-close-print {
+  padding: 8px 20px;
+  background-color: #666;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+}
+
+.btn-close-print:hover {
+  background-color: #555;
+}
+
+/* A4 landscape page container */
+.squad-print-pages {
+  width: 100%;
+  max-width: 1122px;
+  background: #fff;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25);
+}
+
+.squad-print-title {
+  background: #222;
+  color: #fff;
+  padding: 16px 24px;
+  display: flex;
+  align-items: baseline;
+  gap: 16px;
+}
+
+.squad-print-title h1 {
+  font-size: 18pt;
+  margin: 0;
+}
+
+.squad-print-subtitle {
+  font-size: 10pt;
+  color: #aaa;
+}
+
+.print-no-characters {
+  padding: 40px;
+  text-align: center;
+  color: #666;
+  font-size: 14pt;
+}
+
+@media print {
+  /* Hide the main React app */
+  #root {
+    display: none !important;
+  }
+
+  /* Show the print portal */
+  #squad-print-root {
+    display: block !important;
+  }
+
+  .squad-print-overlay {
+    position: static;
+    background: none;
+    padding: 0;
+    overflow: visible;
+  }
+
+  .squad-print-toolbar {
+    display: none !important;
+  }
+
+  .squad-print-pages {
+    box-shadow: none;
+    max-width: none;
+    width: 100%;
+  }
+
+  @page {
+    size: A4 landscape;
+    margin: 0.5in;
+  }
+
+  * {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+    color-adjust: exact;
+  }
+}
