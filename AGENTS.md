@@ -401,3 +401,137 @@ Currently, characters can select equipment once. However, in Forbidden Psalm, Am
 
 
 
+## Feature: Character Presets
+
+### Overview
+Character Presets allow users to create and manage individual character templates independent of squads. Each preset is a complete, standalone character with its own stats, flaws, feats, equipment, and tech level. Presets can be created from scratch or loaded and modified, providing a reusable library of character builds.
+
+### Key Concepts
+- **Presets** are standalone characters (CharacterPreset type) not associated with any squad
+- **Presets are tech-agnostic** - each preset selects and stores its own tech level
+- **Presets use full creation flow** - all 4 steps required with no steps skipped (Stats → Flaws/Feats → Equipment → Review)
+- **No preset limit** - users can create unlimited character presets
+- **No autosave** - presets are only saved on explicit user action (unlike squads which autosave)
+
+### UI Components
+
+#### App Nav Bar (Top Level - Modified)
+- **Squad Dropdown**: List of all saved squads (existing functionality)
+- **New Squad Button**: Opens squad tech level selector (existing functionality)
+- **Preset Dropdown**: List of all saved presets, sorted by name
+- **New Character Template Button**: Opens character creation flow for new preset
+
+Both Squad and Preset controls are visible simultaneously in the nav bar.
+
+#### Tech Level Selection in StatDistributionPicker (New)
+- **Compact Tech Level Control**: Mini version of TechLevelSelector integrated into StatDistributionPicker
+  - Size: Much smaller than the full TechLevelSelector used for squads
+  - Placement: Above or alongside stat distribution buttons
+  - User must select tech level before or alongside stat distribution
+  - Selection persists through the entire character creation flow
+  - Tech level affects available equipment in the Equipment step
+
+### User Workflows
+
+#### Creating a New Preset
+1. User clicks "New Character Template" button in top nav
+2. Taken to Stats step of CharacterCreationFlow in preset mode
+3. Selects tech level (past-tech or future-tech) using compact picker
+4. Selects stat distribution (+3,+1,0,-3 or +2,+2,-1,-2)
+5. Continues through Flaws/Feats → Equipment → Review steps normally
+6. On Review step: enters character name
+7. Clicks "Create Preset" button
+8. Preset is saved to `appState.presets` with:
+   - Generated ID (timestamp-based)
+   - Character name as preset name
+   - Current timestamp (createdAt/updatedAt)
+
+#### Editing an Existing Preset
+1. User selects preset from Preset Dropdown in top nav
+2. **Directly loads to Review step** with all preset data pre-filled
+3. Can click "Back" to revisit and modify:
+   - Tech level selection
+   - Stat distribution
+   - Flaws/Feats
+   - Equipment
+   - Character name
+4. Can navigate forward/backward through all steps
+5. On Review step: can change character name
+6. Clicks "Update Preset" button
+7. Preset is updated in `appState.presets` with new timestamp
+
+#### Using a Preset in a Squad
+- From Preset Dropdown, user can potentially copy a preset
+- (Out of scope for this feature - potential future enhancement)
+
+### Implementation Details
+
+**CharacterCreationFlow Modifications:**
+- Add `mode` prop: `'squad' | 'preset'` (default: 'squad')
+- When `mode === 'preset'`:
+  - `techLevel` prop becomes optional
+  - Tech level is selectable via StatDistributionPicker picker
+  - Final button text: "Create Preset" (new) or "Update Preset" (editing)
+  - Initial step can optionally start at Review for editing presets
+  - URL or state parameter determines if loading for edit
+- When `mode === 'squad'`:
+  - `techLevel` prop is required (existing behavior)
+  - Final button text: "Create Character" (existing)
+
+**StatDistributionPicker Modifications:**
+- Add optional `mode` prop: `'squad' | 'preset'` (default: 'squad')
+- Add optional `selectedTechLevel` prop for preset editing
+- Add optional `onTechLevelSelected` callback
+- When `mode === 'preset'`:
+  - Render compact tech level picker (mini buttons or radio buttons, not full TechLevelSelector)
+  - Display tech level selector before or alongside distribution buttons
+  - Both tech level and stat distribution must be selected to proceed
+
+**App.tsx Changes:**
+- Import PresetFlow component
+- Add state management:
+  - `currentPresetId: string | null` to track editing preset
+  - `presetMode: 'new' | 'edit'` to distinguish new vs. editing
+- Add handlers:
+  - `handleNewPreset()` - open new preset creation flow
+  - `handleLoadPreset(presetId: string)` - load preset for editing
+  - `handleSavePreset(preset: CharacterPreset)` - save new or updated preset to appState.presets
+  - `handleCancelPreset()` - close preset flow
+- Render PresetFlow component when in preset mode
+- Pass presets list to PresetDropdown
+
+**New Components:**
+- `PresetDropdown.tsx` - Similar to SquadDropdown
+  - List all presets from `appState.presets`
+  - "New Character Template" button to create new preset
+  - Click preset to load for editing
+- `PresetFlow.tsx` - Container component
+  - Manages preset mode (new vs. edit)
+  - Renders CharacterCreationFlow with `mode='preset'`
+  - Handles save/cancel actions
+  - For edit mode: pre-populates CharacterCreationFlow state with preset data
+  - Starts at Review step for editing presets
+
+### Data Flow
+- Presets stored in `AppState.presets` (localStorage persisted)
+- Each preset: `id`, `name`, `stats`, `flaw`, `feat`, `equipment`, `techLevel`, `createdAt`, `updatedAt`
+- Presets never added to squads (remain separate)
+- Presets can be duplicated or used as templates for squad characters (future feature)
+
+### Edge Cases
+- **Creating new preset**: All 4 steps required, tech level must be selected
+- **Editing preset**: Direct access to Review step, but can modify any field by backing up
+- **Tech level independence**: Each preset has its own tech level, independent of any squad
+- **Duplicate names**: Presets can have same names as squads or other presets (separate namespaces)
+- **Delete preset**: Show confirmation, permanently removes from `appState.presets`
+- **No autosave**: User must explicitly save changes (modal or confirmation on discard)
+
+### Differences from Squad Characters
+| Aspect | Squad Character | Preset |
+|--------|-----------------|--------|
+| Tech Level | Inherited from squad | Self-selected |
+| Autosave | Yes, on changes | No, manual save only |
+| Creation Flow | Full 4 steps | Full 4 steps |
+| Starting Step | Stats | Stats (new) or Review (editing) |
+| Storage | In squad.characters | In appState.presets |
+| Editing Entry | Via squad → character | Direct from Preset Dropdown |
