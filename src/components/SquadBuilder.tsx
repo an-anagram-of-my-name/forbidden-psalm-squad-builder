@@ -6,6 +6,7 @@ import CharacterSummary from './CharacterSummary';
 import SquadDropdown from './SquadDropdown';
 import PresetDropdown from './PresetDropdown';
 import SquadPrintView from './SquadPrintView';
+import PresetCharacterPicker from './PresetCharacterPicker';
 import './SquadBuilder.css';
 
 interface SquadBuilderProps {
@@ -36,6 +37,7 @@ const SquadBuilder: React.FC<SquadBuilderProps> = ({
   );
   const [squad, setSquad] = useState<Squad | null>(initialSquad);
   const [showCharacterCreation, setShowCharacterCreation] = useState(false);
+  const [showPresetPicker, setShowPresetPicker] = useState(false);
   const [editingCharacterId, setEditingCharacterId] = useState<string | null>(null);
   const [isSaved, setIsSaved] = useState(true);
   const [nameError, setNameError] = useState('');
@@ -51,6 +53,7 @@ const SquadBuilder: React.FC<SquadBuilderProps> = ({
     setNameError('');
     setShowCharacterCreation(false);
     setEditingCharacterId(null);
+    setShowPresetPicker(false);
   }, [initialSquad, currentSquadId]);
 
   const isNameDuplicate = (name: string, excludeId?: string): boolean => {
@@ -114,6 +117,28 @@ const SquadBuilder: React.FC<SquadBuilderProps> = ({
     });
     setIsSaved(false);
     setShowCharacterCreation(false);
+  };
+
+  const handleSelectPresetForSquad = (preset: CharacterPreset) => {
+    if (!squad || squad.characters.length >= 5) return;
+
+    const newCharacter: Character = {
+      id: Date.now().toString(),
+      name: preset.name,
+      stats: preset.stats,
+      flaw: preset.flaw,
+      feat: preset.feat,
+      equipment: preset.equipment,
+      techLevel: squad.techLevel,
+    };
+
+    setSquad({
+      ...squad,
+      characters: [...squad.characters, newCharacter],
+      updatedAt: new Date(),
+    });
+    setIsSaved(false);
+    setShowPresetPicker(false);
   };
 
   const handleRemoveCharacter = (characterId: string) => {
@@ -336,6 +361,20 @@ const SquadBuilder: React.FC<SquadBuilderProps> = ({
                   + Add Character
                 </button>
               )}
+              {!showCharacterCreation && !editingCharacterId && (
+                <button
+                  onClick={() => setShowPresetPicker(true)}
+                  className="btn-add-from-preset"
+                  disabled={squad.characters.length >= 5}
+                  title={
+                    squad.characters.length >= 5
+                      ? 'Squad has reached the maximum of 5 characters'
+                      : undefined
+                  }
+                >
+                  + From Preset
+                </button>
+              )}
             </div>
           </div>
 
@@ -426,6 +465,15 @@ const SquadBuilder: React.FC<SquadBuilderProps> = ({
 
       {showPrintView && (
         <SquadPrintView squad={squad} onClose={() => setShowPrintView(false)} />
+      )}
+
+      {showPresetPicker && (
+        <PresetCharacterPicker
+          presets={presets}
+          squadTechLevel={squad.techLevel}
+          onSelectPreset={handleSelectPresetForSquad}
+          onCancel={() => setShowPresetPicker(false)}
+        />
       )}
     </div>
   );

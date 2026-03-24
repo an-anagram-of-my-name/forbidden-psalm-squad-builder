@@ -78,10 +78,15 @@ const CharacterSummary: React.FC<CharacterSummaryProps> = ({ character }) => {
       <div className="summary-section">
         <h4>Equipment</h4>
         <div className="equipment-info">
-          <div className="info-row">
-            <span>Items:</span>
-            <span className="info-value">{character.equipment.length}</span>
-          </div>
+          {character.equipment.length > 0 && (
+            <ul className="equipment-list">
+              {character.equipment.map((eq, idx) => (
+                <li key={`${eq.id}-${idx}`} className="equipment-list-item">
+                  {eq.name}
+                </li>
+              ))}
+            </ul>
+          )}
           <div className="info-row">
             <span>Cost:</span>
             <span className="info-value">{equipmentCost} cr</span>
