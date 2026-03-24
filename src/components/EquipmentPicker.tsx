@@ -2,7 +2,7 @@ import React, { useState, useMemo } from 'react';
 import { Character, Equipment, Item, Ammo, Armor, Weapon, Stats } from '../types';
 import { items28Psalms, ammo28Psalms, armor28Psalms, pastTechWeapons28Psalms, futureTechWeapons28Psalms } from '../types/equipment28Psalms';
 import { canUseArmor } from '../utils/equipment';
-import { applyFlawFeatModifiers } from '../utils/stats';
+import { applyFlawFeatModifiers, calculateDerivedStats } from '../utils/stats';
 import './EquipmentPicker.css';
 
 interface EquipmentPickerProps {
@@ -219,6 +219,28 @@ const EquipmentPicker: React.FC<EquipmentPickerProps> = ({ character, selectedEq
             <div className="stat-value">{effectiveStats[stat] > 0 ? `+${effectiveStats[stat]}` : effectiveStats[stat]}</div>
           </div>
         ))}
+        <div className="current-stats-divider" />
+        <div className="current-stats-derived">
+          {(() => {
+            const derived = calculateDerivedStats(effectiveStats);
+            return (
+              <>
+                <div className="stat-box derived">
+                  <div className="stat-label">MOV</div>
+                  <div className="stat-value">{derived.movement}</div>
+                </div>
+                <div className="stat-box derived">
+                  <div className="stat-label">SLOTS</div>
+                  <div className="stat-value">{derived.equipmentSlots}</div>
+                </div>
+                <div className="stat-box derived">
+                  <div className="stat-label">HP</div>
+                  <div className="stat-value">{derived.hp}</div>
+                </div>
+              </>
+            );
+          })()}
+        </div>
       </div>
 
       <div className="slot-info">

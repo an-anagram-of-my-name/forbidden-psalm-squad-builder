@@ -46,7 +46,7 @@
 
 .stats-grid {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: 1fr 1fr;
   gap: 8px;
 }
 
@@ -58,6 +58,21 @@
   border: 1px solid #ddd;
   border-radius: 4px;
   padding: 8px;
+}
+
+.stat-box.derived {
+  background-color: #E8F0F8;
+  border-color: #b8d4e8;
+}
+
+.stat-box.placeholder {
+  background-color: #f5f5f5;
+  border-color: #e0e0e0;
+}
+
+.stat-box.placeholder .stat-name,
+.stat-box.placeholder .stat-value {
+  color: #bbb;
 }
 
 .stat-name {

@@ -3,6 +3,13 @@ import { Stats, StatName, TechLevel } from '../types';
 import { getValidStatDistributions, getAvailableModifiers } from '../utils/stats';
 import './StatDistributionPicker.css';
 
+type DerivedStatInfo = { label: string; base: number };
+const DERIVED_STAT_MAP: Partial<Record<StatName, DerivedStatInfo>> = {
+    agility: { label: 'MOV', base: 5 },
+    strength: { label: 'SLOTS', base: 5 },
+    toughness: { label: 'HP', base: 8 },
+};
+
 interface StatDistributionPickerProps {
     onStatsChange?: (stats: Stats | null) => void;
     mode?: 'squad' | 'preset';
@@ -113,23 +120,42 @@ const StatDistributionPicker: React.FC<StatDistributionPickerProps> = ({
                     <h3>Assign Modifiers to Stats</h3>
                     {statNames.map((stat) => {
                         const availableOptions = getAvailableModifiersForStat(stat);
+                        const derivedInfo = DERIVED_STAT_MAP[stat];
+                        const assignedValue = statAssignments[stat];
                         return (
                             <div key={stat} className="stat-assignment">
-                                <label>{stat.charAt(0).toUpperCase() + stat.slice(1)}</label>
-                                <select
-                                    value={statAssignments[stat] ?? ''}
-                                    onChange={(e) =>
-                                        handleStatAssignment(stat, parseInt(e.target.value))
-                                    }
-                                    disabled={availableOptions.length === 0}
-                                >
-                                    <option value="">Select Modifier</option>
-                                    {availableOptions.map((mod) => (
-                                        <option key={mod} value={mod}>
-                                            {mod > 0 ? `+${mod}` : mod}
-                                        </option>
-                                    ))}
-                                </select>
+                                <label className="stat-assignment-label">
+                                    {stat.charAt(0).toUpperCase() + stat.slice(1)}
+                                </label>
+                                <div className="stat-assignment-selector">
+                                    <select
+                                        value={assignedValue ?? ''}
+                                        onChange={(e) =>
+                                            handleStatAssignment(stat, parseInt(e.target.value))
+                                        }
+                                        disabled={availableOptions.length === 0}
+                                    >
+                                        <option value="">Select Modifier</option>
+                                        {availableOptions.map((mod) => (
+                                            <option key={mod} value={mod}>
+                                                {mod > 0 ? `+${mod}` : mod}
+                                            </option>
+                                        ))}
+                                    </select>
+                                </div>
+                                {derivedInfo ? (
+                                    <div className={`stat-box${assignedValue !== undefined ? ' derived' : ' placeholder'}`}>
+                                        <span className="stat-label">{derivedInfo.label}</span>
+                                        <span className="stat-value">
+                                            {assignedValue !== undefined ? derivedInfo.base + assignedValue : '—'}
+                                        </span>
+                                    </div>
+                                ) : (
+                                    <div className="stat-box placeholder">
+                                        <span className="stat-label">—</span>
+                                        <span className="stat-value">—</span>
+                                    </div>
+                                )}
                             </div>
                         );
                     })}
