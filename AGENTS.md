@@ -776,3 +776,299 @@ Updates to `CharacterCreationFlow.css`:
 6. **Auto-save**: Edit character and save, navigate away, verify squad auto-saved
 7. **Tech Level Lock**: Verify tech level cannot be changed during edit
 8. **Equipment Changes**: Edit character equipment (add/remove items), verify slots still validated
+
+
+
+## Feature: Character Creation Wizard Footer Pattern
+
+### Overview
+The Character Creation Flow is a multi-step wizard that guides users through creating or editing characters. This spec defines the standardized footer pattern for the wizard, ensuring all action buttons are consistently visible and accessible throughout the flow, preventing accidental clicks on underlying content and maintaining predictable UX.
+
+### Key Concepts
+- **Unified Footer**: All step-specific action buttons (Confirm/Next buttons) are consolidated in a single sticky footer
+- **Persistent Visibility**: The footer remains visible and accessible at all times, regardless of content height or scroll position
+- **No Overlap**: Content scrolls beneath the footer but doesn't get hidden behind it; footer has sufficient viewport space
+- **Consistent Button Hierarchy**: All steps use the same button layout pattern with consistent positioning and styling
+- **Step-Aware Rendering**: Footer buttons conditionally render based on current step to show only relevant actions
+
+### Wizard Structure
+
+#### Overall Layout
+```
+┌─────────────────────────────────┐
+│      flow-header                │  (fixed height, always visible)
+│  (title + step indicator)       │
+├─────────────────────────────────┤
+│                                 │
+│      flow-content               │  (scrollable, has bottom padding)
+│    (step-specific content)      │  (padding = footer height + buffer)
+│                                 │
+│   [content scrolls up beneath]  │
+├─────────────────────────────────┤
+│      flow-footer                │  (sticky, always visible at bottom)
+│    (all action buttons)         │
+└─────────────────────────────────┘
+```
+
+#### flow-header
+- Height: fixed
+- Content: Page title, step indicator (1. Stats, 2. Flaws & Feats, etc.)
+- Behavior: Always visible at top
+- Styling: Dark background, white text
+
+#### flow-content
+- Height: flexible, grows with content
+- Content: Current step's main UI (pickers, forms, grids)
+- Scrolling: Vertical scroll enabled when content exceeds available space
+- **Padding-bottom**: Calculated to equal footer height + buffer (prevents content from being hidden behind sticky footer)
+- Behavior: User scrolls through content; footer remains visible above scrolling
+
+#### flow-footer (Sticky)
+- Position: `sticky` (not fixed)
+- Bottom: `0` (sticks to bottom of visible area while content scrolls)
+- Z-index: `10` (above content)
+- Height: Fixed (approximately 60-80px depending on button count)
+- Content: Action buttons for current step
+- Styling: Light background with top border, centered button layout
+- Scrolling: Stays in place as content scrolls; moves with viewport
+
+### Button Layout by Step
+
+All buttons appear in the sticky footer, organized left-to-right:
+
+**Step 1: Stats Distribution**
+```
+[Cancel]  [Confirm Stats →]
+```
+- Cancel: Red/danger (discard changes, exit flow)
+- Confirm Stats: Primary action (proceed to next step)
+- No Back button (first step)
+
+**Step 2: Flaws & Feats**
+```
+[Cancel]  [Back]  [Confirm Selection →]
+```
+- Cancel: Red/danger
+- Back: Gray (return to previous step)
+- Confirm Selection: Primary action
+
+**Step 3: Equipment**
+```
+[Cancel]  [Back]  [Clear All]  [Confirm Equipment →]
+```
+- Cancel: Red/danger
+- Back: Gray
+- Clear All: Secondary action (remove all equipped items)
+- Confirm Equipment: Primary action
+
+**Step 4: Review**
+```
+[Cancel]  [Back]  [Create/Update Character]
+```
+- Cancel: Red/danger
+- Back: Gray
+- Create Character (new) / Update Character (edit): Primary action, green/success color
+- No additional secondary actions
+
+### Implementation Details
+
+**CharacterCreationFlow.tsx Changes:**
+
+1. **Restructure picker components** to remove their built-in action buttons:
+   - StatDistributionPicker: Remove button, return selected stats via callback only
+   - FlawsAndFeatsPicker: Remove button, return selections via callback only
+   - EquipmentPicker: Remove Clear All and Confirm buttons, move to footer
+
+2. **Update callback signatures**:
+   - `onStatsSelected(stats)`: Called when stats selected (no button click needed)
+   - `onSelectFlawAndFeat(flaw, feat)`: Called when selections made
+   - `onEquipmentSelected(equipment)`: Called when equipment finalized
+   - Add new handler: `onClearAllEquipment()` for Clear All action
+
+3. **Update flow-footer rendering logic**:
+   ```typescript
+   const handleConfirmStats = () => {
+     if (stats) {
+       handleStatsSelected(stats);
+     }
+   };
+
+   const handleConfirmFlawFeat = () => {
+     if (flaw && feat) {
+       handleFlawAndFeatSelected(flaw, feat);
+     }
+   };
+
+   const handleConfirmEquipment = () => {
+     handleEquipmentSelected(equipment);
+   };
+
+   // In footer:
+   {currentStep === 'stats' && (
+     <button onClick={handleConfirmStats} className="btn-confirm btn-confirm-stats">
+       Confirm Stats →
+     </button>
+   )}
+   {currentStep === 'flaws-feats' && (
+     <button onClick={handleConfirmFlawFeat} className="btn-confirm btn-confirm-flaws">
+       Confirm Selection →
+     </button>
+   )}
+   {currentStep === 'equipment' && (
+     <>
+       <button onClick={handleClearAllEquipment} className="btn-secondary">
+         Clear All
+       </button>
+       <button onClick={handleConfirmEquipment} className="btn-confirm btn-confirm-equipment">
+         Confirm Equipment →
+       </button>
+     </>
+   )}
+   ```
+
+4. **Add state to track selections**:
+   - Stats picker doesn't auto-advance; user confirms via button
+   - Same for Flaws/Feats and Equipment
+   - Only Review step has auto-transition (when character created)
+
+**CharacterCreationFlow.css Changes:**
+
+```css
+.flow-content {
+    flex: 1;
+    padding: 40px 20px;
+    padding-bottom: 120px;  /* Footer height (~60px) + buffer (60px) */
+    max-width: 1200px;
+    margin: 0 auto;
+    width: 100%;
+    overflow-y: auto;
+}
+
+.flow-footer {
+    display: flex;
+    justify-content: center;
+    gap: 15px;
+    padding: 20px;
+    background-color: #f0f0f0;
+    border-top: 1px solid #ddd;
+    position: sticky;
+    bottom: 0;
+    z-index: 10;
+    min-height: 60px;
+    flex-wrap: wrap;  /* Allow buttons to wrap on small screens */
+}
+
+.btn-confirm {
+    padding: 12px 30px;
+    font-size: 16px;
+    background-color: #4CAF50;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+.btn-confirm:hover:not(:disabled) {
+    background-color: #45a049;
+}
+
+.btn-confirm:disabled {
+    background-color: #ccc;
+    cursor: not-allowed;
+}
+
+.btn-secondary {
+    padding: 12px 30px;
+    font-size: 16px;
+    background-color: #666;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+.btn-secondary:hover {
+    background-color: #555;
+}
+```
+
+**Picker Component Changes:**
+
+Each picker (StatDistributionPicker, FlawsAndFeatsPicker, EquipmentPicker) removes its own action buttons:
+- Remove `onStatsSelected` button from StatDistributionPicker
+- Remove `onSelectFlawAndFeat` button from FlawsAndFeatsPicker
+- Remove `Clear All` and `Confirm Equipment` buttons from EquipmentPicker
+- Remove related CSS for removed buttons
+- Pickers still render content; buttons moved to footer
+
+### User Workflows
+
+#### Creating a Character - Stats Step
+1. User sees Stats step with options and no buttons visible
+2. User selects stat distribution (e.g., +3,+1,0,-3)
+3. In sticky footer at bottom, user clicks "Confirm Stats →" button
+4. Flow advances to Flaws & Feats step
+5. Footer updates to show Cancel, Back, and "Confirm Selection →"
+
+#### Creating a Character - Equipment Step
+1. User navigates to Equipment step
+2. Footer shows: [Cancel] [Back] [Clear All] [Confirm Equipment →]
+3. User can click "Clear All" to remove all equipment without confirming
+4. User adds/removes equipment as desired
+5. Clicks "Confirm Equipment →" to proceed to Review
+
+#### Editing a Preset - Equipment Step (Same Pattern)
+1. User editing preset sees pre-populated equipment
+2. Modifies equipment selections
+3. Clicks "Clear All" to reset if needed
+4. Clicks "Confirm Equipment →" to proceed
+5. Same UX as creating new character
+
+### Benefits
+
+1. **Visibility**: Never lose action buttons; always know what to click
+2. **Consistency**: Same button locations across all steps
+3. **Accessibility**: Buttons remain in viewport; no need to scroll to find them
+4. **Prevention**: Eliminates accidental clicks on underlying content (e.g., SquadBuilder's "Save Squad" button)
+5. **Clarity**: Footer buttons clearly indicate available actions for current step
+
+### Edge Cases
+
+**Small Screens / Mobile:**
+- Footer buttons may wrap to multiple lines (enabled via `flex-wrap: wrap`)
+- Padding-bottom adjusted to accommodate wrapped buttons
+- Content still scrollable and footer remains sticky
+
+**Tall Step Content:**
+- Stats step: Relatively compact, rarely scrolls
+- Flaws & Feats: Large list of options, may scroll significantly
+- Equipment: Very tall with many items, definitely scrolls
+- Padding-bottom ensures footer never hides content in any case
+
+**Disabled Buttons:**
+- "Confirm" buttons disabled until required fields selected (e.g., stats not selected)
+- Visual feedback: disabled style (gray, no hover effect)
+- Clear indication to user that step is incomplete
+
+**Button Click Timing:**
+- No race conditions: button click triggers step handler
+- Handler advances to next step or performs action
+- Footer re-renders with new buttons for new step
+
+### Testing Scenarios
+
+1. **Tall Content**: Equipment step scrolls significantly; footer remains visible and buttons clickable
+2. **Small Screens**: Buttons wrap correctly without overflow
+3. **Disabled States**: Confirm button disabled until selections made; re-enables when valid
+4. **Step Navigation**: Forward and back navigation works; footer buttons update per step
+5. **Footer Never Hidden**: Scroll to bottom of any step; footer always at bottom and visible
+6. **No Content Overlap**: Scroll to bottom; content last item not hidden behind footer
+7. **Character Summary Cards**: SquadBuilder character cards not accidentally clickable when viewing CharacterCreationFlow
+
+### Backward Compatibility
+
+- Existing picker components refactored to remove buttons
+- No external API changes (callbacks remain same)
+- Improved UX, no breaking changes for existing features
