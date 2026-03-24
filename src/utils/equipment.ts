@@ -22,7 +22,10 @@ export function canUseArmor(characterStrength: number, armorStrength: number): b
     return characterStrength >= armorStrength;
 }
 
-// Calculate character movement based on equipment
+/**
+ * @deprecated Use calculateFinalDerivedStats() from utils/stats instead.
+ * This only handles armor movement penalties and is not part of the full stat modification chain.
+ */
 export function getCharacterMovement(baseMovement: number, equippedItems: Equipment[]): number {
     let penalty = 0;
     equippedItems.forEach((item) => {

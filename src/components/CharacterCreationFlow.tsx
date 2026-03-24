@@ -3,7 +3,7 @@ import { Character, CharacterPreset, Equipment, Stats, Flaw, Feat, TechLevel, Fl
 import StatDistributionPicker from './StatDistributionPicker';
 import FlawsAndFeatsPicker from './FlawsAndFeatsPicker';
 import EquipmentPicker from './EquipmentPicker';
-import { applyFlawFeatModifiers, calculateDerivedStats } from '../utils/stats';
+import { applyFlawFeatModifiers, calculateFinalDerivedStats } from '../utils/stats';
 import { characterNames28Psalms } from '../types/characterNames28Psalms';
 import './CharacterCreationFlow.css';
 
@@ -285,7 +285,7 @@ const CharacterCreationFlow: React.FC<CharacterCreationFlowProps> = ({
                             <div className="review-section-card">
                                 <h3>Stats</h3>
                                 {effectiveStats && (() => {
-                                    const derived = calculateDerivedStats(effectiveStats);
+                                    const derived = calculateFinalDerivedStats(stats!, flaw, feat, equipment);
                                     const fmt = (v: number) => v > 0 ? `+${v}` : `${v}`;
                                     return (
                                         <ul className="stats-list">
