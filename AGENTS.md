@@ -50,6 +50,7 @@ project/
 - Displays squad selection/creation UI
 - Renders CharacterGrid when a squad is active
 - Passes squad data to child components
+- There should be a maximum of five characters in a squad - this should be enforced by the app
 
 **CharacterGrid** → Lists all characters in the current squad
 - Displays each character via CharacterSummary cards
