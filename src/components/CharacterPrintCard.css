@@ -68,8 +68,20 @@
 
 /* Stats grid */
 .print-stats-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.print-stats-row-base {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
+  gap: 4px;
+}
+
+.print-stats-row-derived {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
   gap: 4px;
 }
 
