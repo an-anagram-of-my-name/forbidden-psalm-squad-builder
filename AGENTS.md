@@ -2686,3 +2686,424 @@ const handleSelectPresetForSquad = (preset: CharacterPreset) => {
 ✅ Modal closes after selection
 ✅ No breaking changes to existing functionality
 
+## Feature: Delete Squad
+
+### Overview
+Users can delete an existing squad and all its associated characters. The feature includes a confirmation dialog to prevent accidental deletion, and navigates the user to the landing page after successful deletion.
+
+### Key Concepts
+- **Destructive Action**: Deletion is permanent and cannot be undone
+- **Confirmation Required**: User must confirm deletion via YES/NO dialog
+- **Cascading Deletion**: All characters in the squad are deleted along with the squad
+- **No Impact on Other Data**: Deleting a squad does not affect other squads, characters in other squads, or presets
+- **Landing Page Return**: After deletion, user is redirected to the application's landing page
+
+### UI Components
+
+#### Squad Builder Footer (Modified)
+- **Layout**: Flex container with left-aligned and right-aligned sections
+- **Left Section**: "Delete Squad" button (red/danger styling)
+- **Right Section**: Existing buttons (Save Squad, Print Squad, etc.)
+- **Button Styling**:
+  - Background: Red or #d32f2f (danger color)
+  - Text: "Delete Squad"
+  - Hover state: Darker red with opacity change
+  - Size: Consistent with other footer buttons
+
+#### Delete Confirmation Modal (New)
+- **Title**: "Delete Squad?"
+- **Message**: "Are you sure you want to delete '[Squad Name]'? This action cannot be undone. All characters in this squad will be permanently deleted."
+- **Buttons**:
+  - "NO" (secondary, left-aligned) - close modal without action
+  - "YES" (danger/red, right-aligned) - confirm deletion
+
+### State Management in SquadBuilder
+
+**New Handler:**
+- `handleDeleteSquad()`: Opens confirmation modal
+  - Sets state to show modal
+  - Passes squad name to modal for display
+
+- `handleConfirmDelete()`: Executes squad deletion
+  - Removes squad from `appState.squads`
+  - Removes all characters associated with this squad
+  - Updates `currentSquadId` to null (or loads previous squad if available)
+  - Navigates to landing page
+  - Shows success message (optional toast)
+
+- `handleCancelDelete()`: Closes modal without action
+  - Clears modal state
+  - Returns to squad view
+
+### User Workflow
+
+#### Deleting a Squad
+1. User has a squad loaded in SquadBuilder
+2. User clicks "Delete Squad" button in footer (left-aligned, red)
+3. Confirmation modal appears with squad name and warning message
+4. User clicks "NO":
+   - Modal closes
+   - User remains in SquadBuilder with squad unchanged
+5. User clicks "YES":
+   - Squad is permanently deleted from localStorage
+   - All characters in squad are deleted
+   - App navigates to landing page
+   - Brief success message: "Squad deleted successfully"
+
+### Implementation Details
+
+**SquadBuilder.tsx Changes:**
+- Add `showDeleteModal` state:
+  ```typescript
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  ```
+
+- Add handlers:
+  ```typescript
+  const handleDeleteSquad = () => {
+    setShowDeleteModal(true);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!squad) return;
+    
+    // Remove squad from state
+    const updatedSquads = appState.squads.filter(s => s.id !== squad.id);
+    
+    // Update app state (remove squad and set currentSquadId to null)
+    const newAppState = {
+      ...appState,
+      squads: updatedSquads,
+      currentSquadId: null,
+    };
+    
+    // Persist to localStorage
+    saveToLocalStorage(newAppState);
+    
+    // Show success message
+    showSuccessMessage('Squad deleted successfully');
+    
+    // Navigate to landing page
+    setShowDeleteModal(false);
+    navigate('/');
+  };
+
+  const handleCancelDelete = () => {
+    setShowDeleteModal(false);
+  };
+  ```
+
+- Modify footer rendering to add Delete button (left-aligned):
+  ```typescript
+  <footer className="squad-builder-footer">
+    <div className="footer-left">
+      {squad && (
+        <button 
+          className="btn-delete-squad"
+          onClick={handleDeleteSquad}
+        >
+          Delete Squad
+        </button>
+      )}
+    </div>
+    <div className="footer-right">
+      {/* Existing buttons: Save Squad, Print Squad, etc. */}
+    </div>
+  </footer>
+  ```
+
+- Render DeleteConfirmationModal when `showDeleteModal` is true:
+  ```typescript
+  {showDeleteModal && (
+    <DeleteConfirmationModal
+      squadName={squad?.name || 'Squad'}
+      onConfirm={handleConfirmDelete}
+      onCancel={handleCancelDelete}
+    />
+  )}
+  ```
+
+**SquadBuilder.css Changes:**
+
+```css
+.squad-builder-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px;
+  background-color: #f0f0f0;
+  border-top: 1px solid #ddd;
+  gap: 15px;
+}
+
+.footer-left {
+  display: flex;
+  gap: 10px;
+}
+
+.footer-right {
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+}
+
+.btn-delete-squad {
+  padding: 12px 24px;
+  font-size: 16px;
+  background-color: #d32f2f;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: 500;
+  transition: background-color 0.3s, opacity 0.3s;
+}
+
+.btn-delete-squad:hover {
+  background-color: #b71c1c;
+  opacity: 0.9;
+}
+
+.btn-delete-squad:active {
+  transform: scale(0.98);
+}
+
+.btn-delete-squad:disabled {
+  background-color: #ccc;
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+```
+
+**DeleteConfirmationModal.tsx (New Component):**
+
+```typescript
+import React from 'react';
+import './DeleteConfirmationModal.css';
+
+interface DeleteConfirmationModalProps {
+  squadName: string;
+  onConfirm: () => void;
+  onCancel: () => void;
+}
+
+export const DeleteConfirmationModal: React.FC<DeleteConfirmationModalProps> = ({
+  squadName,
+  onConfirm,
+  onCancel,
+}) => {
+  return (
+    <div className="modal-overlay">
+      <div className="modal-content delete-confirmation">
+        <h2>Delete Squad?</h2>
+        <p>
+          Are you sure you want to delete <strong>'{squadName}'</strong>? This action cannot be undone. 
+          All characters in this squad will be permanently deleted.
+        </p>
+        <div className="modal-buttons">
+          <button 
+            className="btn-secondary btn-cancel"
+            onClick={onCancel}
+          >
+            NO
+          </button>
+          <button 
+            className="btn-danger btn-confirm"
+            onClick={onConfirm}
+          >
+            YES, DELETE
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+```
+
+**DeleteConfirmationModal.css (New Stylesheet):**
+
+```css
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.modal-content {
+  background: white;
+  border-radius: 8px;
+  padding: 30px;
+  max-width: 400px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+  animation: slideIn 0.3s ease-out;
+}
+
+.modal-content h2 {
+  margin: 0 0 15px 0;
+  color: #333;
+  font-size: 22px;
+}
+
+.modal-content p {
+  margin: 0 0 25px 0;
+  color: #666;
+  line-height: 1.5;
+  font-size: 14px;
+}
+
+.modal-buttons {
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+}
+
+.btn-cancel,
+.btn-confirm {
+  padding: 10px 20px;
+  font-size: 14px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: 500;
+  transition: background-color 0.3s;
+}
+
+.btn-cancel {
+  background-color: #f0f0f0;
+  color: #333;
+}
+
+.btn-cancel:hover {
+  background-color: #e0e0e0;
+}
+
+.btn-confirm {
+  background-color: #d32f2f;
+  color: white;
+}
+
+.btn-confirm:hover {
+  background-color: #b71c1c;
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+```
+
+### Data Flow
+
+1. **Before Deletion:**
+   - Squad exists in `appState.squads`
+   - Characters exist in `appState` (either in squad or elsewhere)
+   - `currentSquadId` points to the squad being deleted
+
+2. **On Confirmation:**
+   - Squad object removed from `appState.squads`
+   - All characters that belonged to this squad are deleted
+   - `currentSquadId` set to null
+   - localStorage updated with new state
+   - Navigation to landing page ('/')
+
+3. **After Deletion:**
+   - Squad no longer exists in app
+   - All its characters permanently deleted
+   - User sees landing page with remaining squads (if any)
+
+### Edge Cases
+
+**Multiple Squads:**
+- User deletes Squad A (of 3 squads) → Squad A removed, Squads B and C remain
+- User can still access remaining squads
+
+**Single Squad:**
+- User deletes only squad → App navigates to landing page with no squads
+- User can create a new squad
+
+**Squad with Many Characters:**
+- All characters in the squad are deleted together with squad
+- No orphaned character data left behind
+
+**Unsaved Changes:**
+- If squad has unsaved changes, they are still deleted (no warning needed, consistent with new character creation behavior per AGENTS.md)
+- Deletion is explicit and destructive
+
+### Functional Requirements
+
+- ✅ "Delete Squad" button visible in SquadBuilder footer
+- ✅ Button is left-aligned, other footer buttons remain right-aligned
+- ✅ Button is red/danger color
+- ✅ Button is only visible when squad exists
+- ✅ Clicking opens confirmation modal with squad name
+- ✅ Modal has "NO" and "YES, DELETE" buttons
+- ✅ "NO" closes modal without action
+- ✅ "YES, DELETE" deletes squad and all characters
+- ✅ After deletion, navigate to landing page
+- ✅ Squad removed from localStorage
+- ✅ All characters in squad removed from localStorage
+- ✅ Other squads and characters unaffected
+- ✅ Success message shown after deletion (optional)
+
+### Testing Scenarios
+
+1. **Basic Delete**: Delete a squad, verify it's gone and user redirected
+2. **Confirmation Dialog**: Modal appears with correct squad name
+3. **Cancel Delete**: Click NO, remain in SquadBuilder with squad intact
+4. **Multiple Squads**: Delete one, verify others remain accessible
+5. **Character Deletion**: Verify all characters in deleted squad are removed
+6. **Landing Page**: After deletion, user sees landing page
+7. **Empty State**: Delete only squad, app shows no squads available
+8. **Button Visibility**: Delete button only shows when squad exists
+9. **Button Styling**: Red color, left-aligned in footer
+
+### Files to Modify
+
+1. **src/components/SquadBuilder.tsx**:
+   - Add `showDeleteModal` state
+   - Add `handleDeleteSquad`, `handleConfirmDelete`, `handleCancelDelete` handlers
+   - Modify footer layout to support left-aligned button
+   - Render DeleteConfirmationModal
+
+2. **src/components/SquadBuilder.css**:
+   - Update `.squad-builder-footer` layout with flexbox
+   - Add `.footer-left` and `.footer-right` styles
+   - Add `.btn-delete-squad` styles
+
+### Files to Create
+
+1. **src/components/DeleteConfirmationModal.tsx**:
+   - Reusable confirmation modal component
+
+2. **src/components/DeleteConfirmationModal.css**:
+   - Modal styling with animation
+
+### Non-Functional Requirements
+
+- Performance: Deletion is instant (no loading time)
+- Usability: Clear confirmation prevents accidental deletion
+- Consistency: Follows existing button and modal patterns in app
+- Accessibility: Modal keyboard navigation (Escape to close, Tab between buttons)
+
+### Success Criteria
+
+✅ Squad can be deleted with one click + confirmation
+✅ Confirmation modal clearly indicates what will be deleted
+✅ All associated data removed from localStorage
+✅ User redirected to landing page after deletion
+✅ Other squads/characters/presets unaffected
+✅ Button styling clearly indicates destructive action
+✅ No breaking changes to existing functionality
