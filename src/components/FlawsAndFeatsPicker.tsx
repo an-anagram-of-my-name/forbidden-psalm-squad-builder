@@ -33,13 +33,13 @@ const FlawsAndFeatsPicker: React.FC<FlawsAndFeatsPickerProps> = ({ onSelectionCh
     const getRandomFlaw = () => {
         if (flaws28Psalms.length === 0) return;
         const randomIndex = Math.floor(Math.random() * flaws28Psalms.length);
-        setSelectedFlawType(flaws28Psalms[randomIndex].type as FlawType);
+        setSelectedFlawType(flaws28Psalms[randomIndex].type);
     };
 
     const getRandomFeat = () => {
         if (feats28Psalms.length === 0) return;
         const randomIndex = Math.floor(Math.random() * feats28Psalms.length);
-        setSelectedFeatType(feats28Psalms[randomIndex].type as FeatType);
+        setSelectedFeatType(feats28Psalms[randomIndex].type);
     };
 
     const effectiveStats = useMemo(() => {
