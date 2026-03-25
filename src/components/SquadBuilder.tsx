@@ -7,6 +7,7 @@ import SquadDropdown from './SquadDropdown';
 import PresetDropdown from './PresetDropdown';
 import SquadPrintView from './SquadPrintView';
 import PresetCharacterPicker from './PresetCharacterPicker';
+import DeleteConfirmationModal from './DeleteConfirmationModal';
 import './SquadBuilder.css';
 
 interface SquadBuilderProps {
@@ -16,6 +17,7 @@ interface SquadBuilderProps {
   onSaveSquad: (squad: Squad) => void;
   onLoadSquad: (squadId: string) => void;
   onNewSquad: () => void;
+  onDeleteSquad: (squadId: string) => void;
   presets: CharacterPreset[];
   onNewPreset: () => void;
   onLoadPreset: (presetId: string) => void;
@@ -28,6 +30,7 @@ const SquadBuilder: React.FC<SquadBuilderProps> = ({
   onSaveSquad,
   onLoadSquad,
   onNewSquad,
+  onDeleteSquad,
   presets,
   onNewPreset,
   onLoadPreset,
@@ -44,6 +47,7 @@ const SquadBuilder: React.FC<SquadBuilderProps> = ({
   const [autoSaveMessage, setAutoSaveMessage] = useState('');
   const [saveMessage, setSaveMessage] = useState('');
   const [showPrintView, setShowPrintView] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
 
   // Sync local squad state when the parent switches to a different squad
   useEffect(() => {
@@ -223,6 +227,20 @@ const SquadBuilder: React.FC<SquadBuilderProps> = ({
     setIsSaved(true);
     setNameError('');
     setShowCharacterCreation(false);
+  };
+
+  const handleDeleteSquad = () => {
+    setShowDeleteModal(true);
+  };
+
+  const handleConfirmDelete = () => {
+    if (!squad) return;
+    onDeleteSquad(squad.id);
+    setShowDeleteModal(false);
+  };
+
+  const handleCancelDelete = () => {
+    setShowDeleteModal(false);
   };
 
   const calculateSquadStats = () => {
@@ -443,24 +461,31 @@ const SquadBuilder: React.FC<SquadBuilderProps> = ({
       </div>
 
       <div className="squad-builder-footer">
-        <button onClick={handleCancel} className="btn-cancel">
-          Cancel
-        </button>
-        {saveMessage && <span className="save-message">{saveMessage}</span>}
-        <button
-          className="btn-save"
-          onClick={handleSaveSquad}
-          disabled={isSaveDisabled}
-          title={
-            !squad.name.trim()
-              ? 'Enter a squad name to save'
-              : nameError
-                ? nameError
-                : 'Save Squad'
-          }
-        >
-          Save Squad
-        </button>
+        <div className="footer-left">
+          <button onClick={handleDeleteSquad} className="btn-delete-squad">
+            Delete Squad
+          </button>
+        </div>
+        <div className="footer-right">
+          <button onClick={handleCancel} className="btn-cancel">
+            Cancel
+          </button>
+          {saveMessage && <span className="save-message">{saveMessage}</span>}
+          <button
+            className="btn-save"
+            onClick={handleSaveSquad}
+            disabled={isSaveDisabled}
+            title={
+              !squad.name.trim()
+                ? 'Enter a squad name to save'
+                : nameError
+                  ? nameError
+                  : 'Save Squad'
+            }
+          >
+            Save Squad
+          </button>
+        </div>
       </div>
 
       {showPrintView && (
@@ -473,6 +498,14 @@ const SquadBuilder: React.FC<SquadBuilderProps> = ({
           squadTechLevel={squad.techLevel}
           onSelectPreset={handleSelectPresetForSquad}
           onCancel={() => setShowPresetPicker(false)}
+        />
+      )}
+
+      {showDeleteModal && (
+        <DeleteConfirmationModal
+          squadName={squad.name || 'this squad'}
+          onConfirm={handleConfirmDelete}
+          onCancel={handleCancelDelete}
         />
       )}
     </div>
