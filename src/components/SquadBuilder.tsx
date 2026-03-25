@@ -462,9 +462,11 @@ const SquadBuilder: React.FC<SquadBuilderProps> = ({
 
       <div className="squad-builder-footer">
         <div className="footer-left">
-          <button onClick={handleDeleteSquad} className="btn-delete-squad">
-            Delete Squad
-          </button>
+          {currentSquadId && (
+            <button onClick={handleDeleteSquad} className="btn-delete-squad">
+              Delete Squad
+            </button>
+          )}
         </div>
         <div className="footer-right">
           <button onClick={handleCancel} className="btn-cancel">
