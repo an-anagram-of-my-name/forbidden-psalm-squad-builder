@@ -58,6 +58,14 @@ const App: React.FC = () => {
     setAppState((prev) => ({ ...prev, currentSquadId: null }));
   };
 
+  const handleDeleteSquad = (squadId: string) => {
+    setAppState((prev) => ({
+      ...prev,
+      squads: prev.squads.filter((s) => s.id !== squadId),
+      currentSquadId: null,
+    }));
+  };
+
   const handleNewPreset = () => {
     setCurrentPresetId(null);
     setShowPresetFlow(true);
@@ -106,6 +114,7 @@ const App: React.FC = () => {
         onSaveSquad={handleSaveSquad}
         onLoadSquad={handleLoadSquad}
         onNewSquad={handleNewSquad}
+        onDeleteSquad={handleDeleteSquad}
         presets={appState.presets}
         onNewPreset={handleNewPreset}
         onLoadPreset={handleLoadPreset}
