@@ -3107,3 +3107,263 @@ export const DeleteConfirmationModal: React.FC<DeleteConfirmationModalProps> = (
 ✅ Other squads/characters/presets unaffected
 ✅ Button styling clearly indicates destructive action
 ✅ No breaking changes to existing functionality
+
+## Feature: Random Feat and Flaw Selection
+
+### Overview
+Enable users to randomly select feats and flaws in the FlawsAndFeatsPicker component. This provides a quick way to explore different character builds and adds variety to character creation without requiring manual selection.
+
+### Key Concepts
+- **Unweighted Random Selection**: Each feat and flaw has an equal probability of being selected
+- **No Lock-In**: Random selections can be overridden with manual selections at any time
+- **Dynamic Feat/Flaw Lists**: Randomization works regardless of the number of available feats/flaws
+- **Independent Randomization**: Feat and flaw buttons operate independently
+- **Clear Feedback**: Visual indication of which option was randomly selected
+
+### UI Components
+
+#### FlawsAndFeatsPicker (Modified)
+- **Random Feat Button**: "🎲 Random Feat" or similar icon button next to feat selection
+- **Random Flaw Button**: "🎲 Random Flaw" or similar icon button next to flaw selection
+- **Button Placement**: Above each selection grid
+- **Button Styling**:
+  - Icon-based or text-based button
+  - Consistent with existing component styling
+  - Clear hover state indicating interactivity
+
+### Button Behavior
+
+**Random Feat Button:**
+- When clicked: Selects a random feat from `feats28Psalms` array
+- Updates feat selection state
+- Triggers re-render to display selected feat
+- User can still click any feat to change selection
+
+**Random Flaw Button:**
+- When clicked: Selects a random flaw from `flaws28Psalms` array
+- Updates flaw selection state
+- Triggers re-render to display selected flaw
+- User can still click any flaw to change selection
+
+### Implementation Details
+
+**FlawsAndFeatsPicker.tsx Changes:**
+
+1. **New Helper Functions:**
+   ```typescript
+   const getRandomFeat = (): Feat => {
+     const randomIndex = Math.floor(Math.random() * feats28Psalms.length);
+     return feats28Psalms[randomIndex];
+   };
+
+   const getRandomFlaw = (): Flaw => {
+     const randomIndex = Math.floor(Math.random() * flaws28Psalms.length);
+     return flaws28Psalms[randomIndex];
+   };
+   ```
+
+2. **New Handler Functions:**
+   ```typescript
+   const handleRandomFeat = () => {
+     const randomFeat = getRandomFeat();
+     setSelectedFeat(randomFeat);
+     onSelectFlawAndFeat(selectedFlaw, randomFeat);
+   };
+
+   const handleRandomFlaw = () => {
+     const randomFlaw = getRandomFlaw();
+     setSelectedFlaw(randomFlaw);
+     onSelectFlawAndFeat(randomFlaw, selectedFeat);
+   };
+   ```
+
+3. **Button Rendering:**
+   - Add random feat button above feat selection grid:
+     ```typescript
+     <div className="feat-section">
+       <h3>Select a Feat</h3>
+       <button 
+         className="btn-random"
+         onClick={handleRandomFeat}
+         title="Select a random feat"
+       >
+         🎲
+       </button>
+       {/* Existing feat grid rendering */}
+     </div>
+     ```
+
+   - Add random flaw button above flaw selection grid:
+     ```typescript
+     <div className="flaw-section">
+       <h3>Select a Flaw</h3>
+       <button 
+         className="btn-random"
+         onClick={handleRandomFlaw}
+         title="Select a random flaw"
+       >
+         🎲
+       </button>
+       {/* Existing flaw grid rendering */}
+     </div>
+     ```
+
+**FlawsAndFeatsPicker.css Changes:**
+
+```css
+.feat-section,
+.flaw-section {
+  margin-bottom: 30px;
+}
+
+.feat-section h3,
+.flaw-section h3 {
+  margin-bottom: 15px;
+  font-size: 18px;
+  color: #333;
+}
+
+.btn-random {
+  background: none;
+  border: none;
+  font-size: 24px;
+  cursor: pointer;
+  padding: 4px 8px;
+  margin-bottom: 12px;
+  border-radius: 4px;
+  transition: background-color 0.2s, transform 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.btn-random:hover {
+  background-color: #f0f0f0;
+  transform: scale(1.1);
+}
+
+.btn-random:active {
+  transform: scale(0.95);
+}
+
+/* Tooltip on hover */
+.btn-random[title] {
+  cursor: help;
+}
+```
+
+### Randomization Logic
+
+**Equal Probability:**
+- Use `Math.floor(Math.random() * array.length)` to generate index
+- Every feat/flaw has exactly `1 / array.length` probability of selection
+- No bias toward any particular option
+
+**Dynamic Array Handling:**
+- Randomization works with any number of feats/flaws
+- Automatically adapts if feat/flaw lists are modified or extended
+- No hardcoded assumptions about list length
+
+### User Workflow
+
+#### Randomizing a Feat
+1. User clicks "🎲" button above "Select a Feat" section
+2. A random feat is selected from available feats
+3. Selected feat is highlighted (existing highlight behavior)
+4. Current stats preview updates to show feat modifiers
+5. User can click any other feat to change selection
+6. User can click random button again to select a different random feat
+
+#### Randomizing a Flaw
+1. User clicks "🎲" button above "Select a Flaw" section
+2. A random flaw is selected from available flaws
+3. Selected flaw is highlighted
+4. Current stats preview updates to show flaw modifiers
+5. User can click any other flaw to change selection
+6. User can click random button again to select a different random flaw
+
+#### Mixed Manual and Random Selection
+1. User clicks random feat button → random feat selected
+2. User manually clicks a different feat → feat changes (no lock-in)
+3. User clicks random flaw button → random flaw selected
+4. User can continue modifying selections freely
+
+### Edge Cases
+
+**Single Feat/Flaw:**
+- If only one feat available, clicking random always selects it (still valid)
+- Same for flaws
+
+**Empty Lists:**
+- Should not occur in normal usage (game always has feats/flaws)
+- If it does, handle gracefully (no error, button disabled or hidden)
+
+**Rapid Clicks:**
+- Multiple rapid clicks select new random options each time
+- No debouncing needed (selection is instant)
+
+**Same Random Selection Twice:**
+- User can click random button twice and get same option
+- This is statistically valid and not a bug
+
+### Functional Requirements
+
+- ✅ Random feat button visible above feat selection section
+- ✅ Random flaw button visible above flaw selection section
+- ✅ Each button has clear hover state
+- ✅ Clicking random feat selects random feat from list
+- ✅ Clicking random flaw selects random flaw from list
+- ✅ Each feat has equal probability of selection
+- ✅ Each flaw has equal probability of selection
+- ✅ Works with any number of feats/flaws
+- ✅ Random selections can be overridden manually
+- ✅ No lock-in behavior
+- ✅ Selected option updates UI immediately
+
+### Testing Scenarios
+
+1. **Random Feat Selection**: Click random feat button, verify a feat is selected
+2. **Random Flaw Selection**: Click random flaw button, verify a flaw is selected
+3. **Manual Override**: Click random, then manually select different option
+4. **Stats Update**: Verify current-stats row updates after random selection
+5. **Multiple Random Clicks**: Click random button multiple times, verify different options
+6. **Probability**: Random multiple times, verify all options are selected over time
+7. **Manual After Random**: Randomly select feat, manually select flaw (independent)
+8. **Independent Selection**: Random feat doesn't affect flaw selection
+9. **Hover State**: Buttons show hover feedback
+10. **Accessibility**: Buttons have clear title/aria-label attributes
+
+### Files to Modify
+
+1. **src/components/FlawsAndFeatsPicker.tsx**:
+   - Add `getRandomFeat()` helper function
+   - Add `getRandomFlaw()` helper function
+   - Add `handleRandomFeat()` handler
+   - Add `handleRandomFlaw()` handler
+   - Add random feat button above feat section
+   - Add random flaw button above flaw section
+
+2. **src/components/FlawsAndFeatsPicker.css**:
+   - Add `.btn-random` button styling
+   - Add `.feat-section` and `.flaw-section` styling
+   - Add hover/active states for random button
+
+### Non-Functional Requirements
+
+- Performance: Random selection is instant (no noticeable lag)
+- UX: Clear visual feedback on button interaction
+- Accessibility: Buttons have tooltips/aria-labels
+- Code: Logic is simple and maintainable
+
+### Success Criteria
+
+✅ Random feat button works correctly
+✅ Random flaw button works correctly
+✅ Each feat has equal probability of selection
+✅ Each flaw has equal probability of selection
+✅ Randomization works with dynamic list sizes
+✅ Random selections can be overridden manually
+✅ No lock-in behavior
+✅ UI updates immediately after random selection
+✅ Buttons have clear hover/active states
+✅ No breaking changes to existing functionality
