@@ -44,7 +44,10 @@ function renderEquipmentDetails(item: Equipment): React.ReactNode {
     const weapon = item as Weapon;
     details.push(
       <div key="damage" className="print-equipment-detail">
-        <strong>Damage:</strong> {weapon.damage} &nbsp;|&nbsp; <strong>Mod:</strong> {weapon.modifier.toUpperCase()}
+        <strong>Damage:</strong> {weapon.damage}
+      </div>
+      <div key="damage" className="print-equipment-detail">
+        <strong>Mod:</strong> {weapon.modifier.toUpperCase()}
       </div>
     );
     if (weapon.specialRules.length > 0) {
