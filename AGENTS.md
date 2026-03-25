@@ -251,7 +251,7 @@ The full state stored at key `'forbidden-psalm-state'`:
 }
 ```
 
-A `Squad` requires `createdAt` and `updatedAt` as ISO date strings (not Date objects, since JSON serialization turns them to strings anyway). A minimal example:
+In TypeScript, a `Squad`'s `createdAt` and `updatedAt` fields are typed as `Date`, but when the state is serialized to JSON for localStorage (via `JSON.stringify`), those dates are stored as ISO 8601 strings. When constructing raw JSON for localStorage injection (as below), use ISO date strings for these fields. A minimal example:
 
 ```json
 {
