@@ -289,6 +289,19 @@ export const pastTechWeapons28Psalms: Weapon[] = [
     isRanged: false,
     techLevel: 'past-tech',
   },
+  {
+    id: 'skull',
+    name: 'Skull',
+    damage: 'D4',
+    modifier: 'strength',
+    specialRules: ['Only for characters with the "skull" feat'],
+    cost: 0,
+    slots: 0,
+    category: 'weapon',
+    isTwoHanded: false,
+    isRanged: false,
+    techLevel: 'past-tech',
+  },
 
   // Two-handed Melee Weapons
   {
