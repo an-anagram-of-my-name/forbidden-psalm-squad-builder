@@ -176,6 +176,127 @@ npm test             # Run tests with vitest
 npm run test:ui      # Run tests with UI
 ```
 
+## Screenshot Testing with Playwright
+
+Agents have access to a Playwright browser tool for taking screenshots and verifying UI changes. The following patterns and pitfalls have been learned from using it in this project.
+
+### Starting the Dev Server
+
+Before taking screenshots, start the Vite dev server in the background:
+
+```bash
+npm run dev -- --port 5173 --host 0.0.0.0 &
+```
+
+Then navigate to the app:
+
+```
+http://localhost:5173/forbidden-psalm-squad-builder/
+```
+
+### Screenshots Output Location
+
+Screenshots taken with the `browser_take_screenshot` tool are saved to:
+
+```
+/tmp/playwright-logs/<filename>.png
+```
+
+Example call:
+```
+browser_take_screenshot(filename="my-screenshot.png")
+```
+
+### How App State Works (Important)
+
+The app uses **React state** as its source of truth and **writes to** `localStorage` on every state change:
+
+```
+React State (in memory)  →  saves to  →  localStorage['forbidden-psalm-state']
+                         ←  loads from ←  on page mount
+```
+
+**Consequence**: If you write directly to `localStorage` via `browser_evaluate` and then reload the page, the React app will load your injected state on mount. However, if you write to `localStorage` while the app is already running (without reloading), the React state in memory will **not** reflect the new `localStorage` contents—it will still hold the old state, and it will overwrite `localStorage` again on the next state change.
+
+### The Correct Way to Set Up Test State
+
+**Option A — Inject state then navigate (most reliable)**:
+1. Write the desired state to `localStorage` via `browser_evaluate`
+2. Navigate to the app URL (this causes a fresh page load, triggering the mount effect)
+
+```js
+// Step 1: Set localStorage
+await page.evaluate(() => {
+  localStorage.setItem('forbidden-psalm-state', JSON.stringify({ ... }));
+});
+
+// Step 2: Navigate to reload the app (this triggers the mount useEffect)
+await page.goto('http://localhost:5173/forbidden-psalm-squad-builder/');
+```
+
+**Note**: Calling `window.location.reload()` inside `browser_evaluate` causes a navigation that immediately destroys the execution context, resulting in an error (`Execution context was destroyed`). This is expected — the reload still happens; just ignore the error and wait for the page to settle.
+
+**Option B — Use the UI (most accurate)**:
+Walk through the app's UI as a user would: select tech level, create characters step by step. This is slower but guarantees the app state is exactly what the UI would produce, with no risk of schema mismatches.
+
+### localStorage State Schema
+
+The full state stored at key `'forbidden-psalm-state'`:
+
+```typescript
+{
+  presets: CharacterPreset[];   // character templates
+  squads: Squad[];              // saved squads
+  currentSquadId: string | null;
+}
+```
+
+A `Squad` requires `createdAt` and `updatedAt` as ISO date strings (not Date objects, since JSON serialization turns them to strings anyway). A minimal example:
+
+```json
+{
+  "presets": [],
+  "squads": [{
+    "id": "test-1",
+    "name": "Test Squad",
+    "techLevel": "past-tech",
+    "characters": [],
+    "createdAt": "2026-01-01T00:00:00Z",
+    "updatedAt": "2026-01-01T00:00:00Z",
+    "dateSaved": "2026-01-01T00:00:00Z"
+  }],
+  "currentSquadId": "test-1"
+}
+```
+
+### Waiting for the App to Load
+
+After navigation, always wait for a known element before interacting or taking screenshots:
+
+```js
+// Wait for the squad builder heading
+await page.waitForSelector('h1');
+// or use the Playwright tool:
+browser_wait_for(text="Squad Builder")
+```
+
+### Accessing the Print View
+
+The print view (`SquadPrintView`) is rendered as an overlay triggered by clicking the **🖨 Print Squad** button in `SquadBuilder`. To screenshot it:
+1. Ensure the squad has at least one character
+2. Click the Print Squad button (it only appears when there are characters)
+3. The overlay renders inline on the same page — take the screenshot immediately
+
+### Common Pitfalls
+
+| Pitfall | What Happens | Fix |
+|---------|-------------|-----|
+| Setting `localStorage` while app is running (no reload) | App's React state overwrites `localStorage` on next change | Always reload after setting `localStorage` |
+| Calling `window.location.reload()` inside `browser_evaluate` | "Execution context was destroyed" error | Ignore the error; use `browser_wait_for` to wait for reload |
+| Navigating before `localStorage` is written | App loads with empty/default state | Write `localStorage` first, then navigate |
+| Trying to inject state with wrong schema | App silently falls back to empty state | Match the `AppState` schema in `src/types/index.ts` exactly |
+| Screenshots saved outside allowed output dir | Tool error | Always use a bare filename — files land in `/tmp/playwright-logs/` |
+
 ## Feature: Squad Management - Multiple Saved Squads
 
 ### Overview
