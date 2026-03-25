@@ -97,6 +97,7 @@ const FlawsAndFeatsPicker: React.FC<FlawsAndFeatsPickerProps> = ({ onSelectionCh
                 <div className="flaw-picker">
                     <h3>Flaw</h3>
                     <button
+                        type="button"
                         className="btn-random"
                         onClick={getRandomFlaw}
                         title="Select a random flaw"
@@ -123,6 +124,7 @@ const FlawsAndFeatsPicker: React.FC<FlawsAndFeatsPickerProps> = ({ onSelectionCh
                 <div className="feat-picker">
                     <h3>Feat</h3>
                     <button
+                        type="button"
                         className="btn-random"
                         onClick={getRandomFeat}
                         title="Select a random feat"
