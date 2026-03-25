@@ -30,6 +30,18 @@ const FlawsAndFeatsPicker: React.FC<FlawsAndFeatsPickerProps> = ({ onSelectionCh
         }
     }, [selectedFlawType, selectedFeatType]); // eslint-disable-line react-hooks/exhaustive-deps
 
+    const getRandomFlaw = () => {
+        if (flaws28Psalms.length === 0) return;
+        const randomIndex = Math.floor(Math.random() * flaws28Psalms.length);
+        setSelectedFlawType(flaws28Psalms[randomIndex].type);
+    };
+
+    const getRandomFeat = () => {
+        if (feats28Psalms.length === 0) return;
+        const randomIndex = Math.floor(Math.random() * feats28Psalms.length);
+        setSelectedFeatType(feats28Psalms[randomIndex].type);
+    };
+
     const effectiveStats = useMemo(() => {
         if (!stats) return null;
         // Create minimal objects with just the type needed for modifier lookup
@@ -84,6 +96,15 @@ const FlawsAndFeatsPicker: React.FC<FlawsAndFeatsPickerProps> = ({ onSelectionCh
             <div className="picker-container">
                 <div className="flaw-picker">
                     <h3>Flaw</h3>
+                    <button
+                        type="button"
+                        className="btn-random"
+                        onClick={getRandomFlaw}
+                        title="Select a random flaw"
+                        aria-label="Select a random flaw"
+                    >
+                        🎲
+                    </button>
                     <div className="options-list">
                         {flaws28Psalms.map((flaw) => (
                             <div
@@ -102,6 +123,15 @@ const FlawsAndFeatsPicker: React.FC<FlawsAndFeatsPickerProps> = ({ onSelectionCh
 
                 <div className="feat-picker">
                     <h3>Feat</h3>
+                    <button
+                        type="button"
+                        className="btn-random"
+                        onClick={getRandomFeat}
+                        title="Select a random feat"
+                        aria-label="Select a random feat"
+                    >
+                        🎲
+                    </button>
                     <div className="options-list">
                         {feats28Psalms.map((feat) => (
                             <div
