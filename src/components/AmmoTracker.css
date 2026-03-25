@@ -1,0 +1,24 @@
+.ammo-tracker {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 3px;
+  margin-top: 4px;
+}
+
+.ammo-circle {
+  width: 18px;
+  height: 18px;
+  border: 2px solid #555;
+  border-radius: 50%;
+  background-color: #ffffff;
+  flex-shrink: 0;
+}
+
+@media print {
+  .ammo-circle {
+    border: 2px solid #000;
+    background-color: #ffffff;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+}

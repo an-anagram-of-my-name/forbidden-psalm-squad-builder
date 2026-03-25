@@ -82,7 +82,7 @@ const CharacterSummary: React.FC<CharacterSummaryProps> = ({ character }) => {
             <ul className="equipment-list">
               {character.equipment.map((eq, idx) => (
                 <li key={`${eq.id}-${idx}`} className="equipment-list-item">
-                  {eq.name}
+                  {eq.category === 'ammo' ? `Ammo: ${eq.name}` : eq.name}
                 </li>
               ))}
             </ul>
