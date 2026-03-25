@@ -294,7 +294,7 @@ The print view (`SquadPrintView`) is rendered as an overlay triggered by clickin
 | Setting `localStorage` while app is running (no reload) | App's React state overwrites `localStorage` on next change | Always reload after setting `localStorage` |
 | Calling `window.location.reload()` inside `browser_evaluate` | "Execution context was destroyed" error | Ignore the error; use `browser_wait_for` to wait for reload |
 | Navigating before `localStorage` is written | App loads with empty/default state | Write `localStorage` first, then navigate |
-| Trying to inject state with wrong schema | App silently falls back to empty state | Match the `AppState` schema in `src/types/index.ts` exactly |
+| Trying to inject state with wrong schema | App silently falls back to empty state | Match the persisted `localStorage` shape (including ISO date strings for Date fields) |
 | Screenshots saved outside allowed output dir | Tool error | Always use a bare filename — files land in `/tmp/playwright-logs/` |
 
 ## Feature: Squad Management - Multiple Saved Squads
