@@ -1,6 +1,7 @@
 // equipment.ts
 
-import { Equipment, Armor, TechLevel } from '../types';
+import { Equipment, Armor, Weapon, TechLevel } from '../types';
+import { ammo28Psalms } from '../types/equipment28Psalms';
 
 // Calculate used slots based on equipped items
 export function calculateUsedSlots(equippedItems: Equipment[]): number {
@@ -38,8 +39,24 @@ export function getCharacterMovement(baseMovement: number, equippedItems: Equipm
 }
 
 // Calculate total cost of equipped items
+// Ranged weapons with includesAmmoId receive a credit for one free ammo stack
 export function calculateTotalCost(equippedItems: Equipment[]): number {
-    return equippedItems.reduce((total, item) => total + item.cost, 0);
+    const baseCost = equippedItems.reduce((total, item) => total + item.cost, 0);
+
+    let ammoCredit = 0;
+    equippedItems.forEach((item) => {
+        if (item.category === 'weapon') {
+            const weapon = item as Weapon;
+            if (weapon.includesAmmoId) {
+                const includedAmmo = ammo28Psalms.find(a => a.id === weapon.includesAmmoId);
+                if (includedAmmo) {
+                    ammoCredit += includedAmmo.cost;
+                }
+            }
+        }
+    });
+
+    return Math.max(0, baseCost - ammoCredit);
 }
 
 // Validate tech level for equipping items

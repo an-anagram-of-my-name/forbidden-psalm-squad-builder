@@ -289,6 +289,11 @@
     border-color: #b8d4e8;
 }
 
+.equipment-picker .stat-box.cost {
+    background-color: #FFF8E1;
+    border-color: #F0E0A0;
+}
+
 .picker-footer {
     display: flex;
     gap: 10px;
