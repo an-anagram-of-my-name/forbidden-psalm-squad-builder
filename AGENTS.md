@@ -3367,3 +3367,212 @@ Enable users to randomly select feats and flaws in the FlawsAndFeatsPicker compo
 ✅ UI updates immediately after random selection
 ✅ Buttons have clear hover/active states
 ✅ No breaking changes to existing functionality
+
+
+## Feature: Equipment Cost Display & Free Ammo Stack
+
+### Overview
+Two related enhancements to the Equipment step of character creation:
+1. Display the total CR (credit) cost of selected equipment in the `current-stats` bar of EquipmentPicker
+2. Ranged weapons that include a free first ammo stack should have that ammo's cost credited (subtracted) from the total equipment cost
+
+### Part 1: Total Equipment Cost in current-stats
+
+#### Visual Design
+
+The `current-stats` bar in EquipmentPicker currently shows:
+
+```
+PRIMARY STATS                    │ DERIVED STATS
+[AGI +2] [PRE +1] [STR 0] [TOU -3]  │  [MOV 7] [SLOTS 5] [HP 8]
+```
+
+After this change:
+
+```
+PRIMARY STATS                    │ DERIVED STATS               │ COST
+[AGI +2] [PRE +1] [STR 0] [TOU -3]  │  [MOV 7] [SLOTS 5] [HP 8]  │  [CR 42]
+```
+
+#### Cost Stat Box (New)
+```
+┌─────────────┐
+│ CR          │
+│ 42          │
+└─────────────┘
+```
+- Background: Light yellow (`#FFF8E1`)
+- Border: `1px solid #F0E0A0`
+- Same dimensions as other stat boxes
+- Label: "CR"
+- Value: Total cost from `calculateTotalCost(selectedEquipment)` minus free ammo credits (see Part 2)
+
+#### Implementation
+
+**EquipmentPicker.tsx Changes:**
+- Import `calculateTotalCost` from `utils/equipment`
+- After the `current-stats-derived` div, add:
+  - A second `<div className="current-stats-divider" />`
+  - A `<div className="stat-box cost">` containing label "CR" and the total cost value
+
+**HTML Structure:**
+```tsx
+<div className="current-stats">
+  {/* Primary stats (existing) */}
+  <div className="current-stats-divider" />
+  <div className="current-stats-derived">
+    {/* MOV, SLOTS, HP (existing) */}
+  </div>
+  {/* NEW: second divider and cost box */}
+  <div className="current-stats-divider" />
+  <div className="stat-box cost">
+    <div className="stat-label">CR</div>
+    <div className="stat-value">{totalCost}</div>
+  </div>
+</div>
+```
+
+**CSS Changes (EquipmentPicker.css and/or CharacterCreationFlow.css):**
+```css
+.stat-box.cost {
+    background-color: #FFF8E1;
+    border-color: #F0E0A0;
+}
+```
+
+**Scope:** Only add the cost box to `EquipmentPicker.tsx`. The `FlawsAndFeatsPicker` and `StatDistributionPicker` do not have equipment context and should not display cost.
+
+### Part 2: Free First Ammo Stack for Ranged Weapons
+
+#### Game Rule
+Ranged weapons include one free stack of their compatible ammo. The cost of that first ammo stack should not count toward the character's total equipment cost. The EquipmentPicker already displays the note "Ranged weapons include one free ammo stack" (line ~307), but the cost credit is not currently implemented.
+
+#### Approach: Cost Credit (Option A — smallest code change)
+
+Modify `calculateTotalCost()` in `src/utils/equipment.ts` to detect ranged weapons with `includesAmmoId`, look up the matching ammo's cost from ammo data, and subtract it once per qualifying weapon.
+
+**Why this approach:**
+- Only 1 utility function changes (`calculateTotalCost`)
+- No component changes needed (EquipmentPicker already calls this function)
+- No data changes needed (weapon data already has `includesAmmoId`)
+- No new UI logic or auto-select behavior
+
+**Other approaches considered and rejected:**
+- **(b) Reduce weapon costs in data**: Would require changing 14+ weapon `cost` fields, and displayed costs wouldn't match the rulebook
+- **(c) Separate free ammo data entry with auto-select**: Would require new data entries, new selection state management, new UI for auto-adding/removing ammo — significantly more code
+
+#### Implementation
+
+**src/utils/equipment.ts Changes:**
+
+Update `calculateTotalCost()`:
+
+```typescript
+import { Equipment, Weapon, Ammo } from '../types';
+import { ammo28Psalms } from '../types/equipment28Psalms';
+
+export function calculateTotalCost(equippedItems: Equipment[]): number {
+    const baseCost = equippedItems.reduce((total, item) => total + item.cost, 0);
+
+    // Credit the cost of one free ammo stack per ranged weapon with includesAmmoId
+    let ammoCredit = 0;
+    equippedItems.forEach((item) => {
+        if (item.category === 'weapon') {
+            const weapon = item as Weapon;
+            if (weapon.includesAmmoId) {
+                const includedAmmo = ammo28Psalms.find(a => a.id === weapon.includesAmmoId);
+                if (includedAmmo) {
+                    ammoCredit += includedAmmo.cost;
+                }
+            }
+        }
+    });
+
+    return Math.max(0, baseCost - ammoCredit);
+}
+```
+
+**Key Behaviors:**
+- For each ranged weapon with `includesAmmoId`, the cost of one stack of that ammo type is subtracted from the total
+- The ammo cost is looked up from `ammo28Psalms` data (not hardcoded)
+- The credit applies whether or not the user has actually selected ammo — the weapon price includes one ammo stack by rule
+- Total cost is floored at 0 (can never go negative)
+- If a weapon's `includesAmmoId` doesn't match any ammo entry (data error), no credit is applied
+- Multiple ranged weapons each contribute their own ammo credit independently
+
+#### Data Reference
+
+Ranged weapons with `includesAmmoId` (from `equipment28Psalms.ts`):
+
+| Weapon | includesAmmoId | Ammo to Credit |
+|--------|---------------|----------------|
+| Bow | bow-ammo | Bow Ammo |
+| Crossbow | crossbow-ammo | Crossbow Ammo |
+| Revolver | revolver-ammo | Revolver Ammo |
+| Pistol | pistol-ammo | Pistol Ammo |
+| Rifle | space-rifle-ammo | Space Rifle Ammo |
+| Plas-mar | plasma-cell-ammo | Plasma Cell Ammo |
+| Pulse Rifle | pulse-rifle-ammo | Pulse Rifle Ammo |
+| Shotgun | shotgun-ammo | Shotgun Ammo |
+| Molten Slug Gun | revolver-ammo | Revolver Ammo |
+| Flamethrower | flame-ammo | Flame Ammo |
+| Laser | laser-ammo | Laser Ammo |
+
+### Edge Cases
+
+- **No equipment selected**: Cost displays as 0 CR
+- **Only melee weapons**: No ammo credit applied, cost is sum of weapon costs
+- **Ranged weapon with no ammo selected**: Credit still applies (weapon price includes the ammo by rule)
+- **Multiple ranged weapons**: Each weapon contributes its own ammo credit
+- **Two weapons sharing same ammoTypeId** (e.g., Revolver and Molten Slug Gun both use `revolver-ammo`): Each gets its own credit (both weapons include a free stack)
+- **Ammo without a matching weapon**: No credit — credits are weapon-driven, not ammo-driven
+
+### Testing Scenarios
+
+1. **Cost Display**: Select equipment, verify CR stat-box appears with correct total
+2. **Cost Updates**: Add/remove equipment, verify CR value updates in real-time
+3. **Free Ammo Credit — Ranged Weapon**: Select a Bow (cost 5), verify total cost is `5 - bow_ammo_cost`
+4. **Free Ammo Credit — Multiple Ranged**: Select Bow + Rifle, verify both ammo costs credited
+5. **No Credit — Melee Weapon**: Select Sword, verify full cost shown (no credit)
+6. **No Credit — No Weapon**: Select only armor/items, verify full cost shown
+7. **Floor at Zero**: Edge case where credits exceed base cost → shows 0 CR
+8. **Visual Styling**: Cost box is light yellow, separated by vertical divider from derived stats
+9. **Existing tests**: Update `equipment.test.ts` to cover ammo credit scenarios
+
+### Files to Modify
+
+1. **src/utils/equipment.ts**
+   - Update `calculateTotalCost()` to subtract free ammo credits
+   - Import `ammo28Psalms` from equipment data
+
+2. **src/components/EquipmentPicker.tsx**
+   - Import `calculateTotalCost` from `utils/equipment`
+   - Add second divider and cost stat-box after derived stats in `current-stats`
+
+3. **src/components/EquipmentPicker.css** (or CharacterCreationFlow.css)
+   - Add `.stat-box.cost` styling (light yellow background, gold border)
+
+4. **src/utils/equipment.test.ts** (or create if not present)
+   - Add tests for free ammo credit in `calculateTotalCost()`
+   - Test: ranged weapon credits ammo cost
+   - Test: melee weapon no credit
+   - Test: multiple ranged weapons each credit independently
+   - Test: floor at 0
+
+### Backward Compatibility
+
+- `calculateTotalCost()` signature is unchanged (same input/output types)
+- Existing callers automatically get the ammo credit behavior
+- No breaking changes to component APIs
+- No data structure changes needed
+
+### Success Criteria
+
+✅ CR stat-box appears in EquipmentPicker `current-stats` bar, to the right of derived stats, separated by a vertical divider
+✅ CR stat-box has light yellow background styling
+✅ Total cost updates in real-time as equipment is added/removed
+✅ Ranged weapons with `includesAmmoId` have one free ammo stack's cost credited
+✅ Credit is per-weapon, not per-ammo-type
+✅ Total cost is never negative
+✅ Existing equipment selection behavior is unchanged
+✅ All tests pass
