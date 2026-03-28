@@ -55,7 +55,7 @@ const FlawsAndFeatsPicker: React.FC<FlawsAndFeatsPickerProps> = ({ onSelectionCh
             ? { type: selectedFeatType, description: '' }
             : null;
         return applyFlawFeatModifiers(stats, flawObj, featObj, gameId);
-    }, [stats, selectedFlawType, selectedFeatType]); // eslint-disable-line react-hooks/exhaustive-deps
+    }, [stats, selectedFlawType, selectedFeatType, gameId]);
 
     return (
         <div className="flaws-and-feats-picker">
