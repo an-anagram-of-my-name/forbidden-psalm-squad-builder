@@ -1,5 +1,5 @@
 import { Stats, DerivedStats, Flaw, Feat, Equipment, GameId, StatName } from '../types';
-import { flaws28Psalms, feats28Psalms } from '../types/featsandflaws28Psalms';
+import { flaws28Psalms, feats28Psalms, FlawData, FeatData } from '../types/featsandflaws28Psalms';
 import { StatModifiers } from '../types/featsandflaws28Psalms';
 import { getGameConfig } from '../types/games';
 
@@ -49,20 +49,32 @@ export function isValidStatDistribution(values: number[], gameId?: GameId): bool
  * Apply stat modifiers from a flaw and/or feat to base stats.
  * Returns a new Stats object with modifiers applied.
  * Iterates over the game's stat names dynamically.
+ *
+ * @param baseStats - Base stats before modifiers
+ * @param flaw - Selected flaw, or null
+ * @param feat - Selected feat, or null
+ * @param gameId - Game identifier (defaults to '28-psalms')
+ * @param flawsData - Optional flaw data to use; falls back to flaws28Psalms
+ * @param featsData - Optional feat data to use; falls back to feats28Psalms
  */
 export function applyFlawFeatModifiers(
   baseStats: Stats,
   flaw: Flaw | null,
   feat: Feat | null,
-  gameId?: GameId
+  gameId?: GameId,
+  flawsData?: FlawData[],
+  featsData?: FeatData[]
 ): Stats {
   const modified: Stats = { ...baseStats };
   const config = getGameConfig(gameId ?? DEFAULT_GAME_ID);
 
+  const flawsToUse = flawsData ?? flaws28Psalms;
+  const featsToUse = featsData ?? feats28Psalms;
+
   if (flaw) {
-    const flawData = flaws28Psalms.find((f) => f.type === flaw.type);
-    if (flawData?.statModifiers) {
-      const mods: StatModifiers = flawData.statModifiers;
+    const flawEntry = flawsToUse.find((f) => f.type === flaw.type);
+    if (flawEntry?.statModifiers) {
+      const mods: StatModifiers = flawEntry.statModifiers;
       config.statNames.forEach((stat) => {
         modified[stat] = (modified[stat] ?? 0) + (mods[stat] ?? 0);
       });
@@ -70,9 +82,9 @@ export function applyFlawFeatModifiers(
   }
 
   if (feat) {
-    const featData = feats28Psalms.find((f) => f.type === feat.type);
-    if (featData?.statModifiers) {
-      const mods: StatModifiers = featData.statModifiers;
+    const featEntry = featsToUse.find((f) => f.type === feat.type);
+    if (featEntry?.statModifiers) {
+      const mods: StatModifiers = featEntry.statModifiers;
       config.statNames.forEach((stat) => {
         modified[stat] = (modified[stat] ?? 0) + (mods[stat] ?? 0);
       });
@@ -96,6 +108,8 @@ export function applyFlawFeatModifiers(
  * @param feat - Selected feat (Step 2), or null
  * @param equipment - Selected equipment (Step 3)
  * @param gameId - The game to use for derived stat formulas (defaults to '28-psalms')
+ * @param flawsData - Optional flaw data; falls back to flaws28Psalms
+ * @param featsData - Optional feat data; falls back to feats28Psalms
  * @returns DerivedStats with all modifiers applied
  */
 export function calculateFinalDerivedStats(
@@ -103,9 +117,11 @@ export function calculateFinalDerivedStats(
   flaw: Flaw | null,
   feat: Feat | null,
   equipment: Equipment[],
-  gameId?: GameId
+  gameId?: GameId,
+  flawsData?: FlawData[],
+  featsData?: FeatData[]
 ): DerivedStats {
-  const effectiveStats = applyFlawFeatModifiers(baseStats, flaw, feat, gameId);
+  const effectiveStats = applyFlawFeatModifiers(baseStats, flaw, feat, gameId, flawsData, featsData);
   const derived = calculateDerivedStats(effectiveStats, gameId);
 
   const equipmentModifiers = {
