@@ -39,6 +39,9 @@ const EquipmentPicker: React.FC<EquipmentPickerProps> = ({ character, selectedEq
     if (equipTechLevel === null || equipTechLevel === undefined) {
       return true; // Tech-agnostic equipment can always be equipped
     }
+    if (character.techLevel === undefined) {
+      return true; // No tech level restriction — show all equipment
+    }
     if (character.techLevel === 'future-tech') {
       return true; // Future-tech characters can use anything
     }

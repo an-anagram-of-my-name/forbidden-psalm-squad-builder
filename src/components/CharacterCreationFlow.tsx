@@ -113,9 +113,9 @@ const CharacterCreationFlow: React.FC<CharacterCreationFlowProps> = ({
         setCharacterName(randomName);
     };
 
-    const effectiveTechLevel: TechLevel = mode === 'preset'
+    const effectiveTechLevel: TechLevel | undefined = mode === 'preset'
         ? selectedTechLevel!   // safe: equipment step is only shown when selectedTechLevel is set
-        : techLevel!;
+        : techLevel;
 
     const handleCreateCharacter = () => {
         if (mode === 'preset') {
