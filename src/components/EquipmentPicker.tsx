@@ -1,8 +1,9 @@
 import React, { useState, useMemo } from 'react';
-import { Character, Equipment, Item, Ammo, Armor, Weapon, Stats } from '../types';
+import { Character, Equipment, Item, Ammo, Armor, Weapon } from '../types';
 import { items28Psalms, ammo28Psalms, armor28Psalms, pastTechWeapons28Psalms, futureTechWeapons28Psalms } from '../types/equipment28Psalms';
 import { canUseArmor, calculateTotalCost } from '../utils/equipment';
 import { applyFlawFeatModifiers, calculateFinalDerivedStats } from '../utils/stats';
+import { getGameConfig } from '../types/games';
 import './EquipmentPicker.css';
 
 interface EquipmentPickerProps {
@@ -17,6 +18,7 @@ const CONSUMABLE_IDS = ['molotov', 'black-powder-bomb', 'grenade', 'future-molot
 
 const EquipmentPicker: React.FC<EquipmentPickerProps> = ({ character, selectedEquipment, onEquipmentChange }) => {
   const [activeTab, setActiveTab] = useState<EquipmentTab>('weapons');
+  const config = getGameConfig(character.gameId);
 
   const effectiveStats = useMemo(() => {
     return applyFlawFeatModifiers(character.stats, character.flaw, character.feat);
@@ -216,32 +218,27 @@ const EquipmentPicker: React.FC<EquipmentPickerProps> = ({ character, selectedEq
       </div>
 
       <div className="current-stats">
-        {(['agility', 'presence', 'strength', 'toughness'] as (keyof Stats)[]).map((stat) => (
+        {config.statNames.map((stat) => (
           <div key={stat} className="stat-box">
             <div className="stat-label">{stat.charAt(0).toUpperCase() + stat.slice(1)}</div>
-            <div className="stat-value">{effectiveStats[stat] > 0 ? `+${effectiveStats[stat]}` : effectiveStats[stat]}</div>
+            <div className="stat-value">{(effectiveStats[stat] ?? 0) > 0 ? `+${effectiveStats[stat] ?? 0}` : effectiveStats[stat] ?? 0}</div>
           </div>
         ))}
         <div className="current-stats-divider" />
         <div className="current-stats-derived">
           {(() => {
-            const derived = calculateFinalDerivedStats(character.stats, character.flaw, character.feat, selectedEquipment);
-            return (
-              <>
-                <div className="stat-box derived">
-                  <div className="stat-label">MOV</div>
-                  <div className="stat-value">{derived.movement}</div>
-                </div>
-                <div className="stat-box derived">
-                  <div className="stat-label">SLOTS</div>
-                  <div className="stat-value">{derived.equipmentSlots}</div>
-                </div>
-                <div className="stat-box derived">
-                  <div className="stat-label">HP</div>
-                  <div className="stat-value">{derived.hp}</div>
-                </div>
-              </>
-            );
+            const derived = calculateFinalDerivedStats(character.stats, character.flaw, character.feat, selectedEquipment, character.gameId);
+            return config.statNames
+              .filter((stat) => !!config.derivedStatMap[stat])
+              .map((stat) => {
+                const derivedInfo = config.derivedStatMap[stat]!;
+                return (
+                  <div key={stat} className="stat-box derived">
+                    <div className="stat-label">{derivedInfo.label}</div>
+                    <div className="stat-value">{derived[derivedInfo.derivedKey]}</div>
+                  </div>
+                );
+              });
           })()}
         </div>
         <div className="current-stats-divider" />

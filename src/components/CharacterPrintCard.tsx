@@ -1,6 +1,7 @@
 import React from 'react';
 import { Character, Equipment, Armor, Weapon } from '../types';
 import { applyFlawFeatModifiers, calculateFinalDerivedStats } from '../utils/stats';
+import { getGameConfig } from '../types/games';
 import { flaws28Psalms, feats28Psalms } from '../types/featsandflaws28Psalms';
 import HPTrackingBar from './HPTrackingBar';
 import AmmoTracker from './AmmoTracker';
@@ -96,12 +97,14 @@ function renderEquipmentDetails(item: Equipment): React.ReactNode {
 }
 
 const CharacterPrintCard: React.FC<CharacterPrintCardProps> = ({ character }) => {
-  const effectiveStats = applyFlawFeatModifiers(character.stats, character.flaw, character.feat);
+  const config = getGameConfig(character.gameId);
+  const effectiveStats = applyFlawFeatModifiers(character.stats, character.flaw, character.feat, character.gameId);
   const derived = calculateFinalDerivedStats(
     character.stats,
     character.flaw,
     character.feat,
-    character.equipment
+    character.equipment,
+    character.gameId
   );
 
   // Look up full flaw/feat descriptions from data
@@ -129,36 +132,29 @@ const CharacterPrintCard: React.FC<CharacterPrintCardProps> = ({ character }) =>
             <div className="print-section-title">Stats</div>
             <div className="print-stats-grid">
               <div className="print-stats-row-base">
-                <div className="print-stat-box">
-                  <span className="print-stat-label">AGI</span>
-                  <span className="print-stat-value">{fmt(effectiveStats.agility)}</span>
-                </div>
-                <div className="print-stat-box">
-                  <span className="print-stat-label">PRE</span>
-                  <span className="print-stat-value">{fmt(effectiveStats.presence)}</span>
-                </div>
-                <div className="print-stat-box">
-                  <span className="print-stat-label">STR</span>
-                  <span className="print-stat-value">{fmt(effectiveStats.strength)}</span>
-                </div>
-                <div className="print-stat-box">
-                  <span className="print-stat-label">TOU</span>
-                  <span className="print-stat-value">{fmt(effectiveStats.toughness)}</span>
-                </div>
+                {config.statNames.map((stat) => {
+                  const shortLabel = config.statShortLabels[stat] ?? stat.toUpperCase().slice(0, 4);
+                  return (
+                    <div key={stat} className="print-stat-box">
+                      <span className="print-stat-label">{shortLabel}</span>
+                      <span className="print-stat-value">{fmt(effectiveStats[stat] ?? 0)}</span>
+                    </div>
+                  );
+                })}
               </div>
               <div className="print-stats-row-derived">
-                <div className="print-stat-box derived">
-                  <span className="print-stat-label">MOV</span>
-                  <span className="print-stat-value">{derived.movement}</span>
-                </div>
-                <div className="print-stat-box derived">
-                  <span className="print-stat-label">SLOTS</span>
-                  <span className="print-stat-value">{derived.equipmentSlots}</span>
-                </div>
-                <div className="print-stat-box derived">
-                  <span className="print-stat-label">HP</span>
-                  <span className="print-stat-value">{derived.hp}</span>
-                </div>
+                {config.statNames
+                  .filter((stat) => !!config.derivedStatMap[stat])
+                  .map((stat) => {
+                    const derivedInfo = config.derivedStatMap[stat]!;
+                    return (
+                      <div key={stat} className="print-stat-box derived">
+                        <span className="print-stat-label">{derivedInfo.label}</span>
+                        <span className="print-stat-value">{derived[derivedInfo.derivedKey]}</span>
+                      </div>
+                    );
+                  })
+                }
               </div>
             </div>
           </div>

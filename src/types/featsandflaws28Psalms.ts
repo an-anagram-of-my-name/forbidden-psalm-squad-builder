@@ -2,14 +2,9 @@
  * Feats and flaws data for 28 Psalms ruleset
  */
 
-import { FlawType, FeatType } from './index';
+import { FlawType, FeatType, StatName } from './index';
 
-export interface StatModifiers {
-  agility?: number;
-  presence?: number;
-  strength?: number;
-  toughness?: number;
-}
+export type StatModifiers = Partial<Record<StatName, number>>;
 
 export interface FlawData {
   number: number;

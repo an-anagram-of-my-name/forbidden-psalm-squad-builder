@@ -6,14 +6,9 @@ export type TechLevel = 'past-tech' | 'future-tech';
 
 export type GameId = '28-psalms' | 'kill-sample-process';
 
-export type StatName = 'agility' | 'presence' | 'strength' | 'toughness';
+export type StatName = 'agility' | 'presence' | 'strength' | 'toughness' | 'knowledge';
 
-export interface Stats {
-  agility: number;
-  presence: number;
-  strength: number;
-  toughness: number;
-}
+export type Stats = Record<StatName, number>;
 
 export interface DerivedStats {
   hp: number;

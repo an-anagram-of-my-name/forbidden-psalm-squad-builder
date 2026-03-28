@@ -87,7 +87,7 @@ describe('StatDistributionPicker duplicate value validation', () => {
 });
 
 describe('applyFlawFeatModifiers', () => {
-    const baseStats: Stats = { agility: 2, presence: 1, strength: 0, toughness: -1 };
+    const baseStats: Stats = { agility: 2, presence: 1, strength: 0, toughness: -1, knowledge: 0 };
 
     it('returns base stats unchanged when flaw and feat are null', () => {
         const result = applyFlawFeatModifiers(baseStats, null, null);
@@ -130,7 +130,7 @@ describe('applyFlawFeatModifiers', () => {
 });
 
 describe('calculateFinalDerivedStats', () => {
-    const baseStats: Stats = { agility: 2, presence: 1, strength: 0, toughness: -1 };
+    const baseStats: Stats = { agility: 2, presence: 1, strength: 0, toughness: -1, knowledge: 0 };
 
     it('returns base derived stats when no flaw, feat, or equipment', () => {
         const result = calculateFinalDerivedStats(baseStats, null, null, []);
