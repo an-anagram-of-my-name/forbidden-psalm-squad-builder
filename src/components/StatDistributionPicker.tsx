@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Stats, StatName, TechLevel, GameId } from '../types';
 import { getGameConfig } from '../types/games';
-import { getValidStatDistributions, getAvailableModifiers } from '../utils/stats';
+import { getValidStatDistributions, getAvailableModifiers, makeEmptyStats } from '../utils/stats';
 import './StatDistributionPicker.css';
 
 interface StatDistributionPickerProps {
@@ -49,11 +49,11 @@ const StatDistributionPicker: React.FC<StatDistributionPickerProps> = ({
         setStatAssignments(newAssignments);
         const isNowComplete = statNames.every(s => newAssignments[s] !== undefined);
         if (isNowComplete) {
-            // Build a full Stats object with all stat names, defaulting to 0
+            // Build a full Stats object using makeEmptyStats so no stat keys are hardcoded here.
             const fullStats = statNames.reduce((acc, s) => {
                 acc[s] = newAssignments[s] ?? 0;
                 return acc;
-            }, { agility: 0, presence: 0, strength: 0, toughness: 0, knowledge: 0 } as Stats);
+            }, makeEmptyStats());
             onStatsChange?.(fullStats);
         } else {
             onStatsChange?.(null);

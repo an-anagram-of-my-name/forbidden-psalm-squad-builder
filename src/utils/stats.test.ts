@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
-import { isValidStatDistribution, getValidStatDistributions, getAvailableModifiers, applyFlawFeatModifiers, calculateFinalDerivedStats } from './stats';
-import { Stats, Flaw, Feat, Armor } from '../types';
+import { isValidStatDistribution, getValidStatDistributions, getAvailableModifiers, applyFlawFeatModifiers, calculateFinalDerivedStats, makeEmptyStats } from './stats';
+import { Stats, Flaw, Feat, Armor, StatName } from '../types';
 
 describe('isValidStatDistribution', () => {
     it('accepts [3, 1, 0, -3]', () => {
@@ -19,6 +19,31 @@ describe('isValidStatDistribution', () => {
     it('rejects invalid distributions', () => {
         expect(isValidStatDistribution([2, 2, 2, -2])).toBe(false);
         expect(isValidStatDistribution([1, 1, 1, -1])).toBe(false);
+    });
+});
+
+describe('isValidStatDistribution for KSP (5-stat game)', () => {
+    it('accepts [3, 1, 0, 0, -3]', () => {
+        expect(isValidStatDistribution([3, 1, 0, 0, -3], 'kill-sample-process')).toBe(true);
+    });
+
+    it('accepts [2, 2, 0, -1, -2]', () => {
+        expect(isValidStatDistribution([2, 2, 0, -1, -2], 'kill-sample-process')).toBe(true);
+    });
+
+    it('accepts distributions in any order', () => {
+        expect(isValidStatDistribution([-3, 0, 0, 1, 3], 'kill-sample-process')).toBe(true);
+        expect(isValidStatDistribution([-2, -1, 0, 2, 2], 'kill-sample-process')).toBe(true);
+    });
+
+    it('rejects 28-Psalms distributions as invalid for KSP', () => {
+        expect(isValidStatDistribution([3, 1, 0, -3], 'kill-sample-process')).toBe(false);
+        expect(isValidStatDistribution([2, 2, -1, -2], 'kill-sample-process')).toBe(false);
+    });
+
+    it('rejects invalid KSP distributions', () => {
+        expect(isValidStatDistribution([3, 1, 0, 0, 0], 'kill-sample-process')).toBe(false);
+        expect(isValidStatDistribution([2, 2, 2, -1, -2], 'kill-sample-process')).toBe(false);
     });
 });
 
@@ -247,5 +272,30 @@ describe('calculateFinalDerivedStats', () => {
         // Total slotsModifier = 1 + 3 = +4
         expect(result.hp).toBe(baseHp + 1);
         expect(result.equipmentSlots).toBe(baseSlots + 4);
+    });
+});
+
+describe('makeEmptyStats', () => {
+    it('returns a Stats object with all StatNames set to 0', () => {
+        const empty = makeEmptyStats();
+        const allStatNames: StatName[] = ['agility', 'presence', 'strength', 'toughness', 'knowledge'];
+        allStatNames.forEach((stat) => {
+            expect(empty[stat]).toBe(0);
+        });
+    });
+
+    it('is a safe initialiser for stat reduction (no hardcoded keys at call site)', () => {
+        const gameStatNames: StatName[] = ['agility', 'presence', 'strength', 'toughness'];
+        const assignments: Partial<Stats> = { agility: 3, presence: 1, strength: 0, toughness: -3 };
+        const result = gameStatNames.reduce((acc, s) => {
+            acc[s] = assignments[s] ?? 0;
+            return acc;
+        }, makeEmptyStats());
+        expect(result.agility).toBe(3);
+        expect(result.presence).toBe(1);
+        expect(result.strength).toBe(0);
+        expect(result.toughness).toBe(-3);
+        // Stats not in this game's list default to 0 (from makeEmptyStats)
+        expect(result.knowledge).toBe(0);
     });
 });
