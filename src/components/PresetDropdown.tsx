@@ -1,5 +1,6 @@
 import React from 'react';
 import { CharacterPreset } from '../types';
+import { calculateTotalCost } from '../utils/equipment';
 import './PresetDropdown.css';
 
 interface PresetDropdownProps {
@@ -18,7 +19,7 @@ function formatDate(date: Date | string): string {
 }
 
 function calcTotalCost(preset: CharacterPreset): number {
-  return preset.equipment.reduce((sum, eq) => sum + eq.cost, 0);
+  return calculateTotalCost(preset.equipment);
 }
 
 const PresetDropdown: React.FC<PresetDropdownProps> = ({

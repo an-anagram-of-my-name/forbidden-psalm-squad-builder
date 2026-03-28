@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Squad, Character, CharacterPreset, TechLevel } from '../types';
+import { calculateTotalCost } from '../utils/equipment';
 import TechLevelSelector from './TechLevelSelector';
 import CharacterCreationFlow from './CharacterCreationFlow';
 import CharacterSummary from './CharacterSummary';
@@ -253,8 +254,7 @@ const SquadBuilder: React.FC<SquadBuilderProps> = ({
     }
 
     const totalCost = squad.characters.reduce((sum, char) => {
-      const equipmentCost = char.equipment.reduce((eSum, eq) => eSum + eq.cost, 0);
-      return sum + equipmentCost;
+      return sum + calculateTotalCost(char.equipment);
     }, 0);
 
     return {
