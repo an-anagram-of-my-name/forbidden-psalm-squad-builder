@@ -1,5 +1,6 @@
-import React, { useState, useEffect } from 'react';
-import { Squad, Character, CharacterPreset, TechLevel } from '../types';
+import React, { useState, useEffect, useRef } from 'react';
+import { Squad, Character, CharacterPreset, TechLevel, GameId } from '../types';
+import { getGameConfig } from '../types/games';
 import { calculateTotalCost } from '../utils/equipment';
 import TechLevelSelector from './TechLevelSelector';
 import CharacterCreationFlow from './CharacterCreationFlow';
@@ -12,6 +13,8 @@ import DeleteConfirmationModal from './DeleteConfirmationModal';
 import './SquadBuilder.css';
 
 interface SquadBuilderProps {
+  gameId: GameId;
+  onChangeGame: () => void;
   savedSquads: Squad[];
   currentSquadId: string | null;
   initialSquad: Squad | null;
@@ -25,6 +28,8 @@ interface SquadBuilderProps {
 }
 
 const SquadBuilder: React.FC<SquadBuilderProps> = ({
+  gameId,
+  onChangeGame,
   savedSquads,
   currentSquadId,
   initialSquad,
@@ -36,6 +41,8 @@ const SquadBuilder: React.FC<SquadBuilderProps> = ({
   onNewPreset,
   onLoadPreset,
 }) => {
+  const gameConfig = getGameConfig(gameId);
+  const hasTechLevel = gameConfig.hasTechLevel;
   const [currentView, setCurrentView] = useState<'tech-select' | 'squad-builder'>(
     initialSquad ? 'squad-builder' : 'tech-select'
   );
@@ -49,6 +56,8 @@ const SquadBuilder: React.FC<SquadBuilderProps> = ({
   const [saveMessage, setSaveMessage] = useState('');
   const [showPrintView, setShowPrintView] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
+  // Guard to prevent auto-squad creation from running more than once
+  const autoSquadCreatedRef = useRef(false);
 
   // Sync local squad state when the parent switches to a different squad
   useEffect(() => {
@@ -59,7 +68,31 @@ const SquadBuilder: React.FC<SquadBuilderProps> = ({
     setShowCharacterCreation(false);
     setEditingCharacterId(null);
     setShowPresetPicker(false);
+    autoSquadCreatedRef.current = false;
   }, [initialSquad, currentSquadId]);
+
+  // For games without a tech level, auto-create a squad and skip tech selection
+  useEffect(() => {
+    if (
+      currentView === 'tech-select' &&
+      !hasTechLevel &&
+      !initialSquad &&
+      !autoSquadCreatedRef.current
+    ) {
+      autoSquadCreatedRef.current = true;
+      const newSquad: Squad = {
+        id: Date.now().toString(),
+        name: `Squad - ${new Date().toLocaleDateString()}`,
+        characters: [],
+        gameId,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
+      setSquad(newSquad);
+      setIsSaved(false);
+      setCurrentView('squad-builder');
+    }
+  }, [currentView, hasTechLevel, initialSquad, gameId]);
 
   const isNameDuplicate = (name: string, excludeId?: string): boolean => {
     return savedSquads.some(
@@ -98,6 +131,7 @@ const SquadBuilder: React.FC<SquadBuilderProps> = ({
       id: Date.now().toString(),
       name: `Squad - ${new Date().toLocaleDateString()}`,
       characters: [],
+      gameId,
       techLevel,
       createdAt: new Date(),
       updatedAt: new Date(),
@@ -112,6 +146,7 @@ const SquadBuilder: React.FC<SquadBuilderProps> = ({
 
     const alignedCharacter: Character = {
       ...character,
+      gameId,
       techLevel: squad.techLevel,
     };
 
@@ -134,6 +169,7 @@ const SquadBuilder: React.FC<SquadBuilderProps> = ({
       flaw: preset.flaw,
       feat: preset.feat,
       equipment: preset.equipment,
+      gameId,
       techLevel: squad.techLevel,
     };
 
@@ -266,6 +302,20 @@ const SquadBuilder: React.FC<SquadBuilderProps> = ({
 
   const isSaveDisabled = !squad || !squad.name.trim() || !!nameError;
 
+  const headerTitle = (
+    <div className="squad-builder-header-title">
+      <button
+        onClick={onChangeGame}
+        className="btn-change-game-header"
+        title="Back to game selection"
+        aria-label="Change game"
+      >
+        ← Change Game
+      </button>
+      <h1>Squad Builder — {gameConfig.displayName}</h1>
+    </div>
+  );
+
   const dropdownBar = (
     <div className="squad-nav-bar">
       <SquadDropdown
@@ -287,10 +337,10 @@ const SquadBuilder: React.FC<SquadBuilderProps> = ({
     return (
       <div className="squad-builder">
         <div className="squad-builder-header">
-          <h1>Squad Builder</h1>
+          {headerTitle}
           {dropdownBar}
         </div>
-        <TechLevelSelector onTechLevelSelected={handleTechLevelSelected} />
+        {hasTechLevel && <TechLevelSelector onTechLevelSelected={handleTechLevelSelected} />}
       </div>
     );
   }
@@ -299,10 +349,10 @@ const SquadBuilder: React.FC<SquadBuilderProps> = ({
     return (
       <div className="squad-builder">
         <div className="squad-builder-header">
-          <h1>Squad Builder</h1>
+          {headerTitle}
           {dropdownBar}
         </div>
-        <TechLevelSelector onTechLevelSelected={handleTechLevelSelected} />
+        {hasTechLevel && <TechLevelSelector onTechLevelSelected={handleTechLevelSelected} />}
       </div>
     );
   }
@@ -312,7 +362,7 @@ const SquadBuilder: React.FC<SquadBuilderProps> = ({
   return (
     <div className="squad-builder">
       <div className="squad-builder-header">
-        <h1>Squad Builder</h1>
+        {headerTitle}
         <div className="squad-builder-header-right">
           {dropdownBar}
           <button onClick={handleStartOver} className="btn-start-over">
@@ -337,10 +387,12 @@ const SquadBuilder: React.FC<SquadBuilderProps> = ({
         </div>
 
         <div className="squad-stats">
-          <div className="stat">
-            <span className="stat-label">Tech Level:</span>
-            <span className="stat-value">{squad.techLevel.toUpperCase()}</span>
-          </div>
+          {squad.techLevel && (
+            <div className="stat">
+              <span className="stat-label">Tech Level:</span>
+              <span className="stat-value">{squad.techLevel.toUpperCase()}</span>
+            </div>
+          )}
           <div className="stat">
             <span className="stat-label">Characters:</span>
             <span className="stat-value">{squadStats.characterCount}</span>

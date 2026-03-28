@@ -1,11 +1,13 @@
 import React, { useState, useMemo } from 'react';
-import { Character, CharacterPreset, Equipment, Stats, Flaw, Feat, TechLevel, FlawType, FeatType } from '../types';
+import { Character, CharacterPreset, Equipment, Stats, Flaw, Feat, TechLevel, FlawType, FeatType, GameId } from '../types';
 import StatDistributionPicker from './StatDistributionPicker';
 import FlawsAndFeatsPicker from './FlawsAndFeatsPicker';
 import EquipmentPicker from './EquipmentPicker';
 import { applyFlawFeatModifiers, calculateFinalDerivedStats } from '../utils/stats';
 import { characterNames28Psalms } from '../types/characterNames28Psalms';
 import './CharacterCreationFlow.css';
+
+const DEFAULT_GAME_ID: GameId = '28-psalms';
 
 interface CharacterCreationFlowProps {
     mode?: 'squad' | 'preset';
@@ -16,6 +18,7 @@ interface CharacterCreationFlowProps {
     initialCharacter?: Character | null;
     onCharacterUpdated?: (character: Character) => void;
     // Preset mode
+    gameId?: GameId;
     initialPreset?: CharacterPreset | null;
     onPresetSaved?: (preset: CharacterPreset) => void;
     // Common
@@ -30,6 +33,7 @@ const CharacterCreationFlow: React.FC<CharacterCreationFlowProps> = ({
     onCharacterCreated,
     initialCharacter,
     onCharacterUpdated,
+    gameId,
     initialPreset,
     onPresetSaved,
     onCancel,
@@ -123,6 +127,7 @@ const CharacterCreationFlow: React.FC<CharacterCreationFlowProps> = ({
                     flaw,
                     feat,
                     equipment,
+                    gameId: gameId ?? initialPreset?.gameId ?? DEFAULT_GAME_ID,
                     techLevel: selectedTechLevel,
                     createdAt: initialPreset?.createdAt ?? new Date(),
                     updatedAt: new Date(),
@@ -142,7 +147,7 @@ const CharacterCreationFlow: React.FC<CharacterCreationFlowProps> = ({
                 onCharacterUpdated?.(updatedCharacter);
             }
         } else {
-            if (characterName.trim() && stats && flaw && feat && techLevel) {
+            if (characterName.trim() && stats && flaw && feat) {
                 const newCharacter: Character = {
                     id: Date.now().toString(),
                     name: characterName.trim(),
@@ -150,7 +155,8 @@ const CharacterCreationFlow: React.FC<CharacterCreationFlowProps> = ({
                     flaw,
                     feat,
                     equipment,
-                    techLevel,
+                    gameId: gameId ?? DEFAULT_GAME_ID,
+                    techLevel: techLevel ?? undefined,
                 };
                 onCharacterCreated?.(newCharacter);
             }
@@ -248,6 +254,7 @@ const CharacterCreationFlow: React.FC<CharacterCreationFlowProps> = ({
                             flaw,
                             feat,
                             equipment,
+                            gameId: gameId ?? DEFAULT_GAME_ID,
                             techLevel: effectiveTechLevel,
                         }}
                         selectedEquipment={equipment}

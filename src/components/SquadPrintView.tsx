@@ -42,7 +42,7 @@ const SquadPrintView: React.FC<SquadPrintViewProps> = ({ squad, onClose }) => {
         <div className="squad-print-title">
           <h1>{squad.name}</h1>
           <span className="squad-print-subtitle">
-            {squad.techLevel.toUpperCase()} &nbsp;|&nbsp; {squad.characters.length} character
+            {squad.techLevel ? `${squad.techLevel.toUpperCase()} \u00a0|\u00a0 ` : ''}{squad.characters.length} character
             {squad.characters.length !== 1 ? 's' : ''}
           </span>
         </div>

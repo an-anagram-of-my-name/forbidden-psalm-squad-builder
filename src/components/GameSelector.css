@@ -1,0 +1,134 @@
+.game-selector {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+  padding: 20px;
+  font-family: Arial, sans-serif;
+}
+
+.game-selector-container {
+  background-color: white;
+  border-radius: 8px;
+  padding: 40px;
+  max-width: 900px;
+  width: 100%;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4);
+}
+
+.game-selector-container h1 {
+  text-align: center;
+  font-size: 36px;
+  color: #333;
+  margin: 0 0 20px 0;
+}
+
+.game-selector-description {
+  text-align: center;
+  font-size: 16px;
+  color: #666;
+  margin: 0 0 40px 0;
+  line-height: 1.5;
+}
+
+.game-options {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 30px;
+}
+
+.game-card {
+  padding: 30px;
+  border: 3px solid #ddd;
+  border-radius: 8px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  background-color: #f9f9f9;
+  outline: none;
+}
+
+.game-card:hover,
+.game-card:focus {
+  transform: translateY(-8px);
+  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.15);
+}
+
+.game-card--28-psalms {
+  border-color: #8b0000;
+}
+
+.game-card--28-psalms:hover,
+.game-card--28-psalms:focus {
+  border-color: #6b0000;
+  background-color: #fff5f5;
+}
+
+.game-card--kill-sample-process {
+  border-color: #1a5276;
+  opacity: 0.7;
+}
+
+.game-card--kill-sample-process:hover,
+.game-card--kill-sample-process:focus {
+  border-color: #154360;
+  background-color: #f0f4ff;
+  opacity: 1;
+}
+
+.game-card-short-name {
+  font-size: 48px;
+  font-weight: bold;
+  color: #ccc;
+  margin-bottom: 10px;
+  line-height: 1;
+}
+
+.game-card--28-psalms .game-card-short-name {
+  color: #c0392b;
+}
+
+.game-card--kill-sample-process .game-card-short-name {
+  color: #2980b9;
+}
+
+.game-card h2 {
+  font-size: 26px;
+  margin: 10px 0 15px 0;
+  color: #333;
+}
+
+.game-card p {
+  font-size: 14px;
+  color: #666;
+  margin: 0;
+  line-height: 1.5;
+}
+
+@media (max-width: 768px) {
+  .game-selector-container {
+    padding: 20px;
+  }
+
+  .game-selector-container h1 {
+    font-size: 26px;
+  }
+
+  .game-options {
+    grid-template-columns: 1fr;
+    gap: 20px;
+  }
+
+  .game-card {
+    padding: 20px;
+  }
+
+  .game-card-short-name {
+    font-size: 36px;
+  }
+
+  .game-card h2 {
+    font-size: 20px;
+  }
+}

@@ -1,5 +1,5 @@
 import React from 'react';
-import { Squad, TechLevel } from '../types';
+import { Squad } from '../types';
 import './SquadDropdown.css';
 
 interface SquadDropdownProps {
@@ -8,7 +8,8 @@ interface SquadDropdownProps {
   onSelect: (squadId: string | null) => void;
 }
 
-function formatTechLevel(techLevel: TechLevel): string {
+function formatTechLevel(techLevel: string | undefined): string {
+  if (!techLevel) return '';
   return techLevel
     .split('-')
     .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
@@ -41,12 +42,15 @@ const SquadDropdown: React.FC<SquadDropdownProps> = ({ squads, currentSquadId, o
         onChange={handleChange}
       >
         <option value="">— New Squad —</option>
-        {squads.map((squad) => (
-          <option key={squad.id} value={squad.id}>
-            {squad.name} ({formatTechLevel(squad.techLevel)})
-            {squad.dateSaved ? ` - ${formatDate(squad.dateSaved)}` : ''}
-          </option>
-        ))}
+        {squads.map((squad) => {
+          const techLabel = squad.techLevel ? ` (${formatTechLevel(squad.techLevel)})` : '';
+          const dateLabel = squad.dateSaved ? ` - ${formatDate(squad.dateSaved)}` : '';
+          return (
+            <option key={squad.id} value={squad.id}>
+              {squad.name}{techLabel}{dateLabel}
+            </option>
+          );
+        })}
       </select>
     </div>
   );

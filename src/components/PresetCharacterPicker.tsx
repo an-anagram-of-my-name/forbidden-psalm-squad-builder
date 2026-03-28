@@ -5,7 +5,7 @@ import './PresetCharacterPicker.css';
 
 interface PresetCharacterPickerProps {
   presets: CharacterPreset[];
-  squadTechLevel: TechLevel;
+  squadTechLevel: TechLevel | undefined;
   onSelectPreset: (preset: CharacterPreset) => void;
   onCancel: () => void;
 }
@@ -16,9 +16,13 @@ const PresetCharacterPicker: React.FC<PresetCharacterPickerProps> = ({
   onSelectPreset,
   onCancel,
 }) => {
-  const compatiblePresets = presets.filter((p) => p.techLevel === squadTechLevel);
+  const compatiblePresets = squadTechLevel
+    ? presets.filter((p) => p.techLevel === squadTechLevel)
+    : presets;
 
-  const techLevelLabel = squadTechLevel === 'past-tech' ? 'Past-Tech' : 'Future-Tech';
+  const techLevelLabel = squadTechLevel
+    ? squadTechLevel === 'past-tech' ? 'Past-Tech' : 'Future-Tech'
+    : 'All';
 
   return (
     <div className="preset-picker-overlay" onClick={onCancel}>
@@ -37,7 +41,9 @@ const PresetCharacterPicker: React.FC<PresetCharacterPickerProps> = ({
         {compatiblePresets.length === 0 ? (
           <div className="preset-picker-empty">
             <p>No compatible presets for this tech-level.</p>
-            <p>Create a {techLevelLabel} character preset to add it to your squad.</p>
+            {squadTechLevel && (
+              <p>Create a {techLevelLabel} character preset to add it to your squad.</p>
+            )}
           </div>
         ) : (
           <div className="preset-picker-grid">
@@ -50,6 +56,7 @@ const PresetCharacterPicker: React.FC<PresetCharacterPickerProps> = ({
                 flaw: preset.flaw,
                 feat: preset.feat,
                 equipment: preset.equipment,
+                gameId: preset.gameId,
                 techLevel: preset.techLevel,
               };
               return (
