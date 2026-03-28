@@ -40,7 +40,11 @@ const PresetCharacterPicker: React.FC<PresetCharacterPickerProps> = ({
 
         {compatiblePresets.length === 0 ? (
           <div className="preset-picker-empty">
-            <p>No compatible presets for this tech-level.</p>
+            <p>
+              {squadTechLevel
+                ? 'No compatible presets for this tech-level.'
+                : 'No presets available.'}
+            </p>
             {squadTechLevel && (
               <p>Create a {techLevelLabel} character preset to add it to your squad.</p>
             )}
