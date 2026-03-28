@@ -1,6 +1,7 @@
 import React, { useState, useMemo, useEffect } from 'react';
-import { Flaw, Feat, FlawType, FeatType, Stats } from '../types';
+import { Flaw, Feat, FlawType, FeatType, Stats, GameId } from '../types';
 import { flaws28Psalms, feats28Psalms } from '../types/featsandflaws28Psalms';
+import { getGameConfig } from '../types/games';
 import { applyFlawFeatModifiers, calculateDerivedStats } from '../utils/stats';
 import './FlawsAndFeatsPicker.css';
 
@@ -9,9 +10,11 @@ interface FlawsAndFeatsPickerProps {
     stats?: Stats;
     initialFlawType?: FlawType;
     initialFeatType?: FeatType;
+    gameId?: GameId;
 }
 
-const FlawsAndFeatsPicker: React.FC<FlawsAndFeatsPickerProps> = ({ onSelectionChange, stats, initialFlawType, initialFeatType }) => {
+const FlawsAndFeatsPicker: React.FC<FlawsAndFeatsPickerProps> = ({ onSelectionChange, stats, initialFlawType, initialFeatType, gameId = '28-psalms' }) => {
+    const config = getGameConfig(gameId);
     const [selectedFlawType, setSelectedFlawType] = useState<FlawType | null>(initialFlawType ?? null);
     const [selectedFeatType, setSelectedFeatType] = useState<FeatType | null>(initialFeatType ?? null);
 
@@ -51,8 +54,8 @@ const FlawsAndFeatsPicker: React.FC<FlawsAndFeatsPickerProps> = ({ onSelectionCh
         const featObj: Feat | null = selectedFeatType
             ? { type: selectedFeatType, description: '' }
             : null;
-        return applyFlawFeatModifiers(stats, flawObj, featObj);
-    }, [stats, selectedFlawType, selectedFeatType]);
+        return applyFlawFeatModifiers(stats, flawObj, featObj, gameId);
+    }, [stats, selectedFlawType, selectedFeatType, gameId]);
 
     return (
         <div className="flaws-and-feats-picker">
@@ -62,32 +65,27 @@ const FlawsAndFeatsPicker: React.FC<FlawsAndFeatsPickerProps> = ({ onSelectionCh
 
             {effectiveStats && (
                 <div className="current-stats">
-                    {(['agility', 'presence', 'strength', 'toughness'] as (keyof Stats)[]).map((stat) => (
+                    {config.statNames.map((stat) => (
                         <div key={stat} className="stat-box">
                             <div className="stat-label">{stat.charAt(0).toUpperCase() + stat.slice(1)}</div>
-                            <div className="stat-value">{effectiveStats[stat] > 0 ? `+${effectiveStats[stat]}` : effectiveStats[stat]}</div>
+                            <div className="stat-value">{(effectiveStats[stat] ?? 0) > 0 ? `+${effectiveStats[stat] ?? 0}` : effectiveStats[stat] ?? 0}</div>
                         </div>
                     ))}
                     <div className="current-stats-divider" />
                     <div className="current-stats-derived">
                         {(() => {
-                            const derived = calculateDerivedStats(effectiveStats);
-                            return (
-                                <>
-                                    <div className="stat-box derived">
-                                        <div className="stat-label">MOV</div>
-                                        <div className="stat-value">{derived.movement}</div>
-                                    </div>
-                                    <div className="stat-box derived">
-                                        <div className="stat-label">SLOTS</div>
-                                        <div className="stat-value">{derived.equipmentSlots}</div>
-                                    </div>
-                                    <div className="stat-box derived">
-                                        <div className="stat-label">HP</div>
-                                        <div className="stat-value">{derived.hp}</div>
-                                    </div>
-                                </>
-                            );
+                            const derived = calculateDerivedStats(effectiveStats, gameId);
+                            return config.statNames
+                                .filter((stat) => !!config.derivedStatMap[stat])
+                                .map((stat) => {
+                                    const derivedInfo = config.derivedStatMap[stat]!;
+                                    return (
+                                        <div key={stat} className="stat-box derived">
+                                            <div className="stat-label">{derivedInfo.label}</div>
+                                            <div className="stat-value">{derived[derivedInfo.derivedKey]}</div>
+                                        </div>
+                                    );
+                                });
                         })()}
                     </div>
                 </div>

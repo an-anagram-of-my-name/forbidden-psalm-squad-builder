@@ -1,5 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { Character, CharacterPreset, Equipment, Stats, Flaw, Feat, TechLevel, FlawType, FeatType, GameId } from '../types';
+import { getGameConfig } from '../types/games';
 import StatDistributionPicker from './StatDistributionPicker';
 import FlawsAndFeatsPicker from './FlawsAndFeatsPicker';
 import EquipmentPicker from './EquipmentPicker';
@@ -117,6 +118,9 @@ const CharacterCreationFlow: React.FC<CharacterCreationFlowProps> = ({
         ? selectedTechLevel!   // safe: equipment step is only shown when selectedTechLevel is set
         : techLevel;
 
+    const resolvedGameId: GameId = gameId ?? initialCharacter?.gameId ?? initialPreset?.gameId ?? DEFAULT_GAME_ID;
+    const gameConfig = getGameConfig(resolvedGameId);
+
     const handleCreateCharacter = () => {
         if (mode === 'preset') {
             if (characterName.trim() && stats && flaw && feat && selectedTechLevel) {
@@ -182,8 +186,8 @@ const CharacterCreationFlow: React.FC<CharacterCreationFlowProps> = ({
 
     const effectiveStats = useMemo(() => {
         if (!stats) return null;
-        return applyFlawFeatModifiers(stats, flaw, feat);
-    }, [stats, flaw, feat]);
+        return applyFlawFeatModifiers(stats, flaw, feat, resolvedGameId);
+    }, [stats, flaw, feat, resolvedGameId]);
 
     const getHeaderTitle = (): string => {
         if (mode === 'preset') {
@@ -233,6 +237,7 @@ const CharacterCreationFlow: React.FC<CharacterCreationFlowProps> = ({
                         selectedTechLevel={selectedTechLevel ?? undefined}
                         onTechLevelSelected={handleTechLevelSelected}
                         initialStats={stats ?? undefined}
+                        gameId={resolvedGameId}
                     />
                 )}
 
@@ -242,6 +247,7 @@ const CharacterCreationFlow: React.FC<CharacterCreationFlowProps> = ({
                         stats={stats ?? undefined}
                         initialFlawType={flaw?.type as FlawType ?? undefined}
                         initialFeatType={feat?.type as FeatType ?? undefined}
+                        gameId={resolvedGameId}
                     />
                 )}
 
@@ -254,7 +260,7 @@ const CharacterCreationFlow: React.FC<CharacterCreationFlowProps> = ({
                             flaw,
                             feat,
                             equipment,
-                            gameId: gameId ?? DEFAULT_GAME_ID,
+                            gameId: resolvedGameId,
                             techLevel: effectiveTechLevel,
                         }}
                         selectedEquipment={equipment}
@@ -292,18 +298,24 @@ const CharacterCreationFlow: React.FC<CharacterCreationFlowProps> = ({
                             <div className="review-section-card">
                                 <h3>Stats</h3>
                                 {effectiveStats && (() => {
-                                    const derived = calculateFinalDerivedStats(stats!, flaw, feat, equipment);
+                                    const derived = calculateFinalDerivedStats(stats!, flaw, feat, equipment, resolvedGameId);
                                     const fmt = (v: number) => v > 0 ? `+${v}` : `${v}`;
                                     return (
                                         <ul className="stats-list">
-                                            <li>Agility: {fmt(effectiveStats.agility)}</li>
-                                            <li className="derived">Movement: {derived.movement}</li>
-                                            <li>Presence: {fmt(effectiveStats.presence)}</li>
-                                            <li className="derived derived-empty">—</li>
-                                            <li>Strength: {fmt(effectiveStats.strength)}</li>
-                                            <li className="derived">Slots: {derived.equipmentSlots}</li>
-                                            <li>Toughness: {fmt(effectiveStats.toughness)}</li>
-                                            <li className="derived">HP: {derived.hp}</li>
+                                            {gameConfig.statNames.map((stat) => {
+                                                const derivedInfo = gameConfig.derivedStatMap[stat];
+                                                const statLabel = stat.charAt(0).toUpperCase() + stat.slice(1);
+                                                return (
+                                                    <React.Fragment key={stat}>
+                                                        <li>{statLabel}: {fmt(effectiveStats[stat] ?? 0)}</li>
+                                                        {derivedInfo ? (
+                                                            <li className="derived">{derivedInfo.label}: {derived[derivedInfo.derivedKey]}</li>
+                                                        ) : (
+                                                            <li className="derived derived-empty">—</li>
+                                                        )}
+                                                    </React.Fragment>
+                                                );
+                                            })}
                                         </ul>
                                     );
                                 })()}

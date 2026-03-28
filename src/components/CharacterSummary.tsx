@@ -2,6 +2,7 @@ import React from 'react';
 import { Character } from '../types';
 import { applyFlawFeatModifiers, calculateFinalDerivedStats } from '../utils/stats';
 import { calculateTotalCost } from '../utils/equipment';
+import { getGameConfig } from '../types/games';
 import './CharacterSummary.css';
 
 interface CharacterSummaryProps {
@@ -9,8 +10,9 @@ interface CharacterSummaryProps {
 }
 
 const CharacterSummary: React.FC<CharacterSummaryProps> = ({ character }) => {
-  const effectiveStats = applyFlawFeatModifiers(character.stats, character.flaw, character.feat);
-  const derived = calculateFinalDerivedStats(character.stats, character.flaw, character.feat, character.equipment);
+  const config = getGameConfig(character.gameId);
+  const effectiveStats = applyFlawFeatModifiers(character.stats, character.flaw, character.feat, character.gameId);
+  const derived = calculateFinalDerivedStats(character.stats, character.flaw, character.feat, character.equipment, character.gameId);
   const equipmentCost = calculateTotalCost(character.equipment);
   const slotCapacity = derived.equipmentSlots;
   const slotsUsed = character.equipment.reduce((sum, eq) => sum + eq.slots, 0);
@@ -27,38 +29,29 @@ const CharacterSummary: React.FC<CharacterSummaryProps> = ({ character }) => {
       <div className="summary-section">
         <h4>Stats</h4>
         <div className="stats-grid">
-          <div className="stat-box">
-            <span className="stat-name">AGI</span>
-            <span className="stat-value">{fmt(effectiveStats.agility)}</span>
-          </div>
-          <div className="stat-box derived">
-            <span className="stat-name">MOV</span>
-            <span className="stat-value">{derived.movement}</span>
-          </div>
-          <div className="stat-box">
-            <span className="stat-name">PRE</span>
-            <span className="stat-value">{fmt(effectiveStats.presence)}</span>
-          </div>
-          <div className="stat-box placeholder">
-            <span className="stat-name">—</span>
-            <span className="stat-value">—</span>
-          </div>
-          <div className="stat-box">
-            <span className="stat-name">STR</span>
-            <span className="stat-value">{fmt(effectiveStats.strength)}</span>
-          </div>
-          <div className="stat-box derived">
-            <span className="stat-name">SLOTS</span>
-            <span className="stat-value">{derived.equipmentSlots}</span>
-          </div>
-          <div className="stat-box">
-            <span className="stat-name">TOU</span>
-            <span className="stat-value">{fmt(effectiveStats.toughness)}</span>
-          </div>
-          <div className="stat-box derived">
-            <span className="stat-name">HP</span>
-            <span className="stat-value">{derived.hp}</span>
-          </div>
+          {config.statNames.map((stat) => {
+            const derivedInfo = config.derivedStatMap[stat];
+            const shortLabel = config.statShortLabels[stat] ?? stat.toUpperCase().slice(0, 4);
+            return (
+              <React.Fragment key={stat}>
+                <div className="stat-box">
+                  <span className="stat-name">{shortLabel}</span>
+                  <span className="stat-value">{fmt(effectiveStats[stat] ?? 0)}</span>
+                </div>
+                {derivedInfo ? (
+                  <div className="stat-box derived">
+                    <span className="stat-name">{derivedInfo.label}</span>
+                    <span className="stat-value">{derived[derivedInfo.derivedKey]}</span>
+                  </div>
+                ) : (
+                  <div className="stat-box placeholder">
+                    <span className="stat-name">—</span>
+                    <span className="stat-value">—</span>
+                  </div>
+                )}
+              </React.Fragment>
+            );
+          })}
         </div>
       </div>
 

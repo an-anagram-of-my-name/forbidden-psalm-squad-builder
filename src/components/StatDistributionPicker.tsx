@@ -1,14 +1,8 @@
 import React, { useState } from 'react';
-import { Stats, StatName, TechLevel } from '../types';
-import { getValidStatDistributions, getAvailableModifiers } from '../utils/stats';
+import { Stats, StatName, TechLevel, GameId } from '../types';
+import { getGameConfig } from '../types/games';
+import { getValidStatDistributions, getAvailableModifiers, makeEmptyStats } from '../utils/stats';
 import './StatDistributionPicker.css';
-
-type DerivedStatInfo = { label: string; base: number };
-const DERIVED_STAT_MAP: Partial<Record<StatName, DerivedStatInfo>> = {
-    agility: { label: 'MOV', base: 5 },
-    strength: { label: 'SLOTS', base: 5 },
-    toughness: { label: 'HP', base: 8 },
-};
 
 interface StatDistributionPickerProps {
     onStatsChange?: (stats: Stats | null) => void;
@@ -16,6 +10,7 @@ interface StatDistributionPickerProps {
     selectedTechLevel?: TechLevel;
     onTechLevelSelected?: (techLevel: TechLevel) => void;
     initialStats?: Stats;
+    gameId?: GameId;
 }
 
 const StatDistributionPicker: React.FC<StatDistributionPickerProps> = ({
@@ -24,23 +19,24 @@ const StatDistributionPicker: React.FC<StatDistributionPickerProps> = ({
     selectedTechLevel,
     onTechLevelSelected,
     initialStats,
+    gameId = '28-psalms',
 }) => {
-    const distributions = getValidStatDistributions();
+    const config = getGameConfig(gameId);
+    const distributions = getValidStatDistributions(gameId);
+    const statNames: StatName[] = config.statNames;
 
     const getInitialDistribution = (): number[] | null => {
         if (!initialStats) return null;
-        const statValues = [initialStats.agility, initialStats.presence, initialStats.strength, initialStats.toughness];
+        const statValues = statNames.map((stat) => initialStats[stat] ?? 0);
         const sortedValues = [...statValues].sort((a, b) => b - a);
         return distributions.find(d => {
             const sortedDist = [...d].sort((a, b) => b - a);
-            return sortedDist.every((v, i) => v === sortedValues[i]);
+            return sortedDist.length === sortedValues.length && sortedDist.every((v, i) => v === sortedValues[i]);
         }) ?? null;
     };
 
     const [selectedDistribution, setSelectedDistribution] = useState<number[] | null>(getInitialDistribution);
     const [statAssignments, setStatAssignments] = useState<Partial<Stats>>(initialStats ?? {});
-
-    const statNames: StatName[] = ['agility', 'presence', 'strength', 'toughness'];
 
     const handleDistributionSelect = (distribution: number[]) => {
         setSelectedDistribution(distribution);
@@ -52,7 +48,16 @@ const StatDistributionPicker: React.FC<StatDistributionPickerProps> = ({
         const newAssignments = { ...statAssignments, [stat]: modifier };
         setStatAssignments(newAssignments);
         const isNowComplete = statNames.every(s => newAssignments[s] !== undefined);
-        onStatsChange?.(isNowComplete ? (newAssignments as Stats) : null);
+        if (isNowComplete) {
+            // Build a full Stats object using makeEmptyStats so no stat keys are hardcoded here.
+            const fullStats = statNames.reduce((acc, s) => {
+                acc[s] = newAssignments[s] ?? 0;
+                return acc;
+            }, makeEmptyStats());
+            onStatsChange?.(fullStats);
+        } else {
+            onStatsChange?.(null);
+        }
     };
 
     const handleTechLevelSelect = (techLevel: TechLevel) => {
@@ -120,7 +125,7 @@ const StatDistributionPicker: React.FC<StatDistributionPickerProps> = ({
                     <h3>Assign Modifiers to Stats</h3>
                     {statNames.map((stat) => {
                         const availableOptions = getAvailableModifiersForStat(stat);
-                        const derivedInfo = DERIVED_STAT_MAP[stat];
+                        const derivedInfo = config.derivedStatMap[stat];
                         const assignedValue = statAssignments[stat];
                         return (
                             <div key={stat} className="stat-assignment">
