@@ -1,4 +1,29 @@
-import { describe, it } from 'vitest';
+import { describe, it, expect } from 'vitest';
+import { calculateTotalCost } from './equipment';
+import { Equipment, Weapon } from '../types';
+
+const makeWeapon = (id: string, cost: number, includesAmmoId?: string): Weapon => ({
+    id,
+    name: id,
+    cost,
+    slots: 1,
+    category: 'weapon',
+    damage: '1d6',
+    modifier: 'agility',
+    specialRules: [],
+    isTwoHanded: false,
+    isRanged: !!includesAmmoId,
+    includesAmmoId,
+});
+
+const makeItem = (id: string, cost: number): Equipment => ({
+    id,
+    name: id,
+    cost,
+    slots: 1,
+    category: 'item',
+    ability: '',
+} as Equipment);
 
 describe('Equipment Slot Management', () => {
     it('should add equipment to available slot', () => {
@@ -56,6 +81,43 @@ describe('Movement Penalties', () => {
 
 describe('Total Cost Calculations', () => {
     it('should calculate total cost of equipped items', () => {
-        // Test code here
+        const items: Equipment[] = [makeItem('item-a', 5), makeItem('item-b', 10)];
+        expect(calculateTotalCost(items)).toBe(15);
+    });
+
+    it('should return 0 for empty equipment list', () => {
+        expect(calculateTotalCost([])).toBe(0);
+    });
+
+    it('should credit free ammo cost for a ranged weapon with includesAmmoId', () => {
+        // Bow costs 5, bow-ammo costs 1 → effective cost should be 4
+        const bow = makeWeapon('bow', 5, 'bow-ammo');
+        expect(calculateTotalCost([bow])).toBe(4);
+    });
+
+    it('should not apply ammo credit for a melee weapon (no includesAmmoId)', () => {
+        const sword = makeWeapon('sword', 8);
+        expect(calculateTotalCost([sword])).toBe(8);
+    });
+
+    it('should credit each ranged weapon independently for multiple ranged weapons', () => {
+        // Bow (5, bow-ammo cost 1) + Revolver (real data cost tested via integration)
+        // Use two weapons with the same ammo to ensure per-weapon crediting
+        const bow1 = makeWeapon('bow', 5, 'bow-ammo');
+        const bow2 = makeWeapon('crossbow', 7, 'bow-ammo');
+        // bow-ammo cost is 1; each weapon credits 1 → total credit = 2
+        expect(calculateTotalCost([bow1, bow2])).toBe(10); // (5+7) - (1+1)
+    });
+
+    it('should never return a negative total cost', () => {
+        // A very cheap weapon that credits more than it costs is impossible with real data,
+        // but guard against it anyway
+        const cheapRanged = makeWeapon('cheap', 0, 'bow-ammo');
+        expect(calculateTotalCost([cheapRanged])).toBe(0);
+    });
+
+    it('should not apply credit when includesAmmoId does not match any ammo', () => {
+        const brokenWeapon = makeWeapon('broken', 10, 'nonexistent-ammo');
+        expect(calculateTotalCost([brokenWeapon])).toBe(10);
     });
 });

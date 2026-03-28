@@ -1,7 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { Character, Equipment, Item, Ammo, Armor, Weapon, Stats } from '../types';
 import { items28Psalms, ammo28Psalms, armor28Psalms, pastTechWeapons28Psalms, futureTechWeapons28Psalms } from '../types/equipment28Psalms';
-import { canUseArmor } from '../utils/equipment';
+import { canUseArmor, calculateTotalCost } from '../utils/equipment';
 import { applyFlawFeatModifiers, calculateFinalDerivedStats } from '../utils/stats';
 import './EquipmentPicker.css';
 
@@ -240,6 +240,11 @@ const EquipmentPicker: React.FC<EquipmentPickerProps> = ({ character, selectedEq
               </>
             );
           })()}
+        </div>
+        <div className="current-stats-divider" />
+        <div className="stat-box cost">
+          <div className="stat-label">CR</div>
+          <div className="stat-value">{calculateTotalCost(selectedEquipment)}</div>
         </div>
       </div>
 
