@@ -21,7 +21,7 @@ const CharacterSummary: React.FC<CharacterSummaryProps> = ({ character }) => {
     <div className="character-summary">
       <div className="summary-header">
         <h3>{character.name}</h3>
-        <span className="tech-badge">{character.techLevel}</span>
+        {character.techLevel && <span className="tech-badge">{character.techLevel}</span>}
       </div>
 
       <div className="summary-section">

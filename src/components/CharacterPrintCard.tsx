@@ -119,7 +119,7 @@ const CharacterPrintCard: React.FC<CharacterPrintCardProps> = ({ character }) =>
     <div className="character-print-card">
       <div className="print-card-header">
         <h2>{character.name}</h2>
-        <span className="print-tech-badge">{character.techLevel}</span>
+        {character.techLevel && <span className="print-tech-badge">{character.techLevel}</span>}
       </div>
 
       <div className="print-card-body">

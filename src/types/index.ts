@@ -4,6 +4,8 @@
 
 export type TechLevel = 'past-tech' | 'future-tech';
 
+export type GameId = '28-psalms' | 'kill-sample-process';
+
 export type StatName = 'agility' | 'presence' | 'strength' | 'toughness';
 
 export interface Stats {
@@ -108,7 +110,8 @@ export interface Character {
   flaw: Flaw;
   feat: Feat;
   equipment: Equipment[];
-  techLevel: TechLevel;
+  gameId: GameId;
+  techLevel?: TechLevel;
 }
 
 export interface CharacterPreset {
@@ -118,7 +121,8 @@ export interface CharacterPreset {
   flaw: Flaw;
   feat: Feat;
   equipment: Equipment[];
-  techLevel: TechLevel;
+  gameId: GameId;
+  techLevel?: TechLevel;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -127,7 +131,8 @@ export interface Squad {
   id: string;
   name: string;
   characters: Character[];
-  techLevel: TechLevel;
+  gameId: GameId;
+  techLevel?: TechLevel;
   createdAt: Date;
   updatedAt: Date;
   dateSaved?: string;
@@ -137,4 +142,5 @@ export interface AppState {
   presets: CharacterPreset[];
   squads: Squad[];
   currentSquadId: string | null;
+  currentGameId: GameId | null;
 }

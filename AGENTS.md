@@ -3576,3 +3576,200 @@ Ranged weapons with `includesAmmoId` (from `equipment28Psalms.ts`):
 ✅ Total cost is never negative
 ✅ Existing equipment selection behavior is unchanged
 ✅ All tests pass
+
+## Feature: Game Selector, Routing & New Storage Key
+
+### Overview
+Add a game selection screen as the first thing users see. Thread `gameId` through all state. Use a new localStorage key. Show the current game name in the header with a "back to games" control. Selecting "Kill Sample Process" shows a placeholder for now.
+
+### Key Concepts
+- **GameId**: `'28-psalms' | 'kill-sample-process'` — discriminator for all game-specific data
+- **GameConfig**: Registry of per-game configuration (display name, whether tech level applies, etc.)
+- **New localStorage key**: `'squad-builder-state'` replaces `'forbidden-psalm-state'` — no migration of old data
+- **Game-scoped squads/presets**: Each squad and preset stores its own `gameId`; UI filters by current game
+
+### Data Structure Changes
+
+**New type `GameId`** in `src/types/index.ts`:
+```typescript
+export type GameId = '28-psalms' | 'kill-sample-process';
+```
+
+**New file `src/types/games.ts`**:
+```typescript
+import { GameId } from './index';
+
+export interface GameConfig {
+  id: GameId;
+  displayName: string;
+  shortName: string;
+  hasTechLevel: boolean;
+}
+
+const GAME_CONFIGS: Record<GameId, GameConfig> = {
+  '28-psalms': {
+    id: '28-psalms',
+    displayName: '28 Psalms',
+    shortName: '28P',
+    hasTechLevel: true,
+  },
+  'kill-sample-process': {
+    id: 'kill-sample-process',
+    displayName: 'Kill Sample Process',
+    shortName: 'KSP',
+    hasTechLevel: false,
+  },
+};
+
+export function getGameConfig(gameId: GameId): GameConfig {
+  return GAME_CONFIGS[gameId];
+}
+
+export function getAllGameConfigs(): GameConfig[] {
+  return Object.values(GAME_CONFIGS);
+}
+```
+
+**Modified `AppState`** in `src/types/index.ts`:
+```typescript
+export interface AppState {
+  presets: CharacterPreset[];
+  squads: Squad[];
+  currentSquadId: string | null;
+  currentGameId: GameId | null;
+}
+```
+
+**Modified `Squad`** — add `gameId`, make `techLevel` optional:
+```typescript
+export interface Squad {
+  id: string;
+  name: string;
+  characters: Character[];
+  gameId: GameId;
+  techLevel?: TechLevel;  // optional: KSP squads won't have one
+  createdAt: Date;
+  updatedAt: Date;
+  dateSaved?: string;
+}
+```
+
+**Modified `Character`** — add `gameId`, make `techLevel` optional:
+```typescript
+export interface Character {
+  id: string;
+  name: string;
+  stats: Stats;
+  flaw: Flaw;
+  feat: Feat;
+  equipment: Equipment[];
+  gameId: GameId;
+  techLevel?: TechLevel;
+}
+```
+
+**Modified `CharacterPreset`** — add `gameId`, make `techLevel` optional:
+```typescript
+export interface CharacterPreset {
+  id: string;
+  name: string;
+  stats: Stats;
+  flaw: Flaw;
+  feat: Feat;
+  equipment: Equipment[];
+  gameId: GameId;
+  techLevel?: TechLevel;
+  createdAt: Date;
+  updatedAt: Date;
+}
+```
+
+### New Component: GameSelector
+
+**File: `src/components/GameSelector.tsx`** + `GameSelector.css`
+
+- Grid of game cards (one per game in `getAllGameConfigs()`)
+- Each card shows: game display name, short description
+- Clicking a card calls `onGameSelected(gameId)`
+- Visual style: cards similar to TechLevelSelector but for games
+- "Kill Sample Process" card is visually dimmed (coming soon)
+
+### App.tsx Changes
+
+- **New constant**: `STORAGE_KEY = 'squad-builder-state'` (replaces `'forbidden-psalm-state'`)
+- **New state**: `currentGameId` tracked inside `appState.currentGameId`
+- **Rendering logic**:
+  - When `appState.currentGameId` is `null` → render `GameSelector`
+  - When `appState.currentGameId === 'kill-sample-process'` → render a simple placeholder with "← Change Game" button
+  - When `appState.currentGameId === '28-psalms'` → render existing `SquadBuilder` (filtered to that game's squads/presets)
+- **New handler**: `handleGameSelected(gameId)` — sets `appState.currentGameId`, clears `currentSquadId`
+- **New handler**: `handleChangeGame()` — sets `appState.currentGameId` to `null`
+- **Filter squads/presets**: Pass only squads/presets matching `appState.currentGameId` to `SquadBuilder`
+- **Pass `gameId`** to `SquadBuilder` as a new prop
+
+### SquadBuilder Changes
+
+- **New prop**: `gameId: GameId`
+- **New prop**: `onChangeGame: () => void`
+- **Header**: Show `squad-builder-header-title` with "← Change Game" button and title "Squad Builder — {displayName}"
+- **Squad creation**: When creating a new squad, set `squad.gameId = gameId`
+- **Tech level selector**: Only show `TechLevelSelector` when `getGameConfig(gameId).hasTechLevel` is true
+- **KSP squads**: When `hasTechLevel` is false, a `useEffect` auto-creates a squad without tech level and advances to `squad-builder` view
+- **Characters created in squad**: Set `character.gameId = gameId` and `character.techLevel = squad.techLevel` (if applicable)
+
+### SquadDropdown Changes
+- Already receives filtered squads from App.tsx, so no filtering changes needed inside the component
+- `formatTechLevel()` updated to accept `string | undefined` — omits tech level info from option label when not present
+
+### PresetCharacterPicker Changes
+- `squadTechLevel` prop changed from `TechLevel` to `TechLevel | undefined`
+- When `squadTechLevel` is undefined, all presets are shown (no filtering)
+
+### CharacterCreationFlow Changes
+- New optional prop `gameId?: GameId` (used in preset mode to store `gameId` on created preset)
+- Preset creation includes `gameId: gameId ?? initialPreset?.gameId ?? '28-psalms'`
+- Character creation (squad mode) includes `gameId: gameId ?? '28-psalms'` — overridden by SquadBuilder
+
+### PresetFlow Changes
+- New required prop `gameId: GameId` — passed to `CharacterCreationFlow`
+
+### localStorage Schema Change
+
+**Old key**: `'forbidden-psalm-state'`  
+**New key**: `'squad-builder-state'`
+
+No migration. Old data remains in `'forbidden-psalm-state'` and is ignored. The new schema adds `currentGameId`:
+
+```json
+{
+  "presets": [],
+  "squads": [],
+  "currentSquadId": null,
+  "currentGameId": null
+}
+```
+
+Squads and presets now include `gameId` field. Squads loaded from old data without `gameId` will not match any `currentGameId` filter and will be invisible until the user recreates them.
+
+### CSS Changes
+
+**`src/App.css`** — new `.game-placeholder` and `.btn-change-game` styles for the KSP placeholder screen
+
+**`src/components/GameSelector.css`** — new file; dark gradient background, game cards similar to TechLevelSelector
+
+**`src/components/SquadBuilder.css`** — new `.squad-builder-header-title`, `.btn-change-game-header` styles
+
+### Success Criteria
+
+✅ Game selector shown on first visit (or when `currentGameId` is null)
+✅ Selecting "28 Psalms" loads the full squad builder
+✅ Selecting "Kill Sample Process" shows a placeholder
+✅ "← Change Game" button returns to the game selector from any game screen
+✅ New localStorage key `'squad-builder-state'` used throughout
+✅ `Squad`, `Character`, and `CharacterPreset` all carry `gameId`
+✅ `techLevel` is optional on all three (required only for 28-Psalms)
+✅ `AppState` carries `currentGameId`
+✅ Squads/presets filtered by `currentGameId` before being passed to SquadBuilder
+✅ SquadBuilder header shows game display name
+✅ All TypeScript types updated and build passes
+✅ All existing tests pass
