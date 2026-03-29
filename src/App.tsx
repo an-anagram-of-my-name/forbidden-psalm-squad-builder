@@ -116,21 +116,6 @@ const App: React.FC = () => {
     );
   }
 
-  // Placeholder for Kill Sample Process
-  if (appState.currentGameId === 'kill-sample-process') {
-    return (
-      <div className="app">
-        <div className="game-placeholder">
-          <button onClick={handleChangeGame} className="btn-change-game">
-            ← Change Game
-          </button>
-          <h1>Kill Sample Process</h1>
-          <p>Squad builder support for Kill Sample Process is coming soon.</p>
-        </div>
-      </div>
-    );
-  }
-
   // Filter squads and presets to the current game
   const gameSquads = appState.squads.filter((s) => s.gameId === appState.currentGameId);
   const gamePresets = appState.presets.filter((p) => p.gameId === appState.currentGameId);
