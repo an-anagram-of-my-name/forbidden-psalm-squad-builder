@@ -39,7 +39,7 @@ export function AugmentationAllowanceBox({
 
       {!selection.isComplete && (
         <div className="incomplete-indicator">
-          <span className="warning-icon">⚠️</span>
+          <span className="warning-icon" aria-hidden="true">⚠️</span>
           <span className="incomplete-text">
             {selection.incompleteItems.length} augmentation(s) incomplete
           </span>
