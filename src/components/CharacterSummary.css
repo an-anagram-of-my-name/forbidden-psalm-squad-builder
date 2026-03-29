@@ -9,10 +9,23 @@
 .summary-header {
   display: flex;
   justify-content: space-between;
-  align-items: center;
+  align-items: flex-start;
   margin-bottom: 15px;
   padding-bottom: 10px;
   border-bottom: 2px solid #f0f0f0;
+}
+
+.summary-header-info {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex: 1;
+}
+
+.summary-header-text {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
 }
 
 .summary-header h3 {

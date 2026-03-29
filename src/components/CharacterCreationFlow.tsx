@@ -4,6 +4,7 @@ import { getGameConfig } from '../types/games';
 import StatDistributionPicker from './StatDistributionPicker';
 import FlawsAndFeatsPicker from './FlawsAndFeatsPicker';
 import EquipmentPicker from './EquipmentPicker';
+import CharacterPortrait from './CharacterPortrait';
 import { applyFlawFeatModifiers, calculateFinalDerivedStats, getDefaultFlawsData, getDefaultFeatsData } from '../utils/stats';
 import { characterNames28Psalms } from '../types/characterNames28Psalms';
 import './CharacterCreationFlow.css';
@@ -205,6 +206,24 @@ const CharacterCreationFlow: React.FC<CharacterCreationFlowProps> = ({
         return applyFlawFeatModifiers(stats, flaw, feat, resolvedGameId, gameData.flaws, gameData.feats);
     }, [stats, flaw, feat, resolvedGameId, gameData]);
 
+    // Stable preview character for portrait generation in the review step.
+    // characterName is intentionally excluded: it is not part of the image hash
+    // or prompt, so including it would cause CharacterPortrait's useMemo to
+    // recompute the hash on every keystroke without changing its value.
+    const previewCharacter = useMemo<Character | null>(() => {
+        if (!stats || !flaw || !feat) return null;
+        return {
+            id: initialCharacter?.id ?? initialPreset?.id ?? 'preview',
+            name: '',   // excluded intentionally — see note above
+            stats,
+            flaw,
+            feat,
+            equipment,
+            gameId: resolvedGameId,
+            techLevel: effectiveTechLevel,
+        };
+    }, [stats, flaw, feat, equipment, resolvedGameId, effectiveTechLevel, initialCharacter?.id, initialPreset?.id]);
+
     const getHeaderTitle = (): string => {
         if (mode === 'preset') {
             return isEditingPreset ? 'Edit Character Template' : 'New Character Template';
@@ -298,6 +317,16 @@ const CharacterCreationFlow: React.FC<CharacterCreationFlowProps> = ({
                         <div className="picker-header">
                             <h2>Review Your Character</h2>
                         </div>
+
+                        {/* Portrait preview — shown once stats/flaw/feat are set */}
+                        {previewCharacter && (
+                            <div className="review-portrait-row">
+                                <CharacterPortrait
+                                    character={previewCharacter}
+                                    size="large"
+                                />
+                            </div>
+                        )}
 
                         <div className="character-name-input">
                             <label>Character Name</label>

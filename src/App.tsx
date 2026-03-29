@@ -3,6 +3,7 @@ import { AppState, Squad, CharacterPreset, GameId } from './types';
 import SquadBuilder from './components/SquadBuilder';
 import PresetFlow from './components/PresetFlow';
 import GameSelector from './components/GameSelector';
+import ReplicateConfig from './components/ReplicateConfig';
 import './App.css';
 
 const STORAGE_KEY = 'squad-builder-state';
@@ -16,6 +17,7 @@ const App: React.FC = () => {
   });
   const [showPresetFlow, setShowPresetFlow] = useState(false);
   const [currentPresetId, setCurrentPresetId] = useState<string | null>(null);
+  const [showSettings, setShowSettings] = useState(false);
 
   // Load app state from localStorage on mount
   useEffect(() => {
@@ -107,51 +109,56 @@ const App: React.FC = () => {
     setCurrentPresetId(null);
   };
 
-  // Show game selector when no game is selected
-  if (appState.currentGameId === null) {
-    return (
-      <div className="app">
-        <GameSelector onGameSelected={handleGameSelected} />
-      </div>
-    );
-  }
-
-  // Filter squads and presets to the current game
-  const gameSquads = appState.squads.filter((s) => s.gameId === appState.currentGameId);
-  const gamePresets = appState.presets.filter((p) => p.gameId === appState.currentGameId);
-
+  // Compute game-scoped data (safe even when currentGameId is null — yields empty arrays)
+  const currentGameId = appState.currentGameId;
+  const gameSquads = currentGameId
+    ? appState.squads.filter((s) => s.gameId === currentGameId)
+    : [];
+  const gamePresets = currentGameId
+    ? appState.presets.filter((p) => p.gameId === currentGameId)
+    : [];
   const currentSquad = gameSquads.find((s) => s.id === appState.currentSquadId) ?? null;
   const currentPreset = gamePresets.find((p) => p.id === currentPresetId) ?? null;
 
-  if (showPresetFlow) {
-    return (
-      <div className="app">
+  return (
+    <div className="app">
+      {/* Settings gear rendered once at root so it is available on every view */}
+      <button
+        className="btn-settings"
+        onClick={() => setShowSettings(true)}
+        title="Image generation settings"
+        aria-label="Open settings"
+      >
+        ⚙
+      </button>
+
+      {currentGameId === null ? (
+        <GameSelector onGameSelected={handleGameSelected} />
+      ) : showPresetFlow ? (
         <PresetFlow
           preset={currentPreset}
-          gameId={appState.currentGameId}
+          gameId={currentGameId}
           onSavePreset={handleSavePreset}
           onCancel={handleCancelPreset}
         />
-      </div>
-    );
-  }
+      ) : (
+        <SquadBuilder
+          gameId={currentGameId}
+          onChangeGame={handleChangeGame}
+          savedSquads={gameSquads}
+          currentSquadId={appState.currentSquadId}
+          initialSquad={currentSquad}
+          onSaveSquad={handleSaveSquad}
+          onLoadSquad={handleLoadSquad}
+          onNewSquad={handleNewSquad}
+          onDeleteSquad={handleDeleteSquad}
+          presets={gamePresets}
+          onNewPreset={handleNewPreset}
+          onLoadPreset={handleLoadPreset}
+        />
+      )}
 
-  return (
-    <div className="app">
-      <SquadBuilder
-        gameId={appState.currentGameId}
-        onChangeGame={handleChangeGame}
-        savedSquads={gameSquads}
-        currentSquadId={appState.currentSquadId}
-        initialSquad={currentSquad}
-        onSaveSquad={handleSaveSquad}
-        onLoadSquad={handleLoadSquad}
-        onNewSquad={handleNewSquad}
-        onDeleteSquad={handleDeleteSquad}
-        presets={gamePresets}
-        onNewPreset={handleNewPreset}
-        onLoadPreset={handleLoadPreset}
-      />
+      {showSettings && <ReplicateConfig onClose={() => setShowSettings(false)} />}
     </div>
   );
 };
