@@ -13,16 +13,22 @@ export interface PortraitGenerationResult {
   error?: string;
 }
 
+const PORTRAIT_TIMEOUT_MS = 30_000;
+
 /**
  * Generates a portrait for the given character by calling the Picsart proxy.
  *
  * On success returns `{ success: true, url: '...' }`.
  * On failure returns `{ success: false, error: '...' }`.
  * Never throws — all errors are caught and returned as failure results.
+ * The request is aborted after 30 seconds if no response is received.
  */
 export async function generateCharacterPortrait(
   character: Character,
 ): Promise<PortraitGenerationResult> {
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), PORTRAIT_TIMEOUT_MS);
+
   try {
     const prompt = generatePortraitPrompt(character);
 
@@ -32,6 +38,7 @@ export async function generateCharacterPortrait(
     const response = await fetch(PORTRAIT_API_URL, {
       method: 'POST',
       body: formData,
+      signal: controller.signal,
     });
 
     if (!response.ok) {
@@ -77,7 +84,13 @@ export async function generateCharacterPortrait(
     return { success: true, url: imageUrl };
   } catch (err) {
     const message =
-      err instanceof Error ? err.message : 'Unknown network error';
+      err instanceof Error
+        ? err.name === 'AbortError'
+          ? 'Request timed out after 30 seconds'
+          : err.message
+        : 'Unknown network error';
     return { success: false, error: `Portrait generation failed: ${message}` };
+  } finally {
+    clearTimeout(timeoutId);
   }
 }
