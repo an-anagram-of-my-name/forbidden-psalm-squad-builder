@@ -20,16 +20,14 @@ export const API_KEY_STORAGE_KEY = 'replicate-api-key';
 
 /**
  * Create a deterministic cache key string from the parts of a character that
- * affect the generated prompt.  We keep it simple: JSON stringify the relevant
+ * affect the generated prompt. We keep it simple: JSON stringify the relevant
  * fields and compute a basic hash.
  */
 export function createImageHash(character: Character): string {
   const relevant = {
-    name: character.name,
+    // Only include stats and the equipment that can appear in the prompt.
     stats: character.stats,
-    flaw: character.flaw.type,
-    feat: character.feat.type,
-    equipment: character.equipment.map((e) => e.id).sort(),
+    equipment: promptEquipment(character.equipment).map((e) => e.id).sort(),
   };
   const str = JSON.stringify(relevant);
   // djb2-style hash → hex string
