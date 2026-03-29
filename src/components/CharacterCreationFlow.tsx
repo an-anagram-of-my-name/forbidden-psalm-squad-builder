@@ -6,8 +6,10 @@ import FlawsAndFeatsPicker from './FlawsAndFeatsPicker';
 import EquipmentPicker from './EquipmentPicker';
 import CharacterPortrait from './CharacterPortrait';
 import AugmentationAllowanceBox from './AugmentationAllowanceBox';
+import PortraitGeneratingModal from './PortraitGeneratingModal';
 import { applyFlawFeatModifiers, calculateFinalDerivedStats, getDefaultFlawsData, getDefaultFeatsData } from '../utils/stats';
 import { calculateAugmentationSelection } from '../utils/augmentationAllowances';
+import { generateCharacterPortrait } from '../services/portraitGenerationService';
 import { characterNames28Psalms } from '../types/characterNames28Psalms';
 import './CharacterCreationFlow.css';
 
@@ -69,6 +71,9 @@ const CharacterCreationFlow: React.FC<CharacterCreationFlowProps> = ({
     const [selectedTechLevel, setSelectedTechLevel] = useState<TechLevel | null>(
         initialPreset?.techLevel ?? null
     );
+
+    const [isGeneratingPortrait, setIsGeneratingPortrait] = useState(false);
+    const [portraitGenerationError, setPortraitGenerationError] = useState<string | null>(null);
 
     // KSP augmentation state (placeholder counts until selection UI is added)
     const cybermodCount = (initialCharacter?.cybermods ?? initialPreset?.cybermods)?.length ?? 0;
@@ -153,9 +158,31 @@ const CharacterCreationFlow: React.FC<CharacterCreationFlowProps> = ({
         };
     }, [resolvedGameId, gameConfig]);
 
-    const handleCreateCharacter = () => {
+    const handleCreateCharacter = async () => {
+        setPortraitGenerationError(null);
+
         if (mode === 'preset') {
             if (characterName.trim() && stats && flaw && feat && selectedTechLevel) {
+                // Build the character object to use for portrait generation
+                const presetCharacterForPortrait: Character = {
+                    id: initialPreset?.id ?? Date.now().toString(),
+                    name: characterName.trim(),
+                    stats,
+                    flaw,
+                    feat,
+                    equipment,
+                    gameId: gameId,
+                    techLevel: selectedTechLevel,
+                };
+
+                setIsGeneratingPortrait(true);
+                const portraitResult = await generateCharacterPortrait(presetCharacterForPortrait);
+                setIsGeneratingPortrait(false);
+
+                if (!portraitResult.success) {
+                    setPortraitGenerationError(portraitResult.error ?? 'Portrait generation failed');
+                }
+
                 const preset: CharacterPreset = {
                     id: initialPreset?.id ?? Date.now().toString(),
                     name: characterName.trim(),
@@ -165,6 +192,7 @@ const CharacterCreationFlow: React.FC<CharacterCreationFlowProps> = ({
                     equipment,
                     gameId: gameId,
                     techLevel: selectedTechLevel,
+                    portraitUrl: portraitResult.url,
                     createdAt: initialPreset?.createdAt ?? new Date(),
                     updatedAt: new Date(),
                 };
@@ -172,7 +200,7 @@ const CharacterCreationFlow: React.FC<CharacterCreationFlowProps> = ({
             }
         } else if (isEditingCharacter) {
             if (characterName.trim() && stats && flaw && feat && initialCharacter) {
-                const updatedCharacter: Character = {
+                const characterForPortrait: Character = {
                     ...initialCharacter,
                     name: characterName.trim(),
                     stats,
@@ -180,11 +208,24 @@ const CharacterCreationFlow: React.FC<CharacterCreationFlowProps> = ({
                     feat,
                     equipment,
                 };
+
+                setIsGeneratingPortrait(true);
+                const portraitResult = await generateCharacterPortrait(characterForPortrait);
+                setIsGeneratingPortrait(false);
+
+                if (!portraitResult.success) {
+                    setPortraitGenerationError(portraitResult.error ?? 'Portrait generation failed');
+                }
+
+                const updatedCharacter: Character = {
+                    ...characterForPortrait,
+                    portraitUrl: portraitResult.url ?? initialCharacter.portraitUrl,
+                };
                 onCharacterUpdated?.(updatedCharacter);
             }
         } else {
             if (characterName.trim() && stats && flaw && feat) {
-                const newCharacter: Character = {
+                const newCharacterBase: Character = {
                     id: Date.now().toString(),
                     name: characterName.trim(),
                     stats,
@@ -193,6 +234,19 @@ const CharacterCreationFlow: React.FC<CharacterCreationFlowProps> = ({
                     equipment,
                     gameId: gameId,
                     techLevel: techLevel ?? undefined,
+                };
+
+                setIsGeneratingPortrait(true);
+                const portraitResult = await generateCharacterPortrait(newCharacterBase);
+                setIsGeneratingPortrait(false);
+
+                if (!portraitResult.success) {
+                    setPortraitGenerationError(portraitResult.error ?? 'Portrait generation failed');
+                }
+
+                const newCharacter: Character = {
+                    ...newCharacterBase,
+                    portraitUrl: portraitResult.url,
                 };
                 onCharacterCreated?.(newCharacter);
             }
@@ -236,7 +290,7 @@ const CharacterCreationFlow: React.FC<CharacterCreationFlowProps> = ({
         [flaw, feat, additionalFlaws, additionalFeats, cybermodCount, mutationCount, resolvedGameId],
     );
 
-    const canSave = canProceed && (!isKSP || augmentationSelection.isComplete);
+    const canSave = canProceed && (!isKSP || augmentationSelection.isComplete) && !isGeneratingPortrait;
 
     // Stable preview character for portrait generation in the review step.
     // characterName is intentionally excluded: it is not part of the image hash
@@ -275,6 +329,9 @@ const CharacterCreationFlow: React.FC<CharacterCreationFlowProps> = ({
 
     return (
         <div className="character-creation-flow">
+            {isGeneratingPortrait && (
+                <PortraitGeneratingModal characterName={characterName} />
+            )}
             <div className="flow-header">
                 <h1>{getHeaderTitle()}</h1>
                 <div className="step-indicator">
@@ -515,13 +572,24 @@ const CharacterCreationFlow: React.FC<CharacterCreationFlowProps> = ({
                     </>
                 )}
                 {currentStep === 'review' && (
-                    <button
-                        onClick={handleCreateCharacter}
-                        disabled={!canSave}
-                        className="btn-create-character"
-                    >
-                        {getSubmitButtonText()}
-                    </button>
+                    <>
+                        {portraitGenerationError && (
+                            <div
+                                className="portrait-error-banner"
+                                role="alert"
+                                aria-live="polite"
+                            >
+                                ⚠️ Portrait generation failed: {portraitGenerationError}. {mode === 'preset' ? 'The preset was saved without a portrait.' : 'The character was saved without a portrait.'}
+                            </div>
+                        )}
+                        <button
+                            onClick={handleCreateCharacter}
+                            disabled={!canSave}
+                            className="btn-create-character"
+                        >
+                            {getSubmitButtonText()}
+                        </button>
+                    </>
                 )}
             </div>
         </div>
