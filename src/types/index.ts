@@ -47,6 +47,7 @@ export interface FeatData {
 }
 
 export type FlawType =
+  // 28 Psalms flaws
   | 'xeno'
   | 'too-many-teeth'
   | 'dead-man-walking'
@@ -56,7 +57,32 @@ export type FlawType =
   | 'superstitious'
   | 'late'
   | 'purge'
-  | 'weak-bones';
+  | 'weak-bones'
+  // Kill Sample Process flaws
+  | 'technophobe'
+  | 'rube'
+  | 'break-bad'
+  | 'bad-connection'
+  | 'wannabe-punk'
+  | 'infected'
+  | 'flatline'
+  | 'sas'
+  | 'ghost'
+  | 'perfect'
+  | 'wanted'
+  | 'trigger-finger'
+  | 'debt'
+  | 'double-down'
+  | 'decide'
+  | 'fanatic'
+  | 'turing-test'
+  | 'mutant-agility'
+  | 'mutant-presence'
+  | 'mutant-strength'
+  | 'mutant-toughness'
+  | 'mutant-knowledge'
+  | 'sensory-overload'
+  | 'mycotoxin';
 
 export type FeatType =
   | 'marine'

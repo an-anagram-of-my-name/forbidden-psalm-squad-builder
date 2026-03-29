@@ -1,9 +1,31 @@
 import { Stats, DerivedStats, Flaw, Feat, Equipment, GameId, StatName } from '../types';
 import { flaws28Psalms, feats28Psalms, FlawData, FeatData } from '../types/featsandflaws28Psalms';
-import { StatModifiers } from '../types/featsandflaws28Psalms';
+import { StatModifiers } from '../types/featsandflaws';
+import { flawsKSP } from '../types/featsandflawsKSP';
 import { getGameConfig } from '../types/games';
 
 const DEFAULT_GAME_ID: GameId = '28-psalms';
+
+/**
+ * Returns the default flaw dataset for a given game.
+ * This avoids hardcoding the 28P dataset as the fallback when a gameId is known.
+ */
+function getDefaultFlawsData(gameId: GameId): FlawData[] {
+  switch (gameId) {
+    case 'kill-sample-process':
+      return flawsKSP;
+    default:
+      return flaws28Psalms;
+  }
+}
+
+/**
+ * Returns the default feat dataset for a given game.
+ * Currently only 28P has feats; KSP feats will be added here when available.
+ */
+function getDefaultFeatsData(_gameId: GameId): FeatData[] {
+  return feats28Psalms;
+}
 
 // Canonical list of all stat names, kept in sync with the StatName union in types/index.ts.
 // TypeScript does not support runtime enumeration of union types, so this list must be
@@ -54,8 +76,8 @@ export function isValidStatDistribution(values: number[], gameId?: GameId): bool
  * @param flaw - Selected flaw, or null
  * @param feat - Selected feat, or null
  * @param gameId - Game identifier (defaults to '28-psalms')
- * @param flawsData - Optional flaw data to use; falls back to flaws28Psalms
- * @param featsData - Optional feat data to use; falls back to feats28Psalms
+ * @param flawsData - Optional flaw data; falls back to the game's default dataset
+ * @param featsData - Optional feat data; falls back to the game's default dataset
  */
 export function applyFlawFeatModifiers(
   baseStats: Stats,
@@ -66,10 +88,11 @@ export function applyFlawFeatModifiers(
   featsData?: FeatData[]
 ): Stats {
   const modified: Stats = { ...baseStats };
-  const config = getGameConfig(gameId ?? DEFAULT_GAME_ID);
+  const resolvedGameId = gameId ?? DEFAULT_GAME_ID;
+  const config = getGameConfig(resolvedGameId);
 
-  const flawsToUse = flawsData ?? flaws28Psalms;
-  const featsToUse = featsData ?? feats28Psalms;
+  const flawsToUse = flawsData ?? getDefaultFlawsData(resolvedGameId);
+  const featsToUse = featsData ?? getDefaultFeatsData(resolvedGameId);
 
   if (flaw) {
     const flawEntry = flawsToUse.find((f) => f.type === flaw.type);
@@ -109,8 +132,8 @@ export function applyFlawFeatModifiers(
  * @param feat - Selected feat (Step 2), or null
  * @param equipment - Selected equipment (Step 3)
  * @param gameId - The game to use for derived stat formulas (defaults to '28-psalms')
- * @param flawsData - Optional flaw data; falls back to flaws28Psalms
- * @param featsData - Optional feat data; falls back to feats28Psalms
+ * @param flawsData - Optional flaw data; falls back to the game's default dataset
+ * @param featsData - Optional feat data; falls back to the game's default dataset
  * @returns DerivedStats with all modifiers applied
  */
 export function calculateFinalDerivedStats(
@@ -122,8 +145,32 @@ export function calculateFinalDerivedStats(
   flawsData?: FlawData[],
   featsData?: FeatData[]
 ): DerivedStats {
-  const effectiveStats = applyFlawFeatModifiers(baseStats, flaw, feat, gameId, flawsData, featsData);
-  const derived = calculateDerivedStats(effectiveStats, gameId);
+  const resolvedGameId = gameId ?? DEFAULT_GAME_ID;
+  const effectiveStats = applyFlawFeatModifiers(baseStats, flaw, feat, resolvedGameId, flawsData, featsData);
+  const derived = calculateDerivedStats(effectiveStats, resolvedGameId);
+
+  // Apply flaw/feat derived stat modifiers (e.g. S.A.S. keeps Movement despite -2 Agility)
+  const flawFeatDerivedModifiers = { movement: 0, hp: 0, equipmentSlots: 0 };
+
+  if (flaw) {
+    const flawsToUse = flawsData ?? getDefaultFlawsData(resolvedGameId);
+    const flawEntry = flawsToUse.find((f) => f.type === flaw.type);
+    if (flawEntry?.derivedStatModifiers) {
+      flawFeatDerivedModifiers.movement += flawEntry.derivedStatModifiers.movement ?? 0;
+      flawFeatDerivedModifiers.hp += flawEntry.derivedStatModifiers.hp ?? 0;
+      flawFeatDerivedModifiers.equipmentSlots += flawEntry.derivedStatModifiers.equipmentSlots ?? 0;
+    }
+  }
+
+  if (feat) {
+    const featsToUse = featsData ?? getDefaultFeatsData(resolvedGameId);
+    const featEntry = featsToUse.find((f) => f.type === feat.type);
+    if (featEntry?.derivedStatModifiers) {
+      flawFeatDerivedModifiers.movement += featEntry.derivedStatModifiers.movement ?? 0;
+      flawFeatDerivedModifiers.hp += featEntry.derivedStatModifiers.hp ?? 0;
+      flawFeatDerivedModifiers.equipmentSlots += featEntry.derivedStatModifiers.equipmentSlots ?? 0;
+    }
+  }
 
   const flawFeatDerivedModifiers: DerivedStats = {
     movement: 0,
