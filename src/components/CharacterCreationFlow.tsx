@@ -71,15 +71,15 @@ const CharacterCreationFlow: React.FC<CharacterCreationFlowProps> = ({
     );
 
     // KSP augmentation state (placeholder counts until selection UI is added)
-    const cybermodCount = initialCharacter?.cybermods?.length ?? 0;
-    const mutationCount = initialCharacter?.mutations?.length ?? 0;
+    const cybermodCount = (initialCharacter?.cybermods ?? initialPreset?.cybermods)?.length ?? 0;
+    const mutationCount = (initialCharacter?.mutations ?? initialPreset?.mutations)?.length ?? 0;
     const additionalFlaws = useMemo(
-        () => initialCharacter?.additionalFlaws ?? [],
-        [initialCharacter?.additionalFlaws]
+        () => initialCharacter?.additionalFlaws ?? initialPreset?.additionalFlaws ?? [],
+        [initialCharacter?.additionalFlaws, initialPreset?.additionalFlaws]
     );
     const additionalFeats = useMemo(
-        () => initialCharacter?.additionalFeats ?? [],
-        [initialCharacter?.additionalFeats]
+        () => initialCharacter?.additionalFeats ?? initialPreset?.additionalFeats ?? [],
+        [initialCharacter?.additionalFeats, initialPreset?.additionalFeats]
     );
 
     const handleStatsChange = (newStats: Stats | null) => {
