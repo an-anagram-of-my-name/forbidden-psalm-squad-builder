@@ -1,4 +1,4 @@
-import { Flaw, Feat } from '../types';
+import { Flaw, Feat, GameId } from '../types';
 import { AugmentationAllowance, AugmentationSelection, AugmentationDeficiency } from '../types/augmentations';
 
 /**
@@ -72,7 +72,7 @@ export function calculateAugmentationSelection(
   additionalFeats: Feat[] | undefined,
   cybermodCount: number,
   mutationCount: number,
-  gameId: string,
+  gameId: GameId,
 ): AugmentationSelection {
   // Only applies to KSP
   if (gameId !== 'kill-sample-process') {
