@@ -44,5 +44,9 @@ export function setCachedImage(hash: string, entry: ImageCacheEntry): void {
 }
 
 export function clearImageCache(): void {
-  localStorage.removeItem(CACHE_KEY);
+  try {
+    localStorage.removeItem(CACHE_KEY);
+  } catch {
+    // Storage unavailable — silently ignore
+  }
 }
