@@ -129,20 +129,28 @@ const CharacterCreationFlow: React.FC<CharacterCreationFlowProps> = ({
 
     // Load game-specific data to pass down to pickers
     const gameData = useMemo(() => {
+        const { equipmentData } = gameConfig;
         if (resolvedGameId === '28-psalms') {
             return {
                 flaws: flaws28Psalms,
                 feats: feats28Psalms,
-                weapons: {
-                    pastTech: pastTechWeapons28Psalms,
-                    futureTech: futureTechWeapons28Psalms,
-                },
-                armor: armor28Psalms,
-                items: items28Psalms,
-                ammo: ammo28Psalms,
+                weapons: equipmentData.weapons,
+                armor: equipmentData.armor,
+                items: equipmentData.items,
+                ammo: equipmentData.ammo,
             };
         }
-        // KSP and future games: return KSP flaws; empty datasets for equipment not yet implemented
+        if (resolvedGameId === 'kill-sample-process') {
+            return {
+                flaws: flawsKSP,
+                feats: featsKSP,
+                weapons: equipmentData.weapons,
+                armor: equipmentData.armor,
+                items: equipmentData.items,
+                ammo: equipmentData.ammo,
+            };
+        }
+        // Fallback: empty datasets so pickers don't fall back to 28P content
         return {
             flaws: flawsKSP,
             feats: [] as typeof feats28Psalms,
@@ -154,7 +162,7 @@ const CharacterCreationFlow: React.FC<CharacterCreationFlowProps> = ({
             items: [] as typeof items28Psalms,
             ammo: [] as typeof ammo28Psalms,
         };
-    }, [resolvedGameId]);
+    }, [resolvedGameId, gameConfig]);
 
     const handleCreateCharacter = () => {
         if (mode === 'preset') {
