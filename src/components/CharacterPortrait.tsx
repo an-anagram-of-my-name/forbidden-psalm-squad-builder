@@ -1,7 +1,5 @@
-import React, { useState, useEffect, useMemo, useRef } from 'react';
+import React from 'react';
 import { Character } from '../types';
-import { createImageHash, getOrGenerateImage, API_KEY_STORAGE_KEY } from '../utils/imageGeneration';
-import { getCachedImage } from '../utils/imageCache';
 import './CharacterPortrait.css';
 
 export type PortraitSize = 'small' | 'large';
@@ -11,58 +9,10 @@ interface CharacterPortraitProps {
   size?: PortraitSize;
 }
 
-type PortraitState = 'idle' | 'loading' | 'loaded' | 'error';
-
 const CharacterPortrait: React.FC<CharacterPortraitProps> = ({
   character,
   size = 'small',
 }) => {
-  const [state, setState] = useState<PortraitState>('idle');
-  const [imageUrl, setImageUrl] = useState<string | null>(null);
-  const mountedRef = useRef(true);
-
-  // Compute the cache key once; only changes when prompt-relevant data changes
-  // (stats and visible equipment — see createImageHash).
-  const hash = useMemo(() => createImageHash(character), [character]);
-
-  useEffect(() => {
-    mountedRef.current = true;
-
-    // Check cache synchronously first
-    const cached = getCachedImage(hash);
-
-    if (cached) {
-      setImageUrl(cached.imageUrl);
-      setState('loaded');
-      return;
-    }
-
-    // No cached image — try to generate if API key is available
-    const apiKey = localStorage.getItem(API_KEY_STORAGE_KEY);
-    if (!apiKey) {
-      // No API key configured → stay in idle (show fallback)
-      setState('idle');
-      return;
-    }
-
-    setState('loading');
-
-    getOrGenerateImage(character, apiKey)
-      .then((url) => {
-        if (!mountedRef.current) return;
-        setImageUrl(url);
-        setState('loaded');
-      })
-      .catch(() => {
-        if (!mountedRef.current) return;
-        setState('error');
-      });
-
-    return () => {
-      mountedRef.current = false;
-    };
-  }, [hash]); // eslint-disable-line react-hooks/exhaustive-deps -- character object is captured inside but hash is the stable key
-
   // Fallback: first two initials of the character name
   const initials = character.name
     .split(' ')
@@ -77,22 +27,9 @@ const CharacterPortrait: React.FC<CharacterPortraitProps> = ({
       title={character.name}
       aria-label={`Portrait of ${character.name}`}
     >
-      {state === 'loaded' && imageUrl ? (
-        <img
-          src={imageUrl}
-          alt={`Portrait of ${character.name}`}
-          className="character-portrait__image"
-        />
-      ) : state === 'loading' ? (
-        <div className="character-portrait__spinner" aria-label="Generating portrait…">
-          <div className="character-portrait__spinner-ring" />
-        </div>
-      ) : (
-        /* idle or error — show initials fallback */
-        <div className="character-portrait__initials" aria-hidden="true">
-          {initials || '?'}
-        </div>
-      )}
+      <div className="character-portrait__initials" aria-hidden="true">
+        {initials || '?'}
+      </div>
     </div>
   );
 };

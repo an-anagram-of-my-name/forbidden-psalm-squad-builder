@@ -3,7 +3,6 @@ import { AppState, Squad, CharacterPreset, GameId } from './types';
 import SquadBuilder from './components/SquadBuilder';
 import PresetFlow from './components/PresetFlow';
 import GameSelector from './components/GameSelector';
-import ReplicateConfig from './components/ReplicateConfig';
 import './App.css';
 
 const STORAGE_KEY = 'squad-builder-state';
@@ -17,8 +16,6 @@ const App: React.FC = () => {
   });
   const [showPresetFlow, setShowPresetFlow] = useState(false);
   const [currentPresetId, setCurrentPresetId] = useState<string | null>(null);
-  const [showSettings, setShowSettings] = useState(false);
-
   // Load app state from localStorage on mount
   useEffect(() => {
     const savedState = localStorage.getItem(STORAGE_KEY);
@@ -122,16 +119,6 @@ const App: React.FC = () => {
 
   return (
     <div className="app">
-      {/* Settings gear rendered once at root so it is available on every view */}
-      <button
-        className="btn-settings"
-        onClick={() => setShowSettings(true)}
-        title="Image generation settings"
-        aria-label="Open settings"
-      >
-        ⚙
-      </button>
-
       {currentGameId === null ? (
         <GameSelector onGameSelected={handleGameSelected} />
       ) : showPresetFlow ? (
@@ -157,8 +144,6 @@ const App: React.FC = () => {
           onLoadPreset={handleLoadPreset}
         />
       )}
-
-      {showSettings && <ReplicateConfig onClose={() => setShowSettings(false)} />}
     </div>
   );
 };
