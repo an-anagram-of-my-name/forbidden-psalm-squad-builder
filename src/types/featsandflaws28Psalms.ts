@@ -2,10 +2,8 @@
  * Feats and flaws data for 28 Psalms ruleset
  */
 
-import type { FlawData, FeatData } from './featsandflaws';
-
-// Re-export shared interfaces so existing imports from this module continue to work.
-export type { StatModifiers, DerivedStatModifiers, FlawData, FeatData } from './featsandflaws';
+import { FlawData, FeatData } from './index';
+export type { StatModifiers, DerivedStatModifiers, FlawData, FeatData } from './index';
 
 export const flaws28Psalms: FlawData[] = [
   {
