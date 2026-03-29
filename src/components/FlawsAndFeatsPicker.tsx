@@ -13,9 +13,10 @@ interface FlawsAndFeatsPickerProps {
     gameId?: GameId;
     flawsData?: FlawData[];
     featsData?: FeatData[];
+    afterStats?: React.ReactNode;
 }
 
-const FlawsAndFeatsPicker: React.FC<FlawsAndFeatsPickerProps> = ({ onSelectionChange, stats, initialFlawType, initialFeatType, gameId = '28-psalms', flawsData, featsData }) => {
+const FlawsAndFeatsPicker: React.FC<FlawsAndFeatsPickerProps> = ({ onSelectionChange, stats, initialFlawType, initialFeatType, gameId = '28-psalms', flawsData, featsData, afterStats }) => {
     const config = getGameConfig(gameId);
     const [selectedFlawType, setSelectedFlawType] = useState<FlawType | null>(initialFlawType ?? null);
     const [selectedFeatType, setSelectedFeatType] = useState<FeatType | null>(initialFeatType ?? null);
@@ -95,6 +96,8 @@ const FlawsAndFeatsPicker: React.FC<FlawsAndFeatsPickerProps> = ({ onSelectionCh
                     </div>
                 </div>
             )}
+
+            {afterStats}
 
             <div className="picker-container">
                 <div className="flaw-picker">

@@ -20,13 +20,14 @@ interface EquipmentPickerProps {
   consumablesData?: Consumable[];
   flawsData?: FlawData[];
   featsData?: FeatData[];
+  afterStats?: React.ReactNode;
 }
 
 type EquipmentTab = 'weapons' | 'armor' | 'items' | 'ammo-consumables';
 
 const CONSUMABLE_IDS = ['molotov', 'black-powder-bomb', 'grenade', 'future-molotov'];
 
-const EquipmentPicker: React.FC<EquipmentPickerProps> = ({ character, selectedEquipment, onEquipmentChange, weaponsData, armorData, itemsData, ammoData, consumablesData, flawsData, featsData }) => {
+const EquipmentPicker: React.FC<EquipmentPickerProps> = ({ character, selectedEquipment, onEquipmentChange, weaponsData, armorData, itemsData, ammoData, consumablesData, flawsData, featsData, afterStats }) => {
   const [activeTab, setActiveTab] = useState<EquipmentTab>('weapons');
   const config = getGameConfig(character.gameId);
 
@@ -269,6 +270,8 @@ const EquipmentPicker: React.FC<EquipmentPickerProps> = ({ character, selectedEq
           <div className="stat-value">{calculateTotalCost(selectedEquipment, ammoList)}</div>
         </div>
       </div>
+
+      {afterStats}
 
       <div className="slot-info">
         <div className="slot-usage">
