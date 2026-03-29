@@ -2,37 +2,10 @@
  * Feats and flaws data for 28 Psalms ruleset
  */
 
-import { FlawType, FeatType, StatName } from './index';
+import type { FlawData, FeatData } from './featsandflaws';
 
-export type StatModifiers = Partial<Record<StatName, number>>;
-
-export interface DerivedStatModifiers {
-  movement?: number;
-  hp?: number;
-  equipmentSlots?: number;
-}
-
-export interface FlawData {
-  number: number;
-  name: string;
-  description: string;
-  type: FlawType;
-  statModifiers?: StatModifiers;
-  /** Groups related flaws for normalised random-selection probability (e.g. Mutant variants). */
-  groupId?: string;
-  /** Modifiers applied directly to derived stats after calculation (e.g. S.A.S. keeps Movement unchanged despite -2 Agility). */
-  derivedStatModifiers?: DerivedStatModifiers;
-}
-
-export interface FeatData {
-  number: number;
-  name: string;
-  description: string;
-  type: FeatType;
-  statModifiers?: StatModifiers;
-  /** Modifiers applied directly to derived stats after calculation. */
-  derivedStatModifiers?: DerivedStatModifiers;
-}
+// Re-export shared interfaces so existing imports from this module continue to work.
+export type { StatModifiers, DerivedStatModifiers, FlawData, FeatData } from './featsandflaws';
 
 export const flaws28Psalms: FlawData[] = [
   {

@@ -1,8 +1,8 @@
 /**
- * Feats and flaws data for Kill Sample Process (KSP) ruleset
+ * Flaws data for Kill Sample Process (KSP) ruleset
  */
 
-import { FlawData } from './featsandflaws28Psalms';
+import type { FlawData } from './featsandflaws';
 
 export const flawsKSP: FlawData[] = [
   // 1: Technophobe

@@ -7,6 +7,7 @@ import EquipmentPicker from './EquipmentPicker';
 import { applyFlawFeatModifiers, calculateFinalDerivedStats } from '../utils/stats';
 import { characterNames28Psalms } from '../types/characterNames28Psalms';
 import { flaws28Psalms, feats28Psalms } from '../types/featsandflaws28Psalms';
+import { flawsKSP } from '../types/featsandflawsKSP';
 import { items28Psalms, ammo28Psalms, armor28Psalms, pastTechWeapons28Psalms, futureTechWeapons28Psalms } from '../types/equipment28Psalms';
 import './CharacterCreationFlow.css';
 
@@ -141,9 +142,9 @@ const CharacterCreationFlow: React.FC<CharacterCreationFlowProps> = ({
                 ammo: ammo28Psalms,
             };
         }
-        // KSP and future games: return empty datasets so pickers don't fall back to 28P content
+        // KSP and future games: return KSP flaws; empty datasets for equipment not yet implemented
         return {
-            flaws: [] as typeof flaws28Psalms,
+            flaws: flawsKSP,
             feats: [] as typeof feats28Psalms,
             weapons: {
                 pastTech: [] as typeof pastTechWeapons28Psalms,
