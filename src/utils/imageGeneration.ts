@@ -1,7 +1,7 @@
 /**
- * Image generation utilities for character portraits.
- * Prompt-generation helpers are retained for future integration with a
- * pre-generated image gallery.
+ * Prompt and cache-key helpers for character portrait descriptions.
+ * These utilities are used to build text prompts and stable hashes for
+ * integration with a pre-generated image gallery or external renderers.
  */
 
 import { Character, Equipment } from '../types';
