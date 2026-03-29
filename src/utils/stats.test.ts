@@ -198,13 +198,71 @@ describe('calculateFinalDerivedStats', () => {
         expect(result.hp).toBe(8 + baseStats.toughness);       // 7
     });
 
-    it('applies flaw/feat stat modifiers to derived stats', () => {
-        const flaw: Flaw = { type: 'too-many-teeth', description: '' };
-        // too-many-teeth applies -2 presence (no agility/toughness change)
-        const result = calculateFinalDerivedStats(baseStats, flaw, null, []);
-        expect(result.movement).toBe(5 + baseStats.agility);   // agility unchanged
-        expect(result.hp).toBe(8 + baseStats.toughness);       // toughness unchanged
+    it('applies flaw derivedStatModifiers to derived stats', () => {
+        // Simulate a flaw that reduces agility by 2 but offsets with +2 movement
+        const customFlaws = [
+            {
+                number: 1,
+                name: 'S.A.S.',
+                description: '-2 Agility (does not reduce movement).',
+                type: 'xeno' as const,
+                statModifiers: { agility: -2 },
+                derivedStatModifiers: { movement: 2 },
+            },
+        ];
+        const flaw: Flaw = { type: 'xeno', description: '' };
+        const result = calculateFinalDerivedStats(baseStats, flaw, null, [], undefined, customFlaws);
+        // agility reduced by 2 → movement base = 5 + (2 - 2) = 5, then +2 offset = 7
+        const expectedMovement = 5 + (baseStats.agility - 2) + 2;
+        expect(result.movement).toBe(expectedMovement);
+        expect(result.hp).toBe(8 + baseStats.toughness); // hp unchanged
     });
+
+    it('applies feat derivedStatModifiers to derived stats', () => {
+        // Simulate Second Heart (+3) feat
+        const customFeats = [
+            {
+                number: 1,
+                name: 'Second Heart (+3)',
+                description: 'Gains 3 extra HP.',
+                type: 'marine' as const,
+                derivedStatModifiers: { hp: 3 },
+            },
+        ];
+        const feat: Feat = { type: 'marine', description: '' };
+        const result = calculateFinalDerivedStats(baseStats, null, feat, [], undefined, undefined, customFeats);
+        expect(result.hp).toBe(8 + baseStats.toughness + 3);
+        expect(result.movement).toBe(5 + baseStats.agility); // movement unchanged
+    });
+
+    it('stacks flaw derivedStatModifiers, feat derivedStatModifiers, and equipment modifiers', () => {
+        const customFlaws = [
+            {
+                number: 1,
+                name: 'Flaw With Derived',
+                description: 'Test flaw',
+                type: 'xeno' as const,
+                derivedStatModifiers: { movement: 1, hp: -1 },
+            },
+        ];
+        const customFeats = [
+            {
+                number: 1,
+                name: 'Feat With Derived',
+                description: 'Test feat',
+                type: 'marine' as const,
+                derivedStatModifiers: { hp: 4 },
+            },
+        ];
+        const armor: Armor = { id: 'a', name: 'A', cost: 1, slots: 1, category: 'armor', av: 1, movementModifier: -1 };
+        const flaw: Flaw = { type: 'xeno', description: '' };
+        const feat: Feat = { type: 'marine', description: '' };
+        const result = calculateFinalDerivedStats(baseStats, flaw, feat, [armor], undefined, customFlaws, customFeats);
+        expect(result.movement).toBe(5 + baseStats.agility + 1 - 1); // base + flaw +1 + equipment -1
+        expect(result.hp).toBe(8 + baseStats.toughness - 1 + 4);     // base - flaw 1 + feat 4
+    });
+
+
 
     it('applies equipment movement modifier', () => {
         const homemadeArmor: Armor = {

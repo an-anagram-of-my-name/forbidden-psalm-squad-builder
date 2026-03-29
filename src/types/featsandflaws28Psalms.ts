@@ -12,6 +12,12 @@ export interface FlawData {
   description: string;
   type: FlawType;
   statModifiers?: StatModifiers;
+  groupId?: string;
+  derivedStatModifiers?: {
+    movement?: number;
+    hp?: number;
+    equipmentSlots?: number;
+  };
 }
 
 export interface FeatData {
@@ -20,6 +26,12 @@ export interface FeatData {
   description: string;
   type: FeatType;
   statModifiers?: StatModifiers;
+  groupId?: string;
+  derivedStatModifiers?: {
+    movement?: number;
+    hp?: number;
+    equipmentSlots?: number;
+  };
 }
 
 export const flaws28Psalms: FlawData[] = [
