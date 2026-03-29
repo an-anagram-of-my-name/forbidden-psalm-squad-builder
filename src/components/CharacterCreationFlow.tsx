@@ -4,6 +4,7 @@ import { getGameConfig } from '../types/games';
 import StatDistributionPicker from './StatDistributionPicker';
 import FlawsAndFeatsPicker from './FlawsAndFeatsPicker';
 import EquipmentPicker from './EquipmentPicker';
+import CharacterPortrait from './CharacterPortrait';
 import { applyFlawFeatModifiers, calculateFinalDerivedStats, getDefaultFlawsData, getDefaultFeatsData } from '../utils/stats';
 import { characterNames28Psalms } from '../types/characterNames28Psalms';
 import './CharacterCreationFlow.css';
@@ -298,6 +299,25 @@ const CharacterCreationFlow: React.FC<CharacterCreationFlowProps> = ({
                         <div className="picker-header">
                             <h2>Review Your Character</h2>
                         </div>
+
+                        {/* Portrait preview — shown once stats/flaw/feat are set */}
+                        {stats && flaw && feat && (
+                            <div className="review-portrait-row">
+                                <CharacterPortrait
+                                    character={{
+                                        id: initialCharacter?.id ?? initialPreset?.id ?? 'preview',
+                                        name: characterName || 'Character',
+                                        stats,
+                                        flaw,
+                                        feat,
+                                        equipment,
+                                        gameId: resolvedGameId,
+                                        techLevel: effectiveTechLevel,
+                                    }}
+                                    size="large"
+                                />
+                            </div>
+                        )}
 
                         <div className="character-name-input">
                             <label>Character Name</label>

@@ -3,6 +3,7 @@ import { AppState, Squad, CharacterPreset, GameId } from './types';
 import SquadBuilder from './components/SquadBuilder';
 import PresetFlow from './components/PresetFlow';
 import GameSelector from './components/GameSelector';
+import ReplicateConfig from './components/ReplicateConfig';
 import './App.css';
 
 const STORAGE_KEY = 'squad-builder-state';
@@ -16,6 +17,7 @@ const App: React.FC = () => {
   });
   const [showPresetFlow, setShowPresetFlow] = useState(false);
   const [currentPresetId, setCurrentPresetId] = useState<string | null>(null);
+  const [showSettings, setShowSettings] = useState(false);
 
   // Load app state from localStorage on mount
   useEffect(() => {
@@ -111,7 +113,16 @@ const App: React.FC = () => {
   if (appState.currentGameId === null) {
     return (
       <div className="app">
+        <button
+          className="btn-settings"
+          onClick={() => setShowSettings(true)}
+          title="Image generation settings"
+          aria-label="Open settings"
+        >
+          ⚙
+        </button>
         <GameSelector onGameSelected={handleGameSelected} />
+        {showSettings && <ReplicateConfig onClose={() => setShowSettings(false)} />}
       </div>
     );
   }
@@ -126,18 +137,35 @@ const App: React.FC = () => {
   if (showPresetFlow) {
     return (
       <div className="app">
+        <button
+          className="btn-settings"
+          onClick={() => setShowSettings(true)}
+          title="Image generation settings"
+          aria-label="Open settings"
+        >
+          ⚙
+        </button>
         <PresetFlow
           preset={currentPreset}
           gameId={appState.currentGameId}
           onSavePreset={handleSavePreset}
           onCancel={handleCancelPreset}
         />
+        {showSettings && <ReplicateConfig onClose={() => setShowSettings(false)} />}
       </div>
     );
   }
 
   return (
     <div className="app">
+      <button
+        className="btn-settings"
+        onClick={() => setShowSettings(true)}
+        title="Image generation settings"
+        aria-label="Open settings"
+      >
+        ⚙
+      </button>
       <SquadBuilder
         gameId={appState.currentGameId}
         onChangeGame={handleChangeGame}
@@ -152,6 +180,7 @@ const App: React.FC = () => {
         onNewPreset={handleNewPreset}
         onLoadPreset={handleLoadPreset}
       />
+      {showSettings && <ReplicateConfig onClose={() => setShowSettings(false)} />}
     </div>
   );
 };

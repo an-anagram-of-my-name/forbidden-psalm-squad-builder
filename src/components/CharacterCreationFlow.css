@@ -67,6 +67,12 @@
     flex-direction: column;
 }
 
+.review-portrait-row {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 24px;
+}
+
 .review-section .picker-header h2 {
     font-size: 28px;
     color: #333;

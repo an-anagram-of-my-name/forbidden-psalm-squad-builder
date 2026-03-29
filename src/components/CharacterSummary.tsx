@@ -3,6 +3,7 @@ import { Character } from '../types';
 import { applyFlawFeatModifiers, calculateFinalDerivedStats } from '../utils/stats';
 import { calculateTotalCost } from '../utils/equipment';
 import { getGameConfig } from '../types/games';
+import CharacterPortrait from './CharacterPortrait';
 import './CharacterSummary.css';
 
 interface CharacterSummaryProps {
@@ -22,8 +23,13 @@ const CharacterSummary: React.FC<CharacterSummaryProps> = ({ character }) => {
   return (
     <div className="character-summary">
       <div className="summary-header">
-        <h3>{character.name}</h3>
-        {character.techLevel && <span className="tech-badge">{character.techLevel}</span>}
+        <div className="summary-header-info">
+          <CharacterPortrait character={character} size="small" />
+          <div className="summary-header-text">
+            <h3>{character.name}</h3>
+            {character.techLevel && <span className="tech-badge">{character.techLevel}</span>}
+          </div>
+        </div>
       </div>
 
       <div className="summary-section">
