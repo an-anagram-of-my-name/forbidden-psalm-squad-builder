@@ -211,6 +211,12 @@ export interface CharacterPreset {
   equipment: Equipment[];
   gameId: GameId;
   techLevel?: TechLevel;
+  // KSP-specific augmentations
+  additionalFlaws?: Flaw[];
+  additionalFeats?: Feat[];
+  cybermods?: string[];   // Array of cybermod IDs (placeholder until equipment data exists)
+  mutations?: string[];   // Array of mutation names/IDs
+  injuries?: string[];    // Array of injury states (optional, for future use)
   createdAt: Date;
   updatedAt: Date;
 }
