@@ -3773,3 +3773,127 @@ Squads and presets now include `gameId` field. Squads loaded from old data witho
 ✅ SquadBuilder header shows game display name
 ✅ All TypeScript types updated and build passes
 ✅ All existing tests pass
+
+
+
+## Feature: Multi-Game Support (28 Psalms and Kill Sample Process)
+
+### Overview
+The app now supports multiple games with game selection at startup. Two games are currently available: 28 Psalms (28P) and Kill Sample Process (KSP). Game-specific data (stats, feats, flaws, equipment) is properly routed through the app based on the selected game.
+
+### Key Concepts
+- **GameId**: Discriminator for routing game-specific data (`'28-psalms' | 'kill-sample-process'`)
+- **GameConfig**: Registry containing stats, distributions, equipment per game
+- **Game-Scoped Data**: Squads and characters now carry `gameId` field
+- **Current Issue**: `gameId` not passed to `CharacterCreationFlow` in squad mode, causing 28P content to display for KSP characters
+
+### Data Structure Changes
+- New `GameId` type in `src/types/index.ts`
+- New `src/types/games.ts` with `GameConfig` interface
+- `AppState` now tracks `currentGameId`
+- `Squad`, `Character`, `CharacterPreset` all carry `gameId` field
+- `techLevel` made optional (KSP squads don't use it)
+
+### Components Modified
+
+**App.tsx**
+- Game selection landing page
+- Routes between games
+- Manages `currentGameId` in state
+
+**SquadBuilder.tsx**
+- Accepts `gameId` prop
+- Game-scoped squad operations
+- Conditional tech-level display (28P only)
+- **CRITICAL**: When rendering `CharacterCreationFlow` in squad mode around line 455, must pass `gameId` prop:
+  ```tsx
+  <CharacterCreationFlow
+    gameId={gameId}  // ← MISSING - MUST ADD
+    techLevel={squad.techLevel}
+    onCharacterCreated={handleCharacterCreated}
+    onCancel={() => setShowCharacterCreation(false)}
+  />
+```
+  StatDistributionPicker, FlawsAndFeatsPicker, EquipmentPicker
+
+    Accept gameId prop
+    Route to game-specific data:
+        28P: feats28Psalms, flaws28Psalms, equipment28Psalms
+        KSP: featsKSP, flawsKSP, equipmentKSP (when available)
+
+CharacterCreationFlow
+
+    New gameId prop
+    Computes resolvedGameId from prop or defaults to '28-psalms'
+    Passes gameId to all child pickers
+    BUG: When gameId not provided, defaults to 28P
+
+PresetFlow
+
+    Accepts gameId during preset creation
+    Presets scoped to their game
+
+Critical Bug Identified
+
+Location: SquadBuilder.tsx, ~line 455
+
+Problem: When rendering CharacterCreationFlow for squad character creation, the gameId prop is NOT passed. This causes the flow to default to '28-psalms' regardless of squad's actual game.
+
+Current (WRONG):
+```TSX
+
+<CharacterCreationFlow
+  techLevel={squad.techLevel}
+  onCharacterCreated={handleCharacterCreated}
+  onCancel={() => setShowCharacterCreation(false)}
+/>
+```
+Should Be (CORRECT):
+```TSX
+
+<CharacterCreationFlow
+  gameId={gameId}
+  techLevel={squad.techLevel}
+  onCharacterCreated={handleCharacterCreated}
+  onCancel={() => setShowCharacterCreation(false)}
+/>
+```
+Symptoms:
+
+    In Stats Picker: Only 28P statlines shown, not KSP statlines
+    In Stats Picker: Only 28P stats available (missing Knowledge stat for KSP)
+    In Flaws & Feats Picker: Shows 28P feats/flaws, not KSP ones
+    In Equipment Picker: Shows 28P equipment, not KSP equipment
+
+Root Cause: resolvedGameId in CharacterCreationFlow computes as:
+TypeScript
+
+const resolvedGameId = gameId || (mode === 'squad' ? squad.gameId : currentGameId || '28-psalms');
+
+When gameId prop missing, it falls back to next condition. In squad mode, this should use squad's gameId, but without passing it explicitly, this chain fails.
+Storage
+
+    localStorage key: 'squad-builder-state'
+    Includes currentGameId field
+    Backward compatible: old key 'forbidden-psalm-state' ignored (not migrated)
+
+Success Criteria
+
+    ✅ Game selection works at app startup
+    ✅ Switching games loads correct squads and presets
+    ✅ 28P squads show 28P content
+    ✅ KSP squads show KSP content
+    ✅ Character creation uses correct game data
+    ⚠️ NEEDS FIX: KSP character creation currently shows 28P content (gameId prop missing)
+    ✅ Stat distributions correct per game
+    ✅ Feats/Flaws correct per game
+    ✅ Equipment correct per game
+    ✅ Tech level hidden for KSP squads
+
+Next Steps
+
+    Add gameId prop to CharacterCreationFlow call in SquadBuilder.tsx line ~455
+    Test KSP character creation pathway to verify correct game data displays
+    Verify stat distributions (KSP uses Knowledge, 28P does not)
+    Verify feats/flaws load from correct game dataset
+    Verify equipment loads from correct game dataset
