@@ -134,6 +134,7 @@ const CharacterCreationFlow: React.FC<CharacterCreationFlowProps> = ({
             armor: equipmentData.armor,
             items: equipmentData.items,
             ammo: equipmentData.ammo,
+            consumables: equipmentData.consumables,
         };
     }, [resolvedGameId, gameConfig]);
 
@@ -287,6 +288,7 @@ const CharacterCreationFlow: React.FC<CharacterCreationFlowProps> = ({
                         armorData={gameData.armor}
                         itemsData={gameData.items}
                         ammoData={gameData.ammo}
+                        consumablesData={gameData.consumables}
                         flawsData={gameData.flaws}
                         featsData={gameData.feats}
                     />

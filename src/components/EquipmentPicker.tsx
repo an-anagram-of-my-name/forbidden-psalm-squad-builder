@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { Character, Equipment, Item, Ammo, Armor, Weapon } from '../types';
+import { Character, Equipment, Item, Ammo, Armor, Weapon, Consumable } from '../types';
 import { FlawData, FeatData } from '../types/featsandflaws28Psalms';
 import { canUseArmor, calculateTotalCost } from '../utils/equipment';
 import { applyFlawFeatModifiers, calculateFinalDerivedStats } from '../utils/stats';
@@ -17,6 +17,7 @@ interface EquipmentPickerProps {
   armorData?: Armor[];
   itemsData?: Item[];
   ammoData?: Ammo[];
+  consumablesData?: Consumable[];
   flawsData?: FlawData[];
   featsData?: FeatData[];
 }
@@ -25,7 +26,7 @@ type EquipmentTab = 'weapons' | 'armor' | 'items' | 'ammo-consumables';
 
 const CONSUMABLE_IDS = ['molotov', 'black-powder-bomb', 'grenade', 'future-molotov'];
 
-const EquipmentPicker: React.FC<EquipmentPickerProps> = ({ character, selectedEquipment, onEquipmentChange, weaponsData, armorData, itemsData, ammoData, flawsData, featsData }) => {
+const EquipmentPicker: React.FC<EquipmentPickerProps> = ({ character, selectedEquipment, onEquipmentChange, weaponsData, armorData, itemsData, ammoData, consumablesData, flawsData, featsData }) => {
   const [activeTab, setActiveTab] = useState<EquipmentTab>('weapons');
   const config = getGameConfig(character.gameId);
 
@@ -36,6 +37,7 @@ const EquipmentPicker: React.FC<EquipmentPickerProps> = ({ character, selectedEq
   const armorList = armorData ?? gameEquipment.armor;
   const itemsList = itemsData ?? gameEquipment.items;
   const ammoList = ammoData ?? gameEquipment.ammo;
+  const consumablesList = consumablesData ?? gameEquipment.consumables;
 
   const effectiveStats = useMemo(() => {
     return applyFlawFeatModifiers(character.stats, character.flaw, character.feat, character.gameId, flawsData, featsData);
@@ -89,14 +91,17 @@ const EquipmentPicker: React.FC<EquipmentPickerProps> = ({ character, selectedEq
     return ammoList.filter((ammo) => canEquipTech(ammo.techLevel));
   }, [character.techLevel, ammoList]);
 
-  // Get all available consumables (from weapon arrays, filtered by tech level)
+  // Get all available consumables: weapon-array-derived (28P) + consumables data (game config)
   const availableConsumables = useMemo(() => {
-    const allWeapons = [...pastTechWeapons, ...futureTechWeapons];
-    return allWeapons.filter((weapon) => canEquipTech(weapon.techLevel) && CONSUMABLE_IDS.includes(weapon.id));
-  }, [character.techLevel, pastTechWeapons, futureTechWeapons]);
+    const weaponDerived = [...pastTechWeapons, ...futureTechWeapons].filter(
+      (weapon) => canEquipTech(weapon.techLevel) && CONSUMABLE_IDS.includes(weapon.id)
+    );
+    const fromData = consumablesList.filter((c) => canEquipTech(c.techLevel));
+    return [...weaponDerived, ...fromData];
+  }, [character.techLevel, pastTechWeapons, futureTechWeapons, consumablesList]);
 
   const isAmmoOrConsumable = (equipment: Equipment): boolean => {
-    return equipment.category === 'ammo' || CONSUMABLE_IDS.includes(equipment.id);
+    return equipment.category === 'ammo' || equipment.category === 'consumable' || CONSUMABLE_IDS.includes(equipment.id);
   };
 
   const handleEquipmentToggle = (equipment: Equipment) => {
