@@ -16,6 +16,36 @@ export interface DerivedStats {
   equipmentSlots: number;
 }
 
+/** Modifiers applied directly to derived stats (HP/Movement/EquipmentSlots). */
+export type DerivedStatModifiers = {
+  movement?: number;
+  hp?: number;
+  equipmentSlots?: number;
+};
+
+/** Partial primary-stat modifiers keyed by StatName. */
+export type StatModifiers = Partial<Record<StatName, number>>;
+
+export interface FlawData {
+  number: number;
+  name: string;
+  description: string;
+  type: FlawType;
+  statModifiers?: StatModifiers;
+  groupId?: string;
+  derivedStatModifiers?: DerivedStatModifiers;
+}
+
+export interface FeatData {
+  number: number;
+  name: string;
+  description: string;
+  type: FeatType;
+  statModifiers?: StatModifiers;
+  groupId?: string;
+  derivedStatModifiers?: DerivedStatModifiers;
+}
+
 export type FlawType =
   | 'xeno'
   | 'too-many-teeth'
@@ -38,7 +68,38 @@ export type FeatType =
   | 'mother-of-crows'
   | 'skulls'
   | 'bibliotech'
-  | 'undead';
+  | 'undead'
+  // KSP Feats
+  | 'butch'
+  | 'modable'
+  | 'priest-of-tech'
+  | 'feedback'
+  | 'idiot-savant'
+  | 'bribe'
+  | 'jockey'
+  | 'firewall'
+  | 'combat-medic'
+  | 'trained'
+  | 'quick-learner'
+  | 'tears-in-rain'
+  | 'passive-income'
+  | 'the-one'
+  | 'second-heart-plus-1'
+  | 'second-heart-plus-2'
+  | 'second-heart-plus-3'
+  | 'second-heart-plus-4'
+  | 'second-heart-plus-5'
+  | 'second-heart-plus-6'
+  | 'x-person'
+  | 'resistant'
+  | 'burst-of-speed'
+  | 'zorro'
+  | 'experimental-bullet-proof'
+  | 'experimental-half-damage'
+  | 'experimental-enhanced'
+  | 'experimental-sedated'
+  | 'experimental-inert'
+  | 'experimental-vitalized';
 
 export interface Flaw {
   type: FlawType;

@@ -98,10 +98,11 @@ export function applyFlawFeatModifiers(
  * Calculate final derived stats with all modifiers applied.
  *
  * Full calculation chain:
- * 1. Apply flaw/feat modifiers to primary stats
- * 2. Calculate base derived stats from modified primary stats
- * 3. Sum equipment modifiers (e.g. Homemade armor's -1 movement)
- * 4. Return derived stats with equipment modifiers applied
+ * 1. Apply flaw/feat modifiers to primary stats via applyFlawFeatModifiers()
+ * 2. Calculate base derived stats from modified primary stats via calculateDerivedStats()
+ * 3. Apply flaw/feat derivedStatModifiers (e.g. Second Heart +HP, S.A.S. +MOV offset)
+ * 4. Apply equipment modifiers (e.g. Homemade armor's -1 movement)
+ * 5. Return final DerivedStats
  *
  * @param baseStats - Base stats from character creation Step 1 (before any modifiers)
  * @param flaw - Selected flaw (Step 2), or null
@@ -124,6 +125,32 @@ export function calculateFinalDerivedStats(
   const effectiveStats = applyFlawFeatModifiers(baseStats, flaw, feat, gameId, flawsData, featsData);
   const derived = calculateDerivedStats(effectiveStats, gameId);
 
+  const flawFeatDerivedModifiers: DerivedStats = {
+    movement: 0,
+    hp: 0,
+    equipmentSlots: 0,
+  };
+
+  if (flaw) {
+    const flawsToUse = flawsData ?? flaws28Psalms;
+    const flawData = flawsToUse.find((f) => f.type === flaw.type);
+    if (flawData?.derivedStatModifiers) {
+      flawFeatDerivedModifiers.movement += flawData.derivedStatModifiers.movement ?? 0;
+      flawFeatDerivedModifiers.hp += flawData.derivedStatModifiers.hp ?? 0;
+      flawFeatDerivedModifiers.equipmentSlots += flawData.derivedStatModifiers.equipmentSlots ?? 0;
+    }
+  }
+
+  if (feat) {
+    const featsToUse = featsData ?? feats28Psalms;
+    const featData = featsToUse.find((f) => f.type === feat.type);
+    if (featData?.derivedStatModifiers) {
+      flawFeatDerivedModifiers.movement += featData.derivedStatModifiers.movement ?? 0;
+      flawFeatDerivedModifiers.hp += featData.derivedStatModifiers.hp ?? 0;
+      flawFeatDerivedModifiers.equipmentSlots += featData.derivedStatModifiers.equipmentSlots ?? 0;
+    }
+  }
+
   const equipmentModifiers = {
     movement: 0,
     hp: 0,
@@ -144,9 +171,9 @@ export function calculateFinalDerivedStats(
   });
 
   return {
-    hp: derived.hp + equipmentModifiers.hp,
-    movement: derived.movement + equipmentModifiers.movement,
-    equipmentSlots: derived.equipmentSlots + equipmentModifiers.equipmentSlots,
+    hp: derived.hp + flawFeatDerivedModifiers.hp + equipmentModifiers.hp,
+    movement: derived.movement + flawFeatDerivedModifiers.movement + equipmentModifiers.movement,
+    equipmentSlots: derived.equipmentSlots + flawFeatDerivedModifiers.equipmentSlots + equipmentModifiers.equipmentSlots,
   };
 }
 
