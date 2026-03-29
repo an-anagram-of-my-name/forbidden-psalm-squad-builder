@@ -579,7 +579,7 @@ const CharacterCreationFlow: React.FC<CharacterCreationFlowProps> = ({
                                 role="alert"
                                 aria-live="polite"
                             >
-                                ⚠️ Portrait generation failed: {portraitGenerationError}. The character was saved without a portrait.
+                                ⚠️ Portrait generation failed: {portraitGenerationError}. {mode === 'preset' ? 'The preset was saved without a portrait.' : 'The character was saved without a portrait.'}
                             </div>
                         )}
                         <button
