@@ -7,7 +7,7 @@ import EquipmentPicker from './EquipmentPicker';
 import { applyFlawFeatModifiers, calculateFinalDerivedStats } from '../utils/stats';
 import { characterNames28Psalms } from '../types/characterNames28Psalms';
 import { flaws28Psalms, feats28Psalms } from '../types/featsandflaws28Psalms';
-import { flawsKSP } from '../types/featsandflawsKSP';
+import { flawsKSP, featsKSP } from '../types/featsandflawsKSP';
 import { items28Psalms, ammo28Psalms, armor28Psalms, pastTechWeapons28Psalms, futureTechWeapons28Psalms } from '../types/equipment28Psalms';
 import './CharacterCreationFlow.css';
 

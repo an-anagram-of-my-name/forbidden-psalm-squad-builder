@@ -172,32 +172,6 @@ export function calculateFinalDerivedStats(
     }
   }
 
-  const flawFeatDerivedModifiers: DerivedStats = {
-    movement: 0,
-    hp: 0,
-    equipmentSlots: 0,
-  };
-
-  if (flaw) {
-    const flawsToUse = flawsData ?? flaws28Psalms;
-    const flawData = flawsToUse.find((f) => f.type === flaw.type);
-    if (flawData?.derivedStatModifiers) {
-      flawFeatDerivedModifiers.movement += flawData.derivedStatModifiers.movement ?? 0;
-      flawFeatDerivedModifiers.hp += flawData.derivedStatModifiers.hp ?? 0;
-      flawFeatDerivedModifiers.equipmentSlots += flawData.derivedStatModifiers.equipmentSlots ?? 0;
-    }
-  }
-
-  if (feat) {
-    const featsToUse = featsData ?? feats28Psalms;
-    const featData = featsToUse.find((f) => f.type === feat.type);
-    if (featData?.derivedStatModifiers) {
-      flawFeatDerivedModifiers.movement += featData.derivedStatModifiers.movement ?? 0;
-      flawFeatDerivedModifiers.hp += featData.derivedStatModifiers.hp ?? 0;
-      flawFeatDerivedModifiers.equipmentSlots += featData.derivedStatModifiers.equipmentSlots ?? 0;
-    }
-  }
-
   const equipmentModifiers = {
     movement: 0,
     hp: 0,
