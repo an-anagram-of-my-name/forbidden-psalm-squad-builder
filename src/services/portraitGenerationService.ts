@@ -41,16 +41,40 @@ export async function generateCharacterPortrait(
       };
     }
 
-    const data = await response.json();
+    const data: unknown = await response.json();
 
-    if (!data.url) {
+    if (
+      typeof data !== 'object' ||
+      data === null ||
+      !('url' in data) ||
+      typeof (data as { url: unknown }).url !== 'string'
+    ) {
       return {
         success: false,
-        error: 'Portrait generation returned no image URL',
+        error: 'Portrait generation returned an invalid image URL',
       };
     }
 
-    return { success: true, url: data.url as string };
+    const imageUrl = (data as { url: string }).url;
+
+    let parsedUrl: URL;
+    try {
+      parsedUrl = new URL(imageUrl);
+    } catch {
+      return {
+        success: false,
+        error: 'Portrait generation returned a malformed image URL',
+      };
+    }
+
+    if (parsedUrl.protocol !== 'https:') {
+      return {
+        success: false,
+        error: 'Portrait generation returned an unsupported URL scheme',
+      };
+    }
+
+    return { success: true, url: imageUrl };
   } catch (err) {
     const message =
       err instanceof Error ? err.message : 'Unknown network error';
