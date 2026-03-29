@@ -1,6 +1,8 @@
 import { describe, it, expect } from 'vitest';
-import { isValidStatDistribution, getValidStatDistributions, getAvailableModifiers, applyFlawFeatModifiers, calculateFinalDerivedStats, makeEmptyStats } from './stats';
+import { isValidStatDistribution, getValidStatDistributions, getAvailableModifiers, applyFlawFeatModifiers, calculateFinalDerivedStats, makeEmptyStats, getDefaultFlawsData, getDefaultFeatsData } from './stats';
 import { Stats, Flaw, Feat, Armor, StatName } from '../types';
+import { flaws28Psalms, feats28Psalms } from '../types/featsandflaws28Psalms';
+import { flawsKSP, featsKSP } from '../types/featsandflawsKSP';
 
 describe('isValidStatDistribution', () => {
     it('accepts [3, 1, 0, -3]', () => {
@@ -425,5 +427,43 @@ describe('makeEmptyStats', () => {
         expect(result.toughness).toBe(-3);
         // Stats not in this game's list default to 0 (from makeEmptyStats)
         expect(result.knowledge).toBe(0);
+    });
+});
+
+describe('getDefaultFlawsData', () => {
+    it('returns 28P flaws for 28-psalms', () => {
+        expect(getDefaultFlawsData('28-psalms')).toBe(flaws28Psalms);
+    });
+
+    it('returns KSP flaws for kill-sample-process', () => {
+        expect(getDefaultFlawsData('kill-sample-process')).toBe(flawsKSP);
+    });
+
+    it('28P and KSP flaw datasets are distinct (no cross-game fallback)', () => {
+        expect(getDefaultFlawsData('kill-sample-process')).not.toBe(flaws28Psalms);
+        expect(getDefaultFlawsData('28-psalms')).not.toBe(flawsKSP);
+    });
+});
+
+describe('getDefaultFeatsData', () => {
+    it('returns 28P feats for 28-psalms', () => {
+        expect(getDefaultFeatsData('28-psalms')).toBe(feats28Psalms);
+    });
+
+    it('returns KSP feats for kill-sample-process', () => {
+        expect(getDefaultFeatsData('kill-sample-process')).toBe(featsKSP);
+    });
+
+    it('28P and KSP feat datasets are distinct (no cross-game fallback)', () => {
+        expect(getDefaultFeatsData('kill-sample-process')).not.toBe(feats28Psalms);
+        expect(getDefaultFeatsData('28-psalms')).not.toBe(featsKSP);
+    });
+
+    it('KSP feats dataset is non-empty', () => {
+        expect(getDefaultFeatsData('kill-sample-process').length).toBeGreaterThan(0);
+    });
+
+    it('28P feats dataset is non-empty', () => {
+        expect(getDefaultFeatsData('28-psalms').length).toBeGreaterThan(0);
     });
 });
