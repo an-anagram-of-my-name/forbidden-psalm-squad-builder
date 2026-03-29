@@ -8,10 +8,10 @@ import { applyFlawFeatModifiers, calculateFinalDerivedStats, getDefaultFlawsData
 import { characterNames28Psalms } from '../types/characterNames28Psalms';
 import './CharacterCreationFlow.css';
 
-const DEFAULT_GAME_ID: GameId = '28-psalms';
-
 interface CharacterCreationFlowProps {
     mode?: 'squad' | 'preset';
+    // Required: identifies which game's data to use
+    gameId: GameId;
     // Squad mode
     techLevel?: TechLevel;
     onCharacterCreated?: (character: Character) => void;
@@ -19,7 +19,6 @@ interface CharacterCreationFlowProps {
     initialCharacter?: Character | null;
     onCharacterUpdated?: (character: Character) => void;
     // Preset mode
-    gameId?: GameId;
     initialPreset?: CharacterPreset | null;
     onPresetSaved?: (preset: CharacterPreset) => void;
     // Common
@@ -121,7 +120,7 @@ const CharacterCreationFlow: React.FC<CharacterCreationFlowProps> = ({
         ? selectedTechLevel!   // safe: equipment step is only shown when selectedTechLevel is set
         : techLevel;
 
-    const resolvedGameId: GameId = gameId ?? initialCharacter?.gameId ?? initialPreset?.gameId ?? DEFAULT_GAME_ID;
+    const resolvedGameId: GameId = gameId;
     const gameConfig = getGameConfig(resolvedGameId);
 
     // Load game-specific data to pass down to pickers
@@ -148,7 +147,7 @@ const CharacterCreationFlow: React.FC<CharacterCreationFlowProps> = ({
                     flaw,
                     feat,
                     equipment,
-                    gameId: gameId ?? initialPreset?.gameId ?? DEFAULT_GAME_ID,
+                    gameId: gameId,
                     techLevel: selectedTechLevel,
                     createdAt: initialPreset?.createdAt ?? new Date(),
                     updatedAt: new Date(),
@@ -176,7 +175,7 @@ const CharacterCreationFlow: React.FC<CharacterCreationFlowProps> = ({
                     flaw,
                     feat,
                     equipment,
-                    gameId: gameId ?? DEFAULT_GAME_ID,
+                    gameId: gameId,
                     techLevel: techLevel ?? undefined,
                 };
                 onCharacterCreated?.(newCharacter);

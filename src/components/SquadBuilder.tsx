@@ -451,6 +451,7 @@ const SquadBuilder: React.FC<SquadBuilderProps> = ({
           {showCharacterCreation && (
             <div className="character-creation-container">
               <CharacterCreationFlow
+                gameId={gameId}
                 techLevel={squad.techLevel}
                 onCharacterCreated={handleCharacterCreated}
                 onCancel={() => setShowCharacterCreation(false)}
@@ -480,6 +481,7 @@ const SquadBuilder: React.FC<SquadBuilderProps> = ({
             <div className="character-edit-overlay">
               <CharacterCreationFlow
                 mode="squad"
+                gameId={gameId}
                 techLevel={squad.techLevel}
                 initialCharacter={squad.characters.find((c) => c.id === editingCharacterId)}
                 onCharacterUpdated={handleCharacterUpdated}
