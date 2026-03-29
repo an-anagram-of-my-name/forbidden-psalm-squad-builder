@@ -27,9 +27,17 @@ const CharacterPortrait: React.FC<CharacterPortraitProps> = ({
       title={character.name}
       aria-label={`Portrait of ${character.name}`}
     >
-      <div className="character-portrait__initials" aria-hidden="true">
-        {initials || '?'}
-      </div>
+      {character.portraitUrl ? (
+        <img
+          src={character.portraitUrl}
+          alt={`Portrait of ${character.name}`}
+          className="character-portrait__image"
+        />
+      ) : (
+        <div className="character-portrait__initials" aria-hidden="true">
+          {initials || '?'}
+        </div>
+      )}
     </div>
   );
 };
