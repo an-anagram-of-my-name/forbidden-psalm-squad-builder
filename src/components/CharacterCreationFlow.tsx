@@ -5,7 +5,9 @@ import StatDistributionPicker from './StatDistributionPicker';
 import FlawsAndFeatsPicker from './FlawsAndFeatsPicker';
 import EquipmentPicker from './EquipmentPicker';
 import CharacterPortrait from './CharacterPortrait';
+import AugmentationAllowanceBox from './AugmentationAllowanceBox';
 import { applyFlawFeatModifiers, calculateFinalDerivedStats, getDefaultFlawsData, getDefaultFeatsData } from '../utils/stats';
+import { calculateAugmentationSelection } from '../utils/augmentationAllowances';
 import { characterNames28Psalms } from '../types/characterNames28Psalms';
 import './CharacterCreationFlow.css';
 
@@ -42,6 +44,10 @@ const CharacterCreationFlow: React.FC<CharacterCreationFlowProps> = ({
     const isEditingPreset = mode === 'preset' && !!initialPreset;
     const isEditingCharacter = mode === 'squad' && !!initialCharacter;
 
+    const resolvedGameId: GameId = gameId;
+    const gameConfig = getGameConfig(resolvedGameId);
+    const isKSP = resolvedGameId === 'kill-sample-process';
+
     const [currentStep, setCurrentStep] = useState<CreationStep>(
         (isEditingPreset || isEditingCharacter) ? 'review' : 'stats'
     );
@@ -62,6 +68,18 @@ const CharacterCreationFlow: React.FC<CharacterCreationFlowProps> = ({
     );
     const [selectedTechLevel, setSelectedTechLevel] = useState<TechLevel | null>(
         initialPreset?.techLevel ?? null
+    );
+
+    // KSP augmentation state (placeholder counts until selection UI is added)
+    const cybermodCount = initialCharacter?.cybermods?.length ?? 0;
+    const mutationCount = initialCharacter?.mutations?.length ?? 0;
+    const additionalFlaws = useMemo(
+        () => initialCharacter?.additionalFlaws ?? [],
+        [initialCharacter?.additionalFlaws]
+    );
+    const additionalFeats = useMemo(
+        () => initialCharacter?.additionalFeats ?? [],
+        [initialCharacter?.additionalFeats]
     );
 
     const handleStatsChange = (newStats: Stats | null) => {
@@ -120,9 +138,6 @@ const CharacterCreationFlow: React.FC<CharacterCreationFlowProps> = ({
     const effectiveTechLevel: TechLevel | undefined = mode === 'preset'
         ? selectedTechLevel!   // safe: equipment step is only shown when selectedTechLevel is set
         : techLevel;
-
-    const resolvedGameId: GameId = gameId;
-    const gameConfig = getGameConfig(resolvedGameId);
 
     // Load game-specific data to pass down to pickers
     const gameData = useMemo(() => {
@@ -206,6 +221,23 @@ const CharacterCreationFlow: React.FC<CharacterCreationFlowProps> = ({
         return applyFlawFeatModifiers(stats, flaw, feat, resolvedGameId, gameData.flaws, gameData.feats);
     }, [stats, flaw, feat, resolvedGameId, gameData]);
 
+    // KSP augmentation selection — recalculates whenever flaw/feat change
+    const augmentationSelection = useMemo(
+        () =>
+            calculateAugmentationSelection(
+                flaw,
+                feat,
+                additionalFlaws,
+                additionalFeats,
+                cybermodCount,
+                mutationCount,
+                resolvedGameId,
+            ),
+        [flaw, feat, additionalFlaws, additionalFeats, cybermodCount, mutationCount, resolvedGameId],
+    );
+
+    const canSave = canProceed && (!isKSP || augmentationSelection.isComplete);
+
     // Stable preview character for portrait generation in the review step.
     // characterName is intentionally excluded: it is not part of the image hash
     // or prompt, so including it would cause CharacterPortrait's useMemo to
@@ -277,39 +309,61 @@ const CharacterCreationFlow: React.FC<CharacterCreationFlowProps> = ({
                 )}
 
                 {currentStep === 'flaws-feats' && (
-                    <FlawsAndFeatsPicker
-                        onSelectionChange={handleFlawFeatChange}
-                        stats={stats ?? undefined}
-                        initialFlawType={flaw?.type as FlawType ?? undefined}
-                        initialFeatType={feat?.type as FeatType ?? undefined}
-                        gameId={resolvedGameId}
-                        flawsData={gameData.flaws}
-                        featsData={gameData.feats}
-                    />
+                    <>
+                        {isKSP && (
+                            <div className="augmentation-allowance-wrapper">
+                                <AugmentationAllowanceBox
+                                    selection={augmentationSelection}
+                                    isKSP={isKSP}
+                                    variant="compact"
+                                />
+                            </div>
+                        )}
+                        <FlawsAndFeatsPicker
+                            onSelectionChange={handleFlawFeatChange}
+                            stats={stats ?? undefined}
+                            initialFlawType={flaw?.type as FlawType ?? undefined}
+                            initialFeatType={feat?.type as FeatType ?? undefined}
+                            gameId={resolvedGameId}
+                            flawsData={gameData.flaws}
+                            featsData={gameData.feats}
+                        />
+                    </>
                 )}
 
                 {currentStep === 'equipment' && stats && flaw && feat && (mode !== 'preset' || selectedTechLevel) && (
-                    <EquipmentPicker
-                        character={{
-                            id: '',
-                            name: '',
-                            stats,
-                            flaw,
-                            feat,
-                            equipment,
-                            gameId: resolvedGameId,
-                            techLevel: effectiveTechLevel,
-                        }}
-                        selectedEquipment={equipment}
-                        onEquipmentChange={handleEquipmentChange}
-                        weaponsData={gameData.weapons}
-                        armorData={gameData.armor}
-                        itemsData={gameData.items}
-                        ammoData={gameData.ammo}
-                        consumablesData={gameData.consumables}
-                        flawsData={gameData.flaws}
-                        featsData={gameData.feats}
-                    />
+                    <>
+                        {isKSP && (
+                            <div className="augmentation-allowance-wrapper">
+                                <AugmentationAllowanceBox
+                                    selection={augmentationSelection}
+                                    isKSP={isKSP}
+                                    variant="compact"
+                                />
+                            </div>
+                        )}
+                        <EquipmentPicker
+                            character={{
+                                id: '',
+                                name: '',
+                                stats,
+                                flaw,
+                                feat,
+                                equipment,
+                                gameId: resolvedGameId,
+                                techLevel: effectiveTechLevel,
+                            }}
+                            selectedEquipment={equipment}
+                            onEquipmentChange={handleEquipmentChange}
+                            weaponsData={gameData.weapons}
+                            armorData={gameData.armor}
+                            itemsData={gameData.items}
+                            ammoData={gameData.ammo}
+                            consumablesData={gameData.consumables}
+                            flawsData={gameData.flaws}
+                            featsData={gameData.feats}
+                        />
+                    </>
                 )}
 
                 {currentStep === 'review' && (
@@ -317,6 +371,17 @@ const CharacterCreationFlow: React.FC<CharacterCreationFlowProps> = ({
                         <div className="picker-header">
                             <h2>Review Your Character</h2>
                         </div>
+
+                        {/* KSP augmentation status on review step */}
+                        {isKSP && (
+                            <div className="augmentation-allowance-wrapper">
+                                <AugmentationAllowanceBox
+                                    selection={augmentationSelection}
+                                    isKSP={isKSP}
+                                    variant="detailed"
+                                />
+                            </div>
+                        )}
 
                         {/* Portrait preview — shown once stats/flaw/feat are set */}
                         {previewCharacter && (
@@ -456,7 +521,7 @@ const CharacterCreationFlow: React.FC<CharacterCreationFlowProps> = ({
                 {currentStep === 'review' && (
                     <button
                         onClick={handleCreateCharacter}
-                        disabled={!canProceed}
+                        disabled={!canSave}
                         className="btn-create-character"
                     >
                         {getSubmitButtonText()}
