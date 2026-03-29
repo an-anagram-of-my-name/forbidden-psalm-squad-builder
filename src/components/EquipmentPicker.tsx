@@ -1,6 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { Character, Equipment, Item, Ammo, Armor, Weapon } from '../types';
 import { items28Psalms, ammo28Psalms, armor28Psalms, pastTechWeapons28Psalms, futureTechWeapons28Psalms } from '../types/equipment28Psalms';
+import { FlawData, FeatData } from '../types/featsandflaws28Psalms';
 import { canUseArmor, calculateTotalCost } from '../utils/equipment';
 import { applyFlawFeatModifiers, calculateFinalDerivedStats } from '../utils/stats';
 import { getGameConfig } from '../types/games';
@@ -17,13 +18,15 @@ interface EquipmentPickerProps {
   armorData?: Armor[];
   itemsData?: Item[];
   ammoData?: Ammo[];
+  flawsData?: FlawData[];
+  featsData?: FeatData[];
 }
 
 type EquipmentTab = 'weapons' | 'armor' | 'items' | 'ammo-consumables';
 
 const CONSUMABLE_IDS = ['molotov', 'black-powder-bomb', 'grenade', 'future-molotov'];
 
-const EquipmentPicker: React.FC<EquipmentPickerProps> = ({ character, selectedEquipment, onEquipmentChange, weaponsData, armorData, itemsData, ammoData }) => {
+const EquipmentPicker: React.FC<EquipmentPickerProps> = ({ character, selectedEquipment, onEquipmentChange, weaponsData, armorData, itemsData, ammoData, flawsData, featsData }) => {
   const [activeTab, setActiveTab] = useState<EquipmentTab>('weapons');
   const config = getGameConfig(character.gameId);
 
@@ -35,8 +38,8 @@ const EquipmentPicker: React.FC<EquipmentPickerProps> = ({ character, selectedEq
   const ammoList = ammoData ?? ammo28Psalms;
 
   const effectiveStats = useMemo(() => {
-    return applyFlawFeatModifiers(character.stats, character.flaw, character.feat);
-  }, [character.stats, character.flaw, character.feat]);
+    return applyFlawFeatModifiers(character.stats, character.flaw, character.feat, character.gameId, flawsData, featsData);
+  }, [character.stats, character.flaw, character.feat, character.gameId, flawsData, featsData]);
 
   // Calculate total slots used
   const slotsUsed = useMemo(() => {
@@ -241,7 +244,7 @@ const EquipmentPicker: React.FC<EquipmentPickerProps> = ({ character, selectedEq
         <div className="current-stats-divider" />
         <div className="current-stats-derived">
           {(() => {
-            const derived = calculateFinalDerivedStats(character.stats, character.flaw, character.feat, selectedEquipment, character.gameId);
+            const derived = calculateFinalDerivedStats(character.stats, character.flaw, character.feat, selectedEquipment, character.gameId, flawsData, featsData);
             return config.statNames
               .filter((stat) => !!config.derivedStatMap[stat])
               .map((stat) => {

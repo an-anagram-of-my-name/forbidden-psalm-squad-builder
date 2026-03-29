@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { calculateTotalCost } from './equipment';
-import { Equipment, Weapon } from '../types';
+import { Equipment, Weapon, Ammo } from '../types';
 
 const makeWeapon = (id: string, cost: number, includesAmmoId?: string): Weapon => ({
     id,
@@ -119,5 +119,22 @@ describe('Total Cost Calculations', () => {
     it('should not apply credit when includesAmmoId does not match any ammo', () => {
         const brokenWeapon = makeWeapon('broken', 10, 'nonexistent-ammo');
         expect(calculateTotalCost([brokenWeapon])).toBe(10);
+    });
+
+    it('uses provided ammoData override instead of default 28P data', () => {
+        const customAmmo: Ammo[] = [
+            { id: 'custom-ammo', name: 'Custom Ammo', cost: 7, slots: 1, category: 'ammo', shots: 3, compatibleWeapons: [] },
+        ];
+        const weapon = makeWeapon('custom-gun', 20, 'custom-ammo');
+        // Without custom ammoData: 'custom-ammo' is not in 28P data → no credit → cost = 20
+        expect(calculateTotalCost([weapon])).toBe(20);
+        // With custom ammoData: credit of 7 applied → cost = 13
+        expect(calculateTotalCost([weapon], customAmmo)).toBe(13);
+    });
+
+    it('does not fall back to 28P data when an empty ammoData array is provided', () => {
+        // bow uses bow-ammo (cost 1 in 28P data); empty array means no credit applied
+        const bow = makeWeapon('bow', 5, 'bow-ammo');
+        expect(calculateTotalCost([bow], [])).toBe(5); // no credit
     });
 });

@@ -36,7 +36,7 @@ const FlawsAndFeatsPicker: React.FC<FlawsAndFeatsPickerProps> = ({ onSelectionCh
         } else {
             onSelectionChange?.(null, null);
         }
-    }, [selectedFlawType, selectedFeatType]); // eslint-disable-line react-hooks/exhaustive-deps
+    }, [selectedFlawType, selectedFeatType, flawsToUse, featsToUse, onSelectionChange]);
 
     const getRandomFlaw = () => {
         if (flawsToUse.length === 0) return;

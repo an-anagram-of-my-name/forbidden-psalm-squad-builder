@@ -141,8 +141,18 @@ const CharacterCreationFlow: React.FC<CharacterCreationFlowProps> = ({
                 ammo: ammo28Psalms,
             };
         }
-        // KSP data loading will go here when available
-        return null;
+        // KSP and future games: return empty datasets so pickers don't fall back to 28P content
+        return {
+            flaws: [] as typeof flaws28Psalms,
+            feats: [] as typeof feats28Psalms,
+            weapons: {
+                pastTech: [] as typeof pastTechWeapons28Psalms,
+                futureTech: [] as typeof futureTechWeapons28Psalms,
+            },
+            armor: [] as typeof armor28Psalms,
+            items: [] as typeof items28Psalms,
+            ammo: [] as typeof ammo28Psalms,
+        };
     }, [resolvedGameId]);
 
     const handleCreateCharacter = () => {
@@ -210,7 +220,7 @@ const CharacterCreationFlow: React.FC<CharacterCreationFlowProps> = ({
 
     const effectiveStats = useMemo(() => {
         if (!stats) return null;
-        return applyFlawFeatModifiers(stats, flaw, feat, resolvedGameId, gameData?.flaws, gameData?.feats);
+        return applyFlawFeatModifiers(stats, flaw, feat, resolvedGameId, gameData.flaws, gameData.feats);
     }, [stats, flaw, feat, resolvedGameId, gameData]);
 
     const getHeaderTitle = (): string => {
@@ -272,8 +282,8 @@ const CharacterCreationFlow: React.FC<CharacterCreationFlowProps> = ({
                         initialFlawType={flaw?.type as FlawType ?? undefined}
                         initialFeatType={feat?.type as FeatType ?? undefined}
                         gameId={resolvedGameId}
-                        flawsData={gameData?.flaws}
-                        featsData={gameData?.feats}
+                        flawsData={gameData.flaws}
+                        featsData={gameData.feats}
                     />
                 )}
 
@@ -291,10 +301,12 @@ const CharacterCreationFlow: React.FC<CharacterCreationFlowProps> = ({
                         }}
                         selectedEquipment={equipment}
                         onEquipmentChange={handleEquipmentChange}
-                        weaponsData={gameData?.weapons}
-                        armorData={gameData?.armor}
-                        itemsData={gameData?.items}
-                        ammoData={gameData?.ammo}
+                        weaponsData={gameData.weapons}
+                        armorData={gameData.armor}
+                        itemsData={gameData.items}
+                        ammoData={gameData.ammo}
+                        flawsData={gameData.flaws}
+                        featsData={gameData.feats}
                     />
                 )}
 
@@ -328,7 +340,7 @@ const CharacterCreationFlow: React.FC<CharacterCreationFlowProps> = ({
                             <div className="review-section-card">
                                 <h3>Stats</h3>
                                 {effectiveStats && (() => {
-                                    const derived = calculateFinalDerivedStats(stats!, flaw, feat, equipment, resolvedGameId, gameData?.flaws, gameData?.feats);
+                                    const derived = calculateFinalDerivedStats(stats!, flaw, feat, equipment, resolvedGameId, gameData.flaws, gameData.feats);
                                     const fmt = (v: number) => v > 0 ? `+${v}` : `${v}`;
                                     return (
                                         <ul className="stats-list">
