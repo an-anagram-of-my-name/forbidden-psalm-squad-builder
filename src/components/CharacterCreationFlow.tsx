@@ -206,6 +206,24 @@ const CharacterCreationFlow: React.FC<CharacterCreationFlowProps> = ({
         return applyFlawFeatModifiers(stats, flaw, feat, resolvedGameId, gameData.flaws, gameData.feats);
     }, [stats, flaw, feat, resolvedGameId, gameData]);
 
+    // Stable preview character for portrait generation in the review step.
+    // characterName is intentionally excluded: it is not part of the image hash
+    // or prompt, so including it would cause CharacterPortrait's useMemo to
+    // recompute the hash on every keystroke without changing its value.
+    const previewCharacter = useMemo<Character | null>(() => {
+        if (!stats || !flaw || !feat) return null;
+        return {
+            id: initialCharacter?.id ?? initialPreset?.id ?? 'preview',
+            name: '',   // excluded intentionally — see note above
+            stats,
+            flaw,
+            feat,
+            equipment,
+            gameId: resolvedGameId,
+            techLevel: effectiveTechLevel,
+        };
+    }, [stats, flaw, feat, equipment, resolvedGameId, effectiveTechLevel, initialCharacter?.id, initialPreset?.id]);
+
     const getHeaderTitle = (): string => {
         if (mode === 'preset') {
             return isEditingPreset ? 'Edit Character Template' : 'New Character Template';
@@ -301,19 +319,10 @@ const CharacterCreationFlow: React.FC<CharacterCreationFlowProps> = ({
                         </div>
 
                         {/* Portrait preview — shown once stats/flaw/feat are set */}
-                        {stats && flaw && feat && (
+                        {previewCharacter && (
                             <div className="review-portrait-row">
                                 <CharacterPortrait
-                                    character={{
-                                        id: initialCharacter?.id ?? initialPreset?.id ?? 'preview',
-                                        name: characterName || 'Character',
-                                        stats,
-                                        flaw,
-                                        feat,
-                                        equipment,
-                                        gameId: resolvedGameId,
-                                        techLevel: effectiveTechLevel,
-                                    }}
+                                    character={previewCharacter}
                                     size="large"
                                 />
                             </div>

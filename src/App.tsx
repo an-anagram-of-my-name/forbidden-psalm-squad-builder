@@ -109,55 +109,20 @@ const App: React.FC = () => {
     setCurrentPresetId(null);
   };
 
-  // Show game selector when no game is selected
-  if (appState.currentGameId === null) {
-    return (
-      <div className="app">
-        <button
-          className="btn-settings"
-          onClick={() => setShowSettings(true)}
-          title="Image generation settings"
-          aria-label="Open settings"
-        >
-          ⚙
-        </button>
-        <GameSelector onGameSelected={handleGameSelected} />
-        {showSettings && <ReplicateConfig onClose={() => setShowSettings(false)} />}
-      </div>
-    );
-  }
-
-  // Filter squads and presets to the current game
-  const gameSquads = appState.squads.filter((s) => s.gameId === appState.currentGameId);
-  const gamePresets = appState.presets.filter((p) => p.gameId === appState.currentGameId);
-
+  // Compute game-scoped data (safe even when currentGameId is null — yields empty arrays)
+  const currentGameId = appState.currentGameId;
+  const gameSquads = currentGameId
+    ? appState.squads.filter((s) => s.gameId === currentGameId)
+    : [];
+  const gamePresets = currentGameId
+    ? appState.presets.filter((p) => p.gameId === currentGameId)
+    : [];
   const currentSquad = gameSquads.find((s) => s.id === appState.currentSquadId) ?? null;
   const currentPreset = gamePresets.find((p) => p.id === currentPresetId) ?? null;
 
-  if (showPresetFlow) {
-    return (
-      <div className="app">
-        <button
-          className="btn-settings"
-          onClick={() => setShowSettings(true)}
-          title="Image generation settings"
-          aria-label="Open settings"
-        >
-          ⚙
-        </button>
-        <PresetFlow
-          preset={currentPreset}
-          gameId={appState.currentGameId}
-          onSavePreset={handleSavePreset}
-          onCancel={handleCancelPreset}
-        />
-        {showSettings && <ReplicateConfig onClose={() => setShowSettings(false)} />}
-      </div>
-    );
-  }
-
   return (
     <div className="app">
+      {/* Settings gear rendered once at root so it is available on every view */}
       <button
         className="btn-settings"
         onClick={() => setShowSettings(true)}
@@ -166,20 +131,33 @@ const App: React.FC = () => {
       >
         ⚙
       </button>
-      <SquadBuilder
-        gameId={appState.currentGameId}
-        onChangeGame={handleChangeGame}
-        savedSquads={gameSquads}
-        currentSquadId={appState.currentSquadId}
-        initialSquad={currentSquad}
-        onSaveSquad={handleSaveSquad}
-        onLoadSquad={handleLoadSquad}
-        onNewSquad={handleNewSquad}
-        onDeleteSquad={handleDeleteSquad}
-        presets={gamePresets}
-        onNewPreset={handleNewPreset}
-        onLoadPreset={handleLoadPreset}
-      />
+
+      {currentGameId === null ? (
+        <GameSelector onGameSelected={handleGameSelected} />
+      ) : showPresetFlow ? (
+        <PresetFlow
+          preset={currentPreset}
+          gameId={currentGameId}
+          onSavePreset={handleSavePreset}
+          onCancel={handleCancelPreset}
+        />
+      ) : (
+        <SquadBuilder
+          gameId={currentGameId}
+          onChangeGame={handleChangeGame}
+          savedSquads={gameSquads}
+          currentSquadId={appState.currentSquadId}
+          initialSquad={currentSquad}
+          onSaveSquad={handleSaveSquad}
+          onLoadSquad={handleLoadSquad}
+          onNewSquad={handleNewSquad}
+          onDeleteSquad={handleDeleteSquad}
+          presets={gamePresets}
+          onNewPreset={handleNewPreset}
+          onLoadPreset={handleLoadPreset}
+        />
+      )}
+
       {showSettings && <ReplicateConfig onClose={() => setShowSettings(false)} />}
     </div>
   );
