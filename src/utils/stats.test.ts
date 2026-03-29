@@ -307,6 +307,44 @@ describe('calculateFinalDerivedStats', () => {
         expect(result.hp).toBe(baseHp + 1);
         expect(result.equipmentSlots).toBe(baseSlots + 4);
     });
+
+    it('applies flaw derivedStatModifiers to derived stats', () => {
+        // S.A.S.: -2 agility, +2 movement (net zero change to movement)
+        const customFlaws = [
+            { number: 8, name: 'S.A.S.', description: '-2 Agility (does not reduce movement)', type: 'sas' as const,
+              statModifiers: { agility: -2 }, derivedStatModifiers: { movement: 2 } },
+        ];
+        const flaw: Flaw = { type: 'sas', description: '' };
+        const result = calculateFinalDerivedStats(baseStats, flaw, null, [], undefined, customFlaws);
+        // agility reduced by 2: base movement = 5 + (agility - 2) = 5
+        // derivedStatModifiers.movement +2 brings it back to 7
+        expect(result.movement).toBe(5 + baseStats.agility); // net unchanged
+    });
+
+    it('applies feat derivedStatModifiers to derived stats', () => {
+        const customFeats = [
+            { number: 1, name: 'Fast', description: '+1 movement', type: 'marine' as const,
+              derivedStatModifiers: { movement: 1 } },
+        ];
+        const feat: Feat = { type: 'marine', description: '' };
+        const result = calculateFinalDerivedStats(baseStats, null, feat, [], undefined, undefined, customFeats);
+        expect(result.movement).toBe(5 + baseStats.agility + 1);
+    });
+
+    it('stacks flaw and equipment modifiers on derived stats', () => {
+        // S.A.S. +2 movement offset, then homemade armor -1 movement
+        const customFlaws = [
+            { number: 8, name: 'S.A.S.', description: '', type: 'sas' as const,
+              statModifiers: { agility: -2 }, derivedStatModifiers: { movement: 2 } },
+        ];
+        const homemadeArmor: Armor = {
+            id: 'homemade', name: 'Homemade', cost: 1, slots: 1, category: 'armor', av: 1, movementModifier: -1,
+        };
+        const flaw: Flaw = { type: 'sas', description: '' };
+        const result = calculateFinalDerivedStats(baseStats, flaw, null, [homemadeArmor], undefined, customFlaws);
+        // base movement 5+2=7, sas agility-2 -> 5+0=5, derivedMod+2->7, equipment-1->6
+        expect(result.movement).toBe(5 + baseStats.agility - 1);
+    });
 });
 
 describe('makeEmptyStats', () => {

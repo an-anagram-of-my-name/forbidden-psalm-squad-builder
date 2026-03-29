@@ -124,6 +124,29 @@ export function calculateFinalDerivedStats(
   const effectiveStats = applyFlawFeatModifiers(baseStats, flaw, feat, gameId, flawsData, featsData);
   const derived = calculateDerivedStats(effectiveStats, gameId);
 
+  // Apply flaw/feat derived stat modifiers (e.g. S.A.S. keeps Movement despite -2 Agility)
+  const flawFeatDerivedModifiers = { movement: 0, hp: 0, equipmentSlots: 0 };
+
+  if (flaw) {
+    const flawsToUse = flawsData ?? flaws28Psalms;
+    const flawEntry = flawsToUse.find((f) => f.type === flaw.type);
+    if (flawEntry?.derivedStatModifiers) {
+      flawFeatDerivedModifiers.movement += flawEntry.derivedStatModifiers.movement ?? 0;
+      flawFeatDerivedModifiers.hp += flawEntry.derivedStatModifiers.hp ?? 0;
+      flawFeatDerivedModifiers.equipmentSlots += flawEntry.derivedStatModifiers.equipmentSlots ?? 0;
+    }
+  }
+
+  if (feat) {
+    const featsToUse = featsData ?? feats28Psalms;
+    const featEntry = featsToUse.find((f) => f.type === feat.type);
+    if (featEntry?.derivedStatModifiers) {
+      flawFeatDerivedModifiers.movement += featEntry.derivedStatModifiers.movement ?? 0;
+      flawFeatDerivedModifiers.hp += featEntry.derivedStatModifiers.hp ?? 0;
+      flawFeatDerivedModifiers.equipmentSlots += featEntry.derivedStatModifiers.equipmentSlots ?? 0;
+    }
+  }
+
   const equipmentModifiers = {
     movement: 0,
     hp: 0,
@@ -144,9 +167,9 @@ export function calculateFinalDerivedStats(
   });
 
   return {
-    hp: derived.hp + equipmentModifiers.hp,
-    movement: derived.movement + equipmentModifiers.movement,
-    equipmentSlots: derived.equipmentSlots + equipmentModifiers.equipmentSlots,
+    hp: derived.hp + flawFeatDerivedModifiers.hp + equipmentModifiers.hp,
+    movement: derived.movement + flawFeatDerivedModifiers.movement + equipmentModifiers.movement,
+    equipmentSlots: derived.equipmentSlots + flawFeatDerivedModifiers.equipmentSlots + equipmentModifiers.equipmentSlots,
   };
 }
 
