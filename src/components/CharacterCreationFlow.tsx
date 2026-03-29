@@ -4,11 +4,8 @@ import { getGameConfig } from '../types/games';
 import StatDistributionPicker from './StatDistributionPicker';
 import FlawsAndFeatsPicker from './FlawsAndFeatsPicker';
 import EquipmentPicker from './EquipmentPicker';
-import { applyFlawFeatModifiers, calculateFinalDerivedStats } from '../utils/stats';
+import { applyFlawFeatModifiers, calculateFinalDerivedStats, getDefaultFlawsData, getDefaultFeatsData } from '../utils/stats';
 import { characterNames28Psalms } from '../types/characterNames28Psalms';
-import { flaws28Psalms, feats28Psalms } from '../types/featsandflaws28Psalms';
-import { flawsKSP, featsKSP } from '../types/featsandflawsKSP';
-import { items28Psalms, ammo28Psalms, armor28Psalms, pastTechWeapons28Psalms, futureTechWeapons28Psalms } from '../types/equipment28Psalms';
 import './CharacterCreationFlow.css';
 
 const DEFAULT_GAME_ID: GameId = '28-psalms';
@@ -130,37 +127,13 @@ const CharacterCreationFlow: React.FC<CharacterCreationFlowProps> = ({
     // Load game-specific data to pass down to pickers
     const gameData = useMemo(() => {
         const { equipmentData } = gameConfig;
-        if (resolvedGameId === '28-psalms') {
-            return {
-                flaws: flaws28Psalms,
-                feats: feats28Psalms,
-                weapons: equipmentData.weapons,
-                armor: equipmentData.armor,
-                items: equipmentData.items,
-                ammo: equipmentData.ammo,
-            };
-        }
-        if (resolvedGameId === 'kill-sample-process') {
-            return {
-                flaws: flawsKSP,
-                feats: featsKSP,
-                weapons: equipmentData.weapons,
-                armor: equipmentData.armor,
-                items: equipmentData.items,
-                ammo: equipmentData.ammo,
-            };
-        }
-        // Fallback: empty datasets so pickers don't fall back to 28P content
         return {
-            flaws: flawsKSP,
-            feats: [] as typeof feats28Psalms,
-            weapons: {
-                pastTech: [] as typeof pastTechWeapons28Psalms,
-                futureTech: [] as typeof futureTechWeapons28Psalms,
-            },
-            armor: [] as typeof armor28Psalms,
-            items: [] as typeof items28Psalms,
-            ammo: [] as typeof ammo28Psalms,
+            flaws: getDefaultFlawsData(resolvedGameId),
+            feats: getDefaultFeatsData(resolvedGameId),
+            weapons: equipmentData.weapons,
+            armor: equipmentData.armor,
+            items: equipmentData.items,
+            ammo: equipmentData.ammo,
         };
     }, [resolvedGameId, gameConfig]);
 

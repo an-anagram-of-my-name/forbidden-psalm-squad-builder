@@ -1,6 +1,5 @@
 import React, { useState, useMemo } from 'react';
 import { Character, Equipment, Item, Ammo, Armor, Weapon } from '../types';
-import { items28Psalms, ammo28Psalms, armor28Psalms, pastTechWeapons28Psalms, futureTechWeapons28Psalms } from '../types/equipment28Psalms';
 import { FlawData, FeatData } from '../types/featsandflaws28Psalms';
 import { canUseArmor, calculateTotalCost } from '../utils/equipment';
 import { applyFlawFeatModifiers, calculateFinalDerivedStats } from '../utils/stats';
@@ -30,12 +29,13 @@ const EquipmentPicker: React.FC<EquipmentPickerProps> = ({ character, selectedEq
   const [activeTab, setActiveTab] = useState<EquipmentTab>('weapons');
   const config = getGameConfig(character.gameId);
 
-  // Resolve data sources: use provided props, falling back to 28P data
-  const pastTechWeapons = weaponsData?.pastTech ?? pastTechWeapons28Psalms;
-  const futureTechWeapons = weaponsData?.futureTech ?? futureTechWeapons28Psalms;
-  const armorList = armorData ?? armor28Psalms;
-  const itemsList = itemsData ?? items28Psalms;
-  const ammoList = ammoData ?? ammo28Psalms;
+  // Resolve data sources: use provided props, falling back to game config's equipment data
+  const gameEquipment = config.equipmentData;
+  const pastTechWeapons = weaponsData?.pastTech ?? gameEquipment.weapons.pastTech;
+  const futureTechWeapons = weaponsData?.futureTech ?? gameEquipment.weapons.futureTech;
+  const armorList = armorData ?? gameEquipment.armor;
+  const itemsList = itemsData ?? gameEquipment.items;
+  const ammoList = ammoData ?? gameEquipment.ammo;
 
   const effectiveStats = useMemo(() => {
     return applyFlawFeatModifiers(character.stats, character.flaw, character.feat, character.gameId, flawsData, featsData);

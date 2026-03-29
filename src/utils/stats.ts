@@ -1,7 +1,7 @@
 import { Stats, DerivedStats, Flaw, Feat, Equipment, GameId, StatName } from '../types';
 import { flaws28Psalms, feats28Psalms, FlawData, FeatData } from '../types/featsandflaws28Psalms';
 import { StatModifiers } from '../types/featsandflaws';
-import { flawsKSP } from '../types/featsandflawsKSP';
+import { flawsKSP, featsKSP } from '../types/featsandflawsKSP';
 import { getGameConfig } from '../types/games';
 
 const DEFAULT_GAME_ID: GameId = '28-psalms';
@@ -10,7 +10,7 @@ const DEFAULT_GAME_ID: GameId = '28-psalms';
  * Returns the default flaw dataset for a given game.
  * This avoids hardcoding the 28P dataset as the fallback when a gameId is known.
  */
-function getDefaultFlawsData(gameId: GameId): FlawData[] {
+export function getDefaultFlawsData(gameId: GameId): FlawData[] {
   switch (gameId) {
     case 'kill-sample-process':
       return flawsKSP;
@@ -21,10 +21,14 @@ function getDefaultFlawsData(gameId: GameId): FlawData[] {
 
 /**
  * Returns the default feat dataset for a given game.
- * Currently only 28P has feats; KSP feats will be added here when available.
  */
-function getDefaultFeatsData(_gameId: GameId): FeatData[] {
-  return feats28Psalms;
+export function getDefaultFeatsData(gameId: GameId): FeatData[] {
+  switch (gameId) {
+    case 'kill-sample-process':
+      return featsKSP;
+    default:
+      return feats28Psalms;
+  }
 }
 
 // Canonical list of all stat names, kept in sync with the StatName union in types/index.ts.

@@ -1,8 +1,8 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { Flaw, Feat, FlawType, FeatType, Stats, GameId } from '../types';
-import { flaws28Psalms, feats28Psalms, FlawData, FeatData } from '../types/featsandflaws28Psalms';
+import { FlawData, FeatData } from '../types/featsandflaws28Psalms';
 import { getGameConfig } from '../types/games';
-import { applyFlawFeatModifiers, calculateDerivedStats } from '../utils/stats';
+import { applyFlawFeatModifiers, calculateDerivedStats, getDefaultFlawsData, getDefaultFeatsData } from '../utils/stats';
 import './FlawsAndFeatsPicker.css';
 
 interface FlawsAndFeatsPickerProps {
@@ -20,8 +20,8 @@ const FlawsAndFeatsPicker: React.FC<FlawsAndFeatsPickerProps> = ({ onSelectionCh
     const [selectedFlawType, setSelectedFlawType] = useState<FlawType | null>(initialFlawType ?? null);
     const [selectedFeatType, setSelectedFeatType] = useState<FeatType | null>(initialFeatType ?? null);
 
-    const flawsToUse = flawsData ?? flaws28Psalms;
-    const featsToUse = featsData ?? feats28Psalms;
+    const flawsToUse = flawsData ?? getDefaultFlawsData(gameId);
+    const featsToUse = featsData ?? getDefaultFeatsData(gameId);
 
     useEffect(() => {
         if (selectedFlawType && selectedFeatType) {
