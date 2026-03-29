@@ -98,10 +98,11 @@ export function applyFlawFeatModifiers(
  * Calculate final derived stats with all modifiers applied.
  *
  * Full calculation chain:
- * 1. Apply flaw/feat modifiers to primary stats
- * 2. Calculate base derived stats from modified primary stats
- * 3. Sum equipment modifiers (e.g. Homemade armor's -1 movement)
- * 4. Return derived stats with equipment modifiers applied
+ * 1. Apply flaw/feat modifiers to primary stats via applyFlawFeatModifiers()
+ * 2. Calculate base derived stats from modified primary stats via calculateDerivedStats()
+ * 3. Apply flaw/feat derivedStatModifiers (e.g. Second Heart +HP, S.A.S. +MOV offset)
+ * 4. Apply equipment modifiers (e.g. Homemade armor's -1 movement)
+ * 5. Return final DerivedStats
  *
  * @param baseStats - Base stats from character creation Step 1 (before any modifiers)
  * @param flaw - Selected flaw (Step 2), or null
@@ -124,7 +125,7 @@ export function calculateFinalDerivedStats(
   const effectiveStats = applyFlawFeatModifiers(baseStats, flaw, feat, gameId, flawsData, featsData);
   const derived = calculateDerivedStats(effectiveStats, gameId);
 
-  const flawFeatDerivedModifiers = {
+  const flawFeatDerivedModifiers: DerivedStats = {
     movement: 0,
     hp: 0,
     equipmentSlots: 0,

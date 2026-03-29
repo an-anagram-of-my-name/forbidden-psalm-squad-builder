@@ -2,37 +2,8 @@
  * Feats and flaws data for 28 Psalms ruleset
  */
 
-import { FlawType, FeatType, StatName } from './index';
-
-export type StatModifiers = Partial<Record<StatName, number>>;
-
-export interface FlawData {
-  number: number;
-  name: string;
-  description: string;
-  type: FlawType;
-  statModifiers?: StatModifiers;
-  groupId?: string;
-  derivedStatModifiers?: {
-    movement?: number;
-    hp?: number;
-    equipmentSlots?: number;
-  };
-}
-
-export interface FeatData {
-  number: number;
-  name: string;
-  description: string;
-  type: FeatType;
-  statModifiers?: StatModifiers;
-  groupId?: string;
-  derivedStatModifiers?: {
-    movement?: number;
-    hp?: number;
-    equipmentSlots?: number;
-  };
-}
+import { FlawData, FeatData } from './index';
+export type { StatModifiers, DerivedStatModifiers, FlawData, FeatData } from './index';
 
 export const flaws28Psalms: FlawData[] = [
   {

@@ -16,6 +16,36 @@ export interface DerivedStats {
   equipmentSlots: number;
 }
 
+/** Modifiers applied directly to derived stats (HP/Movement/EquipmentSlots). */
+export type DerivedStatModifiers = {
+  movement?: number;
+  hp?: number;
+  equipmentSlots?: number;
+};
+
+/** Partial primary-stat modifiers keyed by StatName. */
+export type StatModifiers = Partial<Record<StatName, number>>;
+
+export interface FlawData {
+  number: number;
+  name: string;
+  description: string;
+  type: FlawType;
+  statModifiers?: StatModifiers;
+  groupId?: string;
+  derivedStatModifiers?: DerivedStatModifiers;
+}
+
+export interface FeatData {
+  number: number;
+  name: string;
+  description: string;
+  type: FeatType;
+  statModifiers?: StatModifiers;
+  groupId?: string;
+  derivedStatModifiers?: DerivedStatModifiers;
+}
+
 export type FlawType =
   | 'xeno'
   | 'too-many-teeth'

@@ -262,8 +262,6 @@ describe('calculateFinalDerivedStats', () => {
         expect(result.hp).toBe(8 + baseStats.toughness - 1 + 4);     // base - flaw 1 + feat 4
     });
 
-
-
     it('applies equipment movement modifier', () => {
         const homemadeArmor: Armor = {
             id: 'homemade',
