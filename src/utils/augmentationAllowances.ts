@@ -77,10 +77,10 @@ export function calculateAugmentationSelection(
   // Only applies to KSP
   if (gameId !== 'kill-sample-process') {
     return {
-      feats: { selected: 0, allowed: 0, isFull: false },
-      flaws: { selected: 0, allowed: 0, isFull: false },
-      cybermods: { selected: 0, allowed: 0, isFull: false },
-      mutations: { selected: 0, allowed: 0, isFull: false },
+      feats: { selected: 0, allowed: 0, isFull: true },
+      flaws: { selected: 0, allowed: 0, isFull: true },
+      cybermods: { selected: 0, allowed: 0, isFull: true },
+      mutations: { selected: 0, allowed: 0, isFull: true },
       isComplete: true,
       incompleteItems: [],
     };
