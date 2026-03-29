@@ -94,3 +94,13 @@ html, body {
   border-color: rgba(255, 255, 255, 0.7);
   transform: rotate(30deg);
 }
+
+@media (prefers-reduced-motion: reduce) {
+  .btn-settings {
+    transition: none;
+  }
+
+  .btn-settings:hover {
+    transform: none;
+  }
+}
