@@ -96,7 +96,7 @@ describe('calculateAugmentationSelection — non-KSP game', () => {
       0,
       '28-psalms',
     );
-    expect(result.isComplete).toBe(false);
+    expect(result.isComplete).toBe(true);
     expect(result.feats.allowed).toBe(0);
     expect(result.incompleteItems).toHaveLength(0);
   });
