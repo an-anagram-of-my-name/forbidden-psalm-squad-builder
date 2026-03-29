@@ -189,7 +189,9 @@ async function pollPrediction(
     // still starting/processing — keep polling
   }
 
-  throw new Error('Image generation timed out after 60 seconds');
+  throw new Error(
+    `Image generation timed out after ${Math.round(timeoutMs / 1000)} seconds`,
+  );
 }
 
 /**
