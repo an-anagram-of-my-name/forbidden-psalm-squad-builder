@@ -49,16 +49,16 @@ describe('createImageHash', () => {
     expect(createImageHash(c1)).not.toBe(createImageHash(c2));
   });
 
-  it('produces different hashes when flaw differs', () => {
+  it('produces the same hash when only flaw differs (flaw not in prompt/hash)', () => {
     const c1 = makeCharacter({ flaw: { type: 'xeno', description: 'Xeno' } });
     const c2 = makeCharacter({ flaw: { type: 'crazed', description: 'Crazed' } });
-    expect(createImageHash(c1)).not.toBe(createImageHash(c2));
+    expect(createImageHash(c1)).toBe(createImageHash(c2));
   });
 
-  it('produces different hashes when name differs', () => {
+  it('produces the same hash when only name differs (name not in prompt/hash)', () => {
     const c1 = makeCharacter({ name: 'Alpha' });
     const c2 = makeCharacter({ name: 'Beta' });
-    expect(createImageHash(c1)).not.toBe(createImageHash(c2));
+    expect(createImageHash(c1)).toBe(createImageHash(c2));
   });
 
   it('is insensitive to character.id (id is not part of hash)', () => {

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { Character } from '../types';
 import { createImageHash, getOrGenerateImage, API_KEY_STORAGE_KEY } from '../utils/imageGeneration';
 import { getCachedImage } from '../utils/imageCache';
@@ -21,11 +21,14 @@ const CharacterPortrait: React.FC<CharacterPortraitProps> = ({
   const [imageUrl, setImageUrl] = useState<string | null>(null);
   const mountedRef = useRef(true);
 
+  // Compute the cache key once; only changes when prompt-relevant data changes
+  // (stats and visible equipment — see createImageHash).
+  const hash = useMemo(() => createImageHash(character), [character]);
+
   useEffect(() => {
     mountedRef.current = true;
 
     // Check cache synchronously first
-    const hash = createImageHash(character);
     const cached = getCachedImage(hash);
 
     if (cached) {
@@ -58,9 +61,7 @@ const CharacterPortrait: React.FC<CharacterPortraitProps> = ({
     return () => {
       mountedRef.current = false;
     };
-    // Re-run when the character's "fingerprint" changes (hash covers name, stats, equipment, flaw, feat)
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [createImageHash(character)]);
+  }, [hash]); // eslint-disable-line react-hooks/exhaustive-deps -- character object is captured inside but hash is the stable key
 
   // Fallback: first two initials of the character name
   const initials = character.name

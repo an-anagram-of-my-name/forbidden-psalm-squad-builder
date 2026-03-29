@@ -210,8 +210,11 @@ export async function generateCharacterImage(
 
 /**
  * Get a character portrait URL, using the cache if available.
- * If not cached and an API key is provided, generates a new image.
- * Returns null if no API key is configured or on error.
+ * If not cached, generates a new image via the Replicate API using the
+ * provided API key and caches the result.
+ *
+ * @throws {Error} if the Replicate API call fails, times out, or returns an
+ *   unexpected response. Callers should catch this to handle failure gracefully.
  */
 export async function getOrGenerateImage(
   character: Character,
