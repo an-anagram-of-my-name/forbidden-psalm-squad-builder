@@ -1,0 +1,146 @@
+.augmentation-allowance-box {
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  padding: 12px;
+  background-color: #fff;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+}
+
+.augmentation-allowance-box.compact {
+  font-size: 0.875rem;
+}
+
+.augmentation-allowance-box.detailed {
+  font-size: 0.95rem;
+}
+
+.augmentation-allowance-box .box-header {
+  margin-bottom: 12px;
+}
+
+.augmentation-allowance-box .box-header h4 {
+  margin: 0;
+  font-size: 0.875rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: #666;
+}
+
+.augmentation-allowance-box .allowances-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+@media (min-width: 768px) {
+  .augmentation-allowance-box .allowances-grid {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+.augmentation-allowance-box .allowance-item {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 8px;
+  border-radius: 3px;
+  background-color: #f9f9f9;
+  border: 1px solid #eee;
+}
+
+.augmentation-allowance-box .allowance-item.over-limit {
+  background-color: rgba(239, 68, 68, 0.05);
+  border-color: #ef4444;
+}
+
+.augmentation-allowance-box .allowance-item.full {
+  background-color: rgba(34, 197, 94, 0.05);
+  border-color: #22c55e;
+}
+
+.augmentation-allowance-box .allowance-item.incomplete {
+  background-color: rgba(59, 130, 246, 0.05);
+  border-color: #3b82f6;
+}
+
+.augmentation-allowance-box .label {
+  font-weight: 500;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  color: #888;
+}
+
+.augmentation-allowance-box .count {
+  font-weight: 600;
+  font-size: 1rem;
+  color: #333;
+}
+
+.augmentation-allowance-box .count.error {
+  color: #ef4444;
+}
+
+.augmentation-allowance-box .progress-bar-container {
+  width: 100%;
+  margin: 4px 0;
+}
+
+.augmentation-allowance-box progress {
+  width: 100%;
+  height: 4px;
+  border-radius: 2px;
+  appearance: none;
+  background-color: #eee;
+}
+
+.augmentation-allowance-box progress::-webkit-progress-bar {
+  background-color: #eee;
+  border-radius: 2px;
+}
+
+.augmentation-allowance-box progress::-webkit-progress-value {
+  background-color: #3b82f6;
+  border-radius: 2px;
+}
+
+.augmentation-allowance-box progress::-moz-progress-bar {
+  background-color: #3b82f6;
+  border-radius: 2px;
+}
+
+.augmentation-allowance-box progress.over::-webkit-progress-value {
+  background-color: #ef4444;
+}
+
+.augmentation-allowance-box progress.over::-moz-progress-bar {
+  background-color: #ef4444;
+}
+
+.augmentation-allowance-box .over-message {
+  font-size: 0.65rem;
+  color: #ef4444;
+  font-weight: 500;
+}
+
+.augmentation-allowance-box .incomplete-indicator {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px;
+  background-color: rgba(59, 130, 246, 0.05);
+  border: 1px solid #3b82f6;
+  border-radius: 3px;
+  font-size: 0.8rem;
+  color: #3b82f6;
+}
+
+.augmentation-allowance-box .warning-icon {
+  flex-shrink: 0;
+}
+
+.augmentation-allowance-box .incomplete-text {
+  font-weight: 500;
+}

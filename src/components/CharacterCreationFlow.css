@@ -354,3 +354,12 @@
 .equipment-list li:last-child {
     border-bottom: none;
 }
+
+/* Wrapper for the augmentation allowance box shown in flow steps */
+.augmentation-allowance-wrapper {
+    max-width: 1200px;
+    margin: 0 auto 20px auto;
+    padding: 0 20px;
+    width: 100%;
+    box-sizing: border-box;
+}
