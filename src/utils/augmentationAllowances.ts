@@ -81,7 +81,7 @@ export function calculateAugmentationSelection(
       flaws: { selected: 0, allowed: 0, isFull: false },
       cybermods: { selected: 0, allowed: 0, isFull: false },
       mutations: { selected: 0, allowed: 0, isFull: false },
-      isComplete: false,
+      isComplete: true,
       incompleteItems: [],
     };
   }
