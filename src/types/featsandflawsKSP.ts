@@ -1,14 +1,23 @@
 /**
- * Feats data for Kill Sample Process (KSP) ruleset
+ * Feats and Flaws data for Kill Sample Process (KSP) ruleset
  *
- * 20 feats, 30 entries total:
+ * Flaws:
+ *   - Placeholder empty array (full data will be added in a future feature)
+ *
+ * Feats: 20 feats, 30 entries total:
  *   - Feats #1–14: 14 single entries
  *   - Feat  #15 (Second Heart): 6 HP-variant entries (groupId: 'second-heart')
  *   - Feats #16–19: 4 single entries
  *   - Feat  #20 (Experimental): 6 scenario-variant entries (groupId: 'experimental')
  */
 
-import { FeatData } from './index';
+import { FeatData, FlawData } from './index';
+
+/**
+ * KSP Flaws - Placeholder
+ * Full flaw data will be implemented in a future feature.
+ */
+export const flawsKSP: FlawData[] = [];
 
 export const featsKSP: FeatData[] = [
   // 1: Butch

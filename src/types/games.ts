@@ -1,4 +1,6 @@
-import { GameId, StatName, Stats, DerivedStats } from './index';
+import { GameId, StatName, Stats, DerivedStats, Weapon, Armor, Item, Ammo, Consumable } from './index';
+import { pastTechWeapons28Psalms, futureTechWeapons28Psalms, armor28Psalms, items28Psalms, ammo28Psalms } from './equipment28Psalms';
+import { weaponsKSP, armorKSP, itemsKSP, ammoKSP, consumablesKSP } from './equipmentKSP';
 
 export interface GameConfig {
   id: GameId;
@@ -10,6 +12,16 @@ export interface GameConfig {
   derivedStatMap: Partial<Record<StatName, { label: string; base: number; derivedKey: keyof DerivedStats }>>;
   validDistributions: number[][];
   derivedStatFormulas: (stats: Stats) => DerivedStats;
+  equipmentData: {
+    weapons: {
+      pastTech: Weapon[];
+      futureTech: Weapon[];
+    };
+    armor: Armor[];
+    items: Item[];
+    ammo: Ammo[];
+    consumables: Consumable[];
+  };
 }
 
 export const GAME_CONFIGS: Record<GameId, GameConfig> = {
@@ -39,6 +51,16 @@ export const GAME_CONFIGS: Record<GameId, GameConfig> = {
       movement: 5 + (stats.agility ?? 0),
       equipmentSlots: 5 + (stats.strength ?? 0),
     }),
+    equipmentData: {
+      weapons: {
+        pastTech: pastTechWeapons28Psalms,
+        futureTech: futureTechWeapons28Psalms,
+      },
+      armor: armor28Psalms,
+      items: items28Psalms,
+      ammo: ammo28Psalms,
+      consumables: [],
+    },
   },
   'kill-sample-process': {
     id: 'kill-sample-process',
@@ -67,6 +89,16 @@ export const GAME_CONFIGS: Record<GameId, GameConfig> = {
       movement: 5 + (stats.agility ?? 0),
       equipmentSlots: 5 + (stats.strength ?? 0),
     }),
+    equipmentData: {
+      weapons: {
+        pastTech: weaponsKSP.pastTech,
+        futureTech: weaponsKSP.futureTech,
+      },
+      armor: armorKSP,
+      items: itemsKSP,
+      ammo: ammoKSP,
+      consumables: consumablesKSP,
+    },
   },
 };
 
