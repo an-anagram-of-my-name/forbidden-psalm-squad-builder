@@ -1,6 +1,6 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { Flaw, Feat, FlawType, FeatType, Stats, GameId } from '../types';
-import { flaws28Psalms, feats28Psalms } from '../types/featsandflaws28Psalms';
+import { flaws28Psalms, feats28Psalms, FlawData, FeatData } from '../types/featsandflaws28Psalms';
 import { getGameConfig } from '../types/games';
 import { applyFlawFeatModifiers, calculateDerivedStats } from '../utils/stats';
 import './FlawsAndFeatsPicker.css';
@@ -11,38 +11,43 @@ interface FlawsAndFeatsPickerProps {
     initialFlawType?: FlawType;
     initialFeatType?: FeatType;
     gameId?: GameId;
+    flawsData?: FlawData[];
+    featsData?: FeatData[];
 }
 
-const FlawsAndFeatsPicker: React.FC<FlawsAndFeatsPickerProps> = ({ onSelectionChange, stats, initialFlawType, initialFeatType, gameId = '28-psalms' }) => {
+const FlawsAndFeatsPicker: React.FC<FlawsAndFeatsPickerProps> = ({ onSelectionChange, stats, initialFlawType, initialFeatType, gameId = '28-psalms', flawsData, featsData }) => {
     const config = getGameConfig(gameId);
     const [selectedFlawType, setSelectedFlawType] = useState<FlawType | null>(initialFlawType ?? null);
     const [selectedFeatType, setSelectedFeatType] = useState<FeatType | null>(initialFeatType ?? null);
 
+    const flawsToUse = flawsData ?? flaws28Psalms;
+    const featsToUse = featsData ?? feats28Psalms;
+
     useEffect(() => {
         if (selectedFlawType && selectedFeatType) {
-            const flawData = flaws28Psalms.find(f => f.type === selectedFlawType);
-            const featData = feats28Psalms.find(f => f.type === selectedFeatType);
-            if (flawData && featData) {
+            const flawEntry = flawsToUse.find(f => f.type === selectedFlawType);
+            const featEntry = featsToUse.find(f => f.type === selectedFeatType);
+            if (flawEntry && featEntry) {
                 onSelectionChange?.(
-                    { type: selectedFlawType, description: flawData.description },
-                    { type: selectedFeatType, description: featData.description }
+                    { type: selectedFlawType, description: flawEntry.description },
+                    { type: selectedFeatType, description: featEntry.description }
                 );
             }
         } else {
             onSelectionChange?.(null, null);
         }
-    }, [selectedFlawType, selectedFeatType]); // eslint-disable-line react-hooks/exhaustive-deps
+    }, [selectedFlawType, selectedFeatType, flawsToUse, featsToUse, onSelectionChange]);
 
     const getRandomFlaw = () => {
-        if (flaws28Psalms.length === 0) return;
-        const randomIndex = Math.floor(Math.random() * flaws28Psalms.length);
-        setSelectedFlawType(flaws28Psalms[randomIndex].type);
+        if (flawsToUse.length === 0) return;
+        const randomIndex = Math.floor(Math.random() * flawsToUse.length);
+        setSelectedFlawType(flawsToUse[randomIndex].type);
     };
 
     const getRandomFeat = () => {
-        if (feats28Psalms.length === 0) return;
-        const randomIndex = Math.floor(Math.random() * feats28Psalms.length);
-        setSelectedFeatType(feats28Psalms[randomIndex].type);
+        if (featsToUse.length === 0) return;
+        const randomIndex = Math.floor(Math.random() * featsToUse.length);
+        setSelectedFeatType(featsToUse[randomIndex].type);
     };
 
     const effectiveStats = useMemo(() => {
@@ -54,8 +59,8 @@ const FlawsAndFeatsPicker: React.FC<FlawsAndFeatsPickerProps> = ({ onSelectionCh
         const featObj: Feat | null = selectedFeatType
             ? { type: selectedFeatType, description: '' }
             : null;
-        return applyFlawFeatModifiers(stats, flawObj, featObj, gameId);
-    }, [stats, selectedFlawType, selectedFeatType, gameId]);
+        return applyFlawFeatModifiers(stats, flawObj, featObj, gameId, flawsToUse, featsToUse);
+    }, [stats, selectedFlawType, selectedFeatType, gameId, flawsToUse, featsToUse]);
 
     return (
         <div className="flaws-and-feats-picker">
@@ -104,7 +109,7 @@ const FlawsAndFeatsPicker: React.FC<FlawsAndFeatsPickerProps> = ({ onSelectionCh
                         🎲
                     </button>
                     <div className="options-list">
-                        {flaws28Psalms.map((flaw) => (
+                        {flawsToUse.map((flaw) => (
                             <div
                                 key={flaw.type}
                                 className={`option ${
@@ -131,7 +136,7 @@ const FlawsAndFeatsPicker: React.FC<FlawsAndFeatsPickerProps> = ({ onSelectionCh
                         🎲
                     </button>
                     <div className="options-list">
-                        {feats28Psalms.map((feat) => (
+                        {featsToUse.map((feat) => (
                             <div
                                 key={feat.type}
                                 className={`option ${

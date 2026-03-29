@@ -1,6 +1,6 @@
 // equipment.ts
 
-import { Equipment, Armor, Weapon, TechLevel } from '../types';
+import { Equipment, Armor, Weapon, TechLevel, Ammo } from '../types';
 import { ammo28Psalms } from '../types/equipment28Psalms';
 
 // Calculate used slots based on equipped items
@@ -39,16 +39,19 @@ export function getCharacterMovement(baseMovement: number, equippedItems: Equipm
 }
 
 // Calculate total cost of equipped items
-// Ranged weapons with includesAmmoId receive a credit for one free ammo stack
-export function calculateTotalCost(equippedItems: Equipment[]): number {
+// Ranged weapons with includesAmmoId receive a credit for one free ammo stack.
+// @param ammoData - Optional ammo data to use for credit lookup; falls back to ammo28Psalms
+export function calculateTotalCost(equippedItems: Equipment[], ammoData?: Ammo[]): number {
     const baseCost = equippedItems.reduce((total, item) => total + item.cost, 0);
+
+    const ammoToUse = ammoData ?? ammo28Psalms;
 
     let ammoCredit = 0;
     equippedItems.forEach((item) => {
         if (item.category === 'weapon') {
             const weapon = item as Weapon;
             if (weapon.includesAmmoId) {
-                const includedAmmo = ammo28Psalms.find(a => a.id === weapon.includesAmmoId);
+                const includedAmmo = ammoToUse.find(a => a.id === weapon.includesAmmoId);
                 if (includedAmmo) {
                     ammoCredit += includedAmmo.cost;
                 }

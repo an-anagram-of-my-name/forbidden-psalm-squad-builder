@@ -152,6 +152,40 @@ describe('applyFlawFeatModifiers', () => {
         const result = applyFlawFeatModifiers(baseStats, flaw, feat);
         expect(result.presence).toBe(baseStats.presence - 2);
     });
+
+    it('uses provided flawsData override instead of default 28P data', () => {
+        const customFlaws = [
+            { number: 1, name: 'Custom Flaw', description: 'Test', type: 'xeno' as const, statModifiers: { agility: -3 } },
+        ];
+        const flaw: Flaw = { type: 'xeno', description: '' };
+        // default 28P data for 'xeno' has no stat modifier; custom data applies -3 agility
+        const result = applyFlawFeatModifiers(baseStats, flaw, null, undefined, customFlaws);
+        expect(result.agility).toBe(baseStats.agility - 3);
+    });
+
+    it('uses provided featsData override instead of default 28P data', () => {
+        const customFeats = [
+            { number: 1, name: 'Custom Feat', description: 'Test', type: 'marine' as const, statModifiers: { toughness: 5 } },
+        ];
+        const feat: Feat = { type: 'marine', description: '' };
+        // default 28P data for 'marine' has no stat modifier; custom data applies +5 toughness
+        const result = applyFlawFeatModifiers(baseStats, null, feat, undefined, undefined, customFeats);
+        expect(result.toughness).toBe(baseStats.toughness + 5);
+    });
+
+    it('does not fall back to 28P data when an empty flawsData array is provided', () => {
+        const flaw: Flaw = { type: 'too-many-teeth', description: '' };
+        // 28P 'too-many-teeth' applies -2 presence; empty array means no modifier found
+        const result = applyFlawFeatModifiers(baseStats, flaw, null, undefined, []);
+        expect(result.presence).toBe(baseStats.presence); // no change
+    });
+
+    it('does not fall back to 28P data when an empty featsData array is provided', () => {
+        const feat: Feat = { type: 'marine', description: '' };
+        // 28P 'marine' has no modifier, but ensure no fallback in principle
+        const result = applyFlawFeatModifiers(baseStats, null, feat, undefined, undefined, []);
+        expect(result).toEqual(baseStats);
+    });
 });
 
 describe('calculateFinalDerivedStats', () => {

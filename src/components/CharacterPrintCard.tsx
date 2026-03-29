@@ -2,13 +2,15 @@ import React from 'react';
 import { Character, Equipment, Armor, Weapon } from '../types';
 import { applyFlawFeatModifiers, calculateFinalDerivedStats } from '../utils/stats';
 import { getGameConfig } from '../types/games';
-import { flaws28Psalms, feats28Psalms } from '../types/featsandflaws28Psalms';
+import { flaws28Psalms, feats28Psalms, FlawData, FeatData } from '../types/featsandflaws28Psalms';
 import HPTrackingBar from './HPTrackingBar';
 import AmmoTracker from './AmmoTracker';
 import './CharacterPrintCard.css';
 
 interface CharacterPrintCardProps {
   character: Character;
+  flawsData?: FlawData[];
+  featsData?: FeatData[];
 }
 
 function fmt(v: number): string {
@@ -96,20 +98,24 @@ function renderEquipmentDetails(item: Equipment): React.ReactNode {
   return details;
 }
 
-const CharacterPrintCard: React.FC<CharacterPrintCardProps> = ({ character }) => {
+const CharacterPrintCard: React.FC<CharacterPrintCardProps> = ({ character, flawsData, featsData }) => {
   const config = getGameConfig(character.gameId);
-  const effectiveStats = applyFlawFeatModifiers(character.stats, character.flaw, character.feat, character.gameId);
+  const flawsToUse = flawsData ?? flaws28Psalms;
+  const featsToUse = featsData ?? feats28Psalms;
+  const effectiveStats = applyFlawFeatModifiers(character.stats, character.flaw, character.feat, character.gameId, flawsToUse, featsToUse);
   const derived = calculateFinalDerivedStats(
     character.stats,
     character.flaw,
     character.feat,
     character.equipment,
-    character.gameId
+    character.gameId,
+    flawsToUse,
+    featsToUse
   );
 
   // Look up full flaw/feat descriptions from data
-  const flawData = flaws28Psalms.find((f) => f.type === character.flaw.type);
-  const featData = feats28Psalms.find((f) => f.type === character.feat.type);
+  const flawData = flawsToUse.find((f) => f.type === character.flaw.type);
+  const featData = featsToUse.find((f) => f.type === character.feat.type);
 
   // Sort equipment: armor first, then rest
   const sortedEquipment = [...character.equipment].sort((a, b) => {

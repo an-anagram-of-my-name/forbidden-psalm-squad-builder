@@ -1,6 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { Character, Equipment, Item, Ammo, Armor, Weapon } from '../types';
 import { items28Psalms, ammo28Psalms, armor28Psalms, pastTechWeapons28Psalms, futureTechWeapons28Psalms } from '../types/equipment28Psalms';
+import { FlawData, FeatData } from '../types/featsandflaws28Psalms';
 import { canUseArmor, calculateTotalCost } from '../utils/equipment';
 import { applyFlawFeatModifiers, calculateFinalDerivedStats } from '../utils/stats';
 import { getGameConfig } from '../types/games';
@@ -10,19 +11,35 @@ interface EquipmentPickerProps {
   character: Character;
   selectedEquipment: Equipment[];
   onEquipmentChange: (equipment: Equipment[]) => void;
+  weaponsData?: {
+    pastTech: Weapon[];
+    futureTech: Weapon[];
+  };
+  armorData?: Armor[];
+  itemsData?: Item[];
+  ammoData?: Ammo[];
+  flawsData?: FlawData[];
+  featsData?: FeatData[];
 }
 
 type EquipmentTab = 'weapons' | 'armor' | 'items' | 'ammo-consumables';
 
 const CONSUMABLE_IDS = ['molotov', 'black-powder-bomb', 'grenade', 'future-molotov'];
 
-const EquipmentPicker: React.FC<EquipmentPickerProps> = ({ character, selectedEquipment, onEquipmentChange }) => {
+const EquipmentPicker: React.FC<EquipmentPickerProps> = ({ character, selectedEquipment, onEquipmentChange, weaponsData, armorData, itemsData, ammoData, flawsData, featsData }) => {
   const [activeTab, setActiveTab] = useState<EquipmentTab>('weapons');
   const config = getGameConfig(character.gameId);
 
+  // Resolve data sources: use provided props, falling back to 28P data
+  const pastTechWeapons = weaponsData?.pastTech ?? pastTechWeapons28Psalms;
+  const futureTechWeapons = weaponsData?.futureTech ?? futureTechWeapons28Psalms;
+  const armorList = armorData ?? armor28Psalms;
+  const itemsList = itemsData ?? items28Psalms;
+  const ammoList = ammoData ?? ammo28Psalms;
+
   const effectiveStats = useMemo(() => {
-    return applyFlawFeatModifiers(character.stats, character.flaw, character.feat);
-  }, [character.stats, character.flaw, character.feat]);
+    return applyFlawFeatModifiers(character.stats, character.flaw, character.feat, character.gameId, flawsData, featsData);
+  }, [character.stats, character.flaw, character.feat, character.gameId, flawsData, featsData]);
 
   // Calculate total slots used
   const slotsUsed = useMemo(() => {
@@ -53,30 +70,30 @@ const EquipmentPicker: React.FC<EquipmentPickerProps> = ({ character, selectedEq
 
   // Get all available weapons (past-tech + future-tech if compatible), excluding consumables
   const availableWeapons = useMemo(() => {
-    const allWeapons = [...pastTechWeapons28Psalms, ...futureTechWeapons28Psalms];
+    const allWeapons = [...pastTechWeapons, ...futureTechWeapons];
     return allWeapons.filter((weapon) => canEquipTech(weapon.techLevel) && !CONSUMABLE_IDS.includes(weapon.id));
-  }, [character.techLevel]);
+  }, [character.techLevel, pastTechWeapons, futureTechWeapons]);
 
   // Get all available armor (all are tech-agnostic)
   const availableArmor = useMemo(() => {
-    return armor28Psalms.filter((armor) => canEquipTech(armor.techLevel));
-  }, [character.techLevel]);
+    return armorList.filter((armor) => canEquipTech(armor.techLevel));
+  }, [character.techLevel, armorList]);
 
   // Get all available items
   const availableItems = useMemo(() => {
-    return items28Psalms.filter((item) => canEquipTech(item.techLevel));
-  }, [character.techLevel]);
+    return itemsList.filter((item) => canEquipTech(item.techLevel));
+  }, [character.techLevel, itemsList]);
 
   // Get all available ammo
   const availableAmmo = useMemo(() => {
-    return ammo28Psalms.filter((ammo) => canEquipTech(ammo.techLevel));
-  }, [character.techLevel]);
+    return ammoList.filter((ammo) => canEquipTech(ammo.techLevel));
+  }, [character.techLevel, ammoList]);
 
   // Get all available consumables (from weapon arrays, filtered by tech level)
   const availableConsumables = useMemo(() => {
-    const allWeapons = [...pastTechWeapons28Psalms, ...futureTechWeapons28Psalms];
+    const allWeapons = [...pastTechWeapons, ...futureTechWeapons];
     return allWeapons.filter((weapon) => canEquipTech(weapon.techLevel) && CONSUMABLE_IDS.includes(weapon.id));
-  }, [character.techLevel]);
+  }, [character.techLevel, pastTechWeapons, futureTechWeapons]);
 
   const isAmmoOrConsumable = (equipment: Equipment): boolean => {
     return equipment.category === 'ammo' || CONSUMABLE_IDS.includes(equipment.id);
@@ -227,7 +244,7 @@ const EquipmentPicker: React.FC<EquipmentPickerProps> = ({ character, selectedEq
         <div className="current-stats-divider" />
         <div className="current-stats-derived">
           {(() => {
-            const derived = calculateFinalDerivedStats(character.stats, character.flaw, character.feat, selectedEquipment, character.gameId);
+            const derived = calculateFinalDerivedStats(character.stats, character.flaw, character.feat, selectedEquipment, character.gameId, flawsData, featsData);
             return config.statNames
               .filter((stat) => !!config.derivedStatMap[stat])
               .map((stat) => {
@@ -244,7 +261,7 @@ const EquipmentPicker: React.FC<EquipmentPickerProps> = ({ character, selectedEq
         <div className="current-stats-divider" />
         <div className="stat-box cost">
           <div className="stat-label">CR</div>
-          <div className="stat-value">{calculateTotalCost(selectedEquipment)}</div>
+          <div className="stat-value">{calculateTotalCost(selectedEquipment, ammoList)}</div>
         </div>
       </div>
 
