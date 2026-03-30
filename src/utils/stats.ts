@@ -183,15 +183,23 @@ export function calculateFinalDerivedStats(
   };
 
   equipment.forEach((item) => {
-    const it = item as { movementModifier?: number; hpModifier?: number; slotsModifier?: number };
-    if (it.movementModifier !== undefined) {
-      equipmentModifiers.movement += it.movementModifier;
+    // Read legacy individual modifier fields (e.g. Armor.movementModifier)
+    const legacyItem = item as { movementModifier?: number; hpModifier?: number; slotsModifier?: number };
+    if (legacyItem.movementModifier !== undefined) {
+      equipmentModifiers.movement += legacyItem.movementModifier;
     }
-    if (it.hpModifier !== undefined) {
-      equipmentModifiers.hp += it.hpModifier;
+    if (legacyItem.hpModifier !== undefined) {
+      equipmentModifiers.hp += legacyItem.hpModifier;
     }
-    if (it.slotsModifier !== undefined) {
-      equipmentModifiers.equipmentSlots += it.slotsModifier;
+    if (legacyItem.slotsModifier !== undefined) {
+      equipmentModifiers.equipmentSlots += legacyItem.slotsModifier;
+    }
+    // Also read from the statModifiers field (used by e.g. Unicorn Backpack)
+    const { statModifiers } = item;
+    if (statModifiers) {
+      if (statModifiers.movement !== undefined) equipmentModifiers.movement += statModifiers.movement;
+      if (statModifiers.hp !== undefined) equipmentModifiers.hp += statModifiers.hp;
+      if (statModifiers.equipmentSlots !== undefined) equipmentModifiers.equipmentSlots += statModifiers.equipmentSlots;
     }
   });
 
