@@ -3897,3 +3897,219 @@ Next Steps
     Verify stat distributions (KSP uses Knowledge, 28P does not)
     Verify feats/flaws load from correct game dataset
     Verify equipment loads from correct game dataset
+
+## **Feature: KSP Cybermods Selection**
+
+### Overview
+For Kill Sample Process (KSP) characters, users select cybermods during character creation. Cybermods are equipment-like augmentations with a CR cost that contribute to the augmentation allowance system. Selection occurs between Flaws & Feats and Equipment steps. Each selected cybermod can be marked as FLAWED via checkbox. The feature is skipped entirely for non-KSP games.
+
+### Key Concepts
+- **Cybermod Selection**: Multi-select UI between steps 2 and 3 of character creation
+- **Skipped for Non-KSP**: CybermodPicker only renders when `gameId === 'kill-sample-process'`
+- **Flawed State**: Each selected cybermod has a checkbox to mark it FLAWED (per game rules)
+- **Stats-Box Display**: Like EquipmentPicker, displays current stats and costs
+- **Allowance Integration**: Selected count tracked in augmentation allowance system
+- **No Stat Modifiers**: Cybermods themselves don't modify primary stats; any abilities included in descriptions
+
+### Data Structure
+
+**Cybermod Data** (`src/types/cybermodsKSP.ts`):
+```typescript
+export interface CybermodData {
+  id: string;           // Unique identifier (e.g., 'edward', 'wrist-mobility')
+  number: number;       // Display number (1-12)
+  name: string;
+  cost: number;         // CR cost
+  description: string;  // Full description including weapon stats if applicable
+  canBeFlawed: boolean; // All KSP cybermods can be flawed
+}
+
+export interface SelectedCybermod {
+  id: string;
+  name: string;
+  cost: number;
+  isFlawed: boolean;    // Checkbox state
+}
+```
+Full Cybermod List (12 cybermods):
+
+    Edward — 250 creds — Arm-mounted Katana
+    Wrist mounted mobility device — 300 creds — Grappling hook (1D6, Ranged 6, Agility)
+    BM BIOCHIP — 200 creds — Reroll failed Guts tests
+    Circuit Level Gateway — 300 creds — -3 to hacking attempts against
+    Network uplink — 300 creds — Reroll failed Knowledge tests
+    Heads Up Display — 200 creds — +1 shoot with Cyber weapons
+    Lazer eye — 200 creds — 1D6 damage, Ranged 6, Presence
+    Go Go Gadget — 200 creds — Ignore terrain < 4 inches
+    Iron Lung — 300 creds — Ignore Gas and Smoke effects
+    Hidden Carry — 100 creds + weapon cost — Install Ranged+Cyber weapon outside equipment slots
+    Tazer Hands — 250 creds — Recharge by moving 3 inches
+    Auto injector — 350 creds — First downed: Toughness test to heal 1D4
+
+UI Components
+
+CybermodPicker Component (src/components/CybermodPicker.tsx):
+
+    Step position: Between Flaws & Feats (step 2) and Equipment (step 3)
+    Header: "Select Cybermods"
+    Stats Box Row (like EquipmentPicker):
+        Primary stats + separator + Derived stats + separator + Cost box (CR)
+        Displays current character stats and total cybermod cost
+    Multiselect Grid:
+        Card per cybermod
+        Clickable to toggle selection (add/remove)
+        Show cost for each cybermod
+        Description text (shorter or tooltip)
+        Flawed Checkbox: Each card shows checkbox "Mark as Flawed"
+        Allowance Display: "X/Y cybermods selected" (e.g., "2/1 cybermods") during selection
+        When full: remaining cards disabled or visual indication
+    No Primary Action Buttons: Confirm via footer (CharacterCreationFlow handles step navigation)
+
+CSS Styling (src/components/CybermodPicker.css):
+
+    Card layout similar to EquipmentPicker
+    Flawed checkbox positioned in card corner
+    Cost prominently displayed
+    Selected state: highlight border or background tint
+    Disabled state when allowance full
+
+Character Creation Flow Integration
+
+CharacterCreationFlow.tsx Changes:
+
+    New Step Type: Add 'cybermods' to CreationStep type
+    Step Order: ['stats', 'flaws-feats', 'cybermods', 'equipment', 'review']
+    Conditional Rendering: Only show cybermods step if gameId === 'kill-sample-process'
+    State Management:
+        Add selectedCybermods: SelectedCybermod[] state
+        Track which cybermods are selected and their flawed status
+    Navigation:
+        From Flaws & Feats → advance to Cybermods (or Equipment if non-KSP)
+        From Cybermods → advance to Equipment
+        Back button returns to Flaws & Feats
+    Augmentation Validation:
+        canSave logic updated to require complete cybermods (if KSP)
+        Check: cybermodCount >= cybermodAllowance (existing allowance system applies)
+
+Step Header Update:
+
+    Stats/Flaws/Cybermods/Equipment/Review indicators update
+    Show "3. Cybermods" when in KSP mode
+
+Data Flow
+
+    User Enters Cybermods Step (KSP only):
+        Stats and Flaws & Feats already selected
+        CybermodPicker displays all 12 cybermods
+        Allowance calculated: e.g., "Select 1-2 cybermods"
+
+    User Selects Cybermod:
+        Click cybermod card to toggle selection
+        Add to selectedCybermods array
+        Check flawed checkbox if applicable
+        Stats-box shows updated total cost (sum of selected costs)
+
+    User Marks as Flawed (Optional):
+        For each selected cybermod, checkbox toggles isFlawed flag
+        Stored in SelectedCybermod.isFlawed
+        Displayed in Review step and saved character
+
+    User Advances to Equipment:
+        Selected cybermods passed to handleConfirmCybermods
+        Advance to Equipment step
+        Cybermod selection persists if user backs up
+
+    User Reviews:
+        Review step shows selected cybermods with flawed status
+        Can back up to modify cybermods
+
+    User Saves Character:
+        Cybermods converted to strings for storage in character.cybermods[]
+        Store as array of cybermod IDs + flawed status
+        Example: character.cybermods = ['edward', 'network-uplink']
+        Flawed status stored separately or in metadata
+
+Files to Create
+
+    src/types/cybermodsKSP.ts:
+        CybermodData interface
+        SelectedCybermod interface
+        cybermodsKSP array with all 12 cybermods
+
+    src/components/CybermodPicker.tsx:
+        Multi-select cybermod picker component
+        Props: gameId, selectedCybermods, onCybermodsChange, flawed state handlers
+        Stats-box display (reuse existing stat-box styling)
+        Allowance feedback
+
+    src/components/CybermodPicker.css:
+        Card grid layout
+        Checkbox styling
+        Selected/disabled states
+        Stats-box styling
+
+Files to Modify
+
+    src/types/index.ts:
+        Update Character interface to include cybermods?: SelectedCybermod[] field
+        Update CharacterPreset similarly
+
+    src/components/CharacterCreationFlow.tsx:
+        Add 'cybermods' to step order for KSP
+        Conditional render CybermodPicker when step is 'cybermods' and gameId === 'kill-sample-process'
+        Add handlers: handleCybermodsChange, handleConfirmCybermods
+        Update step navigation logic
+        Skip cybermods step for 28 Psalms games
+
+    src/components/CharacterCreationFlow.css:
+        Update step indicator to show cybermods step (when applicable)
+
+    src/utils/augmentationAllowances.ts:
+        No changes: existing cybermod allowance tracking already works
+        System already checks cybermodCount vs cybermodAllowance
+
+Edge Cases
+
+    Non-KSP Games: Entire cybermods step skipped; no UI shown
+    All Cybermods Flawed: User marks all selections as flawed; all can be flawed (all canBeFlawed true)
+    Allowance = 0: Cybermod grid disabled or hidden
+    Back to Flaws & Feats: Cybermod selection persists
+    Forward to Equipment: Cybermod selections maintained
+    Review Step: Display selected cybermods with flawed indicators
+
+Testing Scenarios
+
+    KSP Game: Cybermods step visible between Flaws and Equipment
+    Non-KSP Game: Cybermods step skipped entirely
+    Select Cybermod: Click card, toggles selection
+    Mark Flawed: Checkbox toggles, saved state
+    Stats-Box Update: Cost updates as cybermods selected/deselected
+    Allowance Feedback: "X/Y" indicator shows current selection vs allowance
+    Full Allowance: Remaining cards disabled when limit reached
+    Back Navigation: Selections persist returning from Equipment
+    Save Character: Cybermods stored in character.cybermods array
+    Display Flawed: Review and saved characters show flawed status
+
+Behavioral Requirements
+
+    ✅ Cybermods step only appears for KSP game
+    ✅ Multi-select: user can select 0 to N cybermods (up to allowance)
+    ✅ Each cybermod has flawed checkbox
+    ✅ Stats-box displays current cost total
+    ✅ Allowance tracker shows X/Y selection
+    ✅ Step navigation includes cybermods in correct position
+    ✅ Selections persist through back/forward navigation
+    ✅ Flawed status persists and displays in Review
+
+Success Criteria
+
+✅ Cybermods step renders for KSP, skipped for 28 Psalms
+✅ All 12 cybermods display with names, costs, descriptions
+✅ Each cybermod can be toggled selected/unselected
+✅ Selected cybermods show in Review and saved character
+✅ Each cybermod has flawed checkbox
+✅ Flawed status visible in Review and saved character
+✅ Total CR cost displays in stats-box
+✅ Allowance system prevents over-selection
+✅ Step navigation works correctly
+✅ Non-KSP games skip cybermods entirely
