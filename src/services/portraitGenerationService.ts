@@ -13,7 +13,7 @@ export interface PortraitGenerationResult {
   error?: string;
 }
 
-const PORTRAIT_TIMEOUT_MS = 30_000;
+const PORTRAIT_TIMEOUT_MS = 120_000;
 
 /**
  * Generates a portrait for the given character by calling the Picsart proxy.
