@@ -355,6 +355,13 @@
     border-bottom: none;
 }
 
+.review-flawed-tag {
+    font-size: 12px;
+    font-weight: bold;
+    color: #e65100;
+    margin-left: 6px;
+}
+
 /* Wrapper for the augmentation allowance box shown in flow steps */
 .augmentation-allowance-wrapper {
     max-width: 1200px;
