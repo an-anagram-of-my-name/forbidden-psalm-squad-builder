@@ -4113,3 +4113,268 @@ Success Criteria
 ✅ Allowance system prevents over-selection
 ✅ Step navigation works correctly
 ✅ Non-KSP games skip cybermods entirely
+
+
+
+## **Feature: KSP Mutations Selection**
+
+### Overview
+For Kill Sample Process (KSP) characters, users select mutations during character creation. Mutations are genetic modifications that can permanently alter base stats (Strength, Agility, Intellect, Presence, Guts, Knowledge) and provide special abilities or effects. Selection occurs after Cybermods and before Equipment. Each selected mutation applies its stat modifications to the character's base stats. The feature is skipped entirely for non-KSP games (28 Psalms).
+
+### Key Concepts
+- **Mutation Selection**: Single or multi-select UI after Cybermods step
+- **Skipped for Non-KSP**: MutationPicker only renders when `gameId === 'kill-sample-process'`
+- **Stat Modifications**: Mutations modify base stats (not equipment-based modifiers)
+- **Real-time Stat Updates**: Stats-box shows live updates as mutations are selected/deselected
+- **Ability Descriptions**: Each mutation includes description of effects and stat changes
+- **No CR Cost**: Mutations do not consume CR or augmentation allowance
+- **Step Position**: Between Cybermods (step 3) and Equipment (step 4)
+
+### Data Structure
+
+**Mutation Data** (`src/types/mutationsKSP.ts`):
+```typescript
+export interface StatModifier {
+  strength?: number;      // -2 to +2
+  agility?: number;
+  intellect?: number;
+  presence?: number;
+  guts?: number;
+  knowledge?: number;
+}
+
+export interface MutationData {
+  id: string;             // Unique identifier (e.g., 'adrenaline-surge', 'iron-skin')
+  number: number;         // Display number
+  name: string;
+  description: string;    // Full description of effects and abilities
+  statMods: StatModifier; // Base stat modifications
+  canBeFlawed?: boolean;  // If applicable per game rules
+}
+
+export interface SelectedMutation {
+  id: string;
+  name: string;
+  statMods: StatModifier;
+  isFlawed?: boolean;     // If mutations can be flawed
+}
+```
+Mutation List (TBD - pending game rules): To be defined based on KSP game mechanics. Placeholder structure:
+
+    Adrenaline Surge — +2 Agility, +1 Guts
+    Iron Skin — +2 Strength, -1 Agility
+    Heightened Senses — +2 Knowledge, +1 Intellect
+    Charismatic — +2 Presence
+    Mental Fortress — +2 Guts, +1 Intellect
+    Quick Reflexes — +2 Agility
+    (Additional mutations as defined by KSP rules)
+
+UI Components
+
+MutationPicker Component (src/components/MutationPicker.tsx):
+
+    Step position: After Cybermods (step 3), before Equipment (step 4)
+    Header: "Select Mutations"
+    Stats Box Row (showing real-time stat updates):
+        Primary stats (STR, AGI, INT, PRE) + separator + Derived stats (GTS, KNW, derived calculations) + separator + Cost box (CR - displays N/A since mutations have no cost)
+        Displays current character stats including mutation modifiers
+        Shows base stats vs. modified stats if applicable
+    Multiselect Grid:
+        Card per mutation
+        Clickable to toggle selection (add/remove)
+        Display name and brief description
+        Stat Mod Badge: Show stat changes on each card (e.g., "+2 AGI, +1 GTS")
+        Flawed Checkbox (if applicable): Toggle "Mark as Flawed" per game rules
+        Selection Feedback: Visual indication of selected mutations
+    Real-time Stat Updates: Stats-box updates immediately when mutations selected/deselected
+
+CSS Styling (src/components/MutationPicker.css):
+
+    Card layout similar to CybermodPicker
+    Stat mod badge prominently displayed (color-coded if positive/negative)
+    Selected state: highlight border or background tint
+    Stats-box styling (reuse from EquipmentPicker/CybermodPicker)
+    Stat change indicators in stats-box (show base → modified)
+
+Character Creation Flow Integration
+
+CharacterCreationFlow.tsx Changes:
+
+    New Step Type: Add 'mutations' to CreationStep type
+    Step Order: ['stats', 'flaws-feats', 'cybermods', 'mutations', 'equipment', 'review']
+    Conditional Rendering: Only show mutations step if gameId === 'kill-sample-process'
+    State Management:
+        Add selectedMutations: SelectedMutation[] state
+        Track which mutations are selected and their flawed status (if applicable)
+    Stat Calculation Integration:
+        Update base stats calculation to include mutation modifiers
+        Formula: finalStat = baseStat + equipmentMods + mutationMods + flawMods
+        Stats-box reflects mutations in real-time
+    Navigation:
+        From Cybermods → advance to Mutations (or Equipment if non-KSP)
+        From Mutations → advance to Equipment
+        Back button returns to Cybermods
+    Validation:
+        No allowance limit on mutations (unlimited selection unless game rules specify otherwise)
+        All mutations can coexist
+        Stat modifications stack (e.g., selecting 2 mutations with +1 Strength each = +2 total)
+
+Step Header Update:
+
+    Stats/Flaws/Cybermods/Mutations/Equipment/Review indicators update
+    Show "4. Mutations" when in KSP mode
+
+Data Flow
+
+    User Enters Mutations Step (KSP only):
+        Stats, Flaws & Feats, and Cybermods already selected
+        MutationPicker displays all available mutations
+        Stats-box shows current stats (with cybermod/equipment mods but before mutations)
+
+    User Selects Mutation:
+        Click mutation card to toggle selection
+        Add to selectedMutations array
+        Stats-box immediately updates to show new base stats with mutation mods applied
+        All derived stats (ARMOR, MELEE, SHOOT, etc.) recalculate
+        Display shows "+2 STR" type badges on card
+
+    User Marks as Flawed (If Applicable):
+        For each selected mutation, checkbox toggles isFlawed flag (if mutations can be flawed)
+        Stored in SelectedMutation.isFlawed
+        Displayed in Review step and saved character
+
+    User Advances to Equipment:
+        Selected mutations passed to handleConfirmMutations
+        Base stats now include mutation modifiers
+        Advance to Equipment step
+        Mutation selection persists if user backs up
+
+    User Modifies Equipment:
+        Equipment modifiers stack on top of base stats (which now include mutations)
+        Stats-box reflects combined: base + mutations + equipment mods
+        Example: STR 6 (base) + 1 (mutation) + 1 (equipment) = 8 final
+
+    User Reviews:
+        Review step shows selected mutations with stat modifications
+        Shows final stats reflecting all modifiers (mutations + equipment)
+        Can back up to modify mutations
+
+    User Saves Character:
+        Mutations converted to array for storage in character.mutations[]
+        Store as array of mutation IDs
+        Example: character.mutations = ['adrenaline-surge', 'iron-skin']
+        Flawed status stored separately if applicable
+        Character object includes final stats (all modifiers applied)
+
+Files to Create
+
+    src/types/mutationsKSP.ts:
+        StatModifier interface
+        MutationData interface
+        SelectedMutation interface
+        mutationsKSP array with all mutations (to be defined)
+
+    src/components/MutationPicker.tsx:
+        Multi-select mutation picker component
+        Props: gameId, selectedMutations, onMutationsChange, currentStats, flawed state handlers
+        Stats-box display with real-time updates (reuse existing stat-box styling)
+        Stat mod badges on each mutation card
+        Real-time stat calculation integration
+
+    src/components/MutationPicker.css:
+        Card grid layout
+        Stat mod badge styling (color-coded for clarity)
+        Checkbox styling (if mutations can be flawed)
+        Selected/disabled states
+        Stats-box styling with stat change indicators
+
+Files to Modify
+
+    src/types/index.ts:
+        Update Character interface to include mutations?: SelectedMutation[] field
+        Update CharacterPreset similarly
+        Ensure stat calculation includes mutation modifiers
+
+    src/components/CharacterCreationFlow.tsx:
+        Add 'mutations' to step order for KSP
+        Conditional render MutationPicker when step is 'mutations' and gameId === 'kill-sample-process'
+        Add handlers: handleMutationsChange, handleConfirmMutations
+        Update stat calculation: Include mutation modifiers in base stats
+        Update step navigation logic
+        Skip mutations step for 28 Psalms games
+        Pass currentStats prop to MutationPicker for display
+
+    src/components/CharacterCreationFlow.css:
+        Update step indicator to show mutations step (when applicable)
+
+    src/utils/statCalculations.ts (or similar):
+        Add applyMutationMods(baseStats, mutations) function
+        Integration point: mutations modify base stats before equipment mods are applied
+        Ensure derived stats recalculate with new base values
+
+Stat Modification Rules
+
+    Base Stat Range: 1-10 (before mutations)
+    Mutation Range: -2 to +2 per mutation per stat
+    Multiple Mutations: Modifiers stack (e.g., +1 STR + +1 STR = +2 STR)
+    Maximum Cap: Enforce any game rules about stat caps (if applicable)
+    Derived Stats: Recalculate ARMOR, MELEE, SHOOT, HACK, DODGE, THROW based on new base stats
+    Equipment Mods: Applied after mutations (mutations modify base, equipment modifies the result)
+
+Edge Cases
+
+    Non-KSP Games: Entire mutations step skipped; no UI shown
+    No Mutations Selected: Valid state; user can proceed with unmodified base stats
+    Multiple Mutations Selected: All stat modifiers apply and stack
+    Stat Overflow: If mutations push stat above cap, enforce cap or display warning
+    Back to Cybermods: Mutation selection persists
+    Forward to Equipment: Mutation selections maintained; base stats now include mods
+    Equipment + Mutations: Stats stack correctly (equipment mods apply to mutation-modified base)
+    Review Step: Display selected mutations with stat changes and final stats
+
+Testing Scenarios
+
+    KSP Game: Mutations step visible after Cybermods, before Equipment
+    Non-KSP Game: Mutations step skipped entirely
+    Select Mutation: Click card, toggles selection
+    Stat Update: Stats-box immediately reflects mutation stat mods
+    Multiple Mutations: Select 2+ mutations, stats stack correctly
+    Equipment Stacking: Add equipment, ensure stats combine (base + mutations + equipment)
+    Derived Stats: ARMOR, MELEE, SHOOT, etc. recalculate with mutation mods
+    Mark Flawed (if applicable): Checkbox toggles, saved state
+    Back Navigation: Selections persist returning from Equipment
+    Save Character: Mutations stored in character.mutations array
+    Review Display: Shows selected mutations and final stats with all mods
+
+Behavioral Requirements
+
+    ✅ Mutations step only appears for KSP game
+    ✅ Multi-select: user can select 0 to N mutations (unlimited or per game rules)
+    ✅ Each mutation displays name, description, and stat changes
+    ✅ Stats-box updates in real-time as mutations selected/deselected
+    ✅ Derived stats recalculate with mutation modifiers
+    ✅ Selected mutations show in Review and saved character
+    ✅ Mutations can be flawed (if applicable per game rules)
+    ✅ Stat modifiers stack across multiple mutations
+    ✅ Equipment mods apply on top of mutation-modified base stats
+    ✅ Step navigation includes mutations in correct position
+
+Success Criteria
+
+✅ Mutations step renders for KSP, skipped for 28 Psalms
+✅ All mutations display with names, descriptions, and stat mods
+✅ Each mutation can be toggled selected/unselected
+✅ Selected mutations show in Review and saved character
+✅ Stat-box updates in real-time as mutations selected
+✅ Derived stats recalculate with mutation modifiers
+✅ Mutations stack correctly (multiple mutations' stat mods combine)
+✅ Equipment mods apply on top of mutation-modified base stats
+✅ Final stats reflect all modifiers (mutations + equipment + flaws)
+✅ Step navigation works correctly
+��� Non-KSP games skip mutations entirely
+Dependencies
+
+    Requires existing stat calculation system in CharacterCreationFlow
+    Depends on equipment modifier system to ensure proper stacking (mutations before equipment)
+    Requires stat-box display component from CybermodPicker/EquipmentPicker for reuse
+
