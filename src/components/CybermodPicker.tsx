@@ -93,6 +93,7 @@ const CybermodPicker: React.FC<CybermodPickerProps> = ({
           className="btn-random"
           onClick={handleRandomize}
           disabled={isFull}
+          aria-label={isFull ? 'Cybermod allowance is already full' : 'Randomly fill remaining cybermod slots'}
           title={isFull ? 'Cybermod allowance is already full' : 'Randomly fill remaining cybermod slots'}
           type="button"
         >

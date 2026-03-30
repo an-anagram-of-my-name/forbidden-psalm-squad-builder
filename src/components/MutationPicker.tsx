@@ -1,6 +1,5 @@
 import React, { useMemo } from 'react';
-import { Character } from '../types';
-import { FlawData, FeatData } from '../types/featsandflaws28Psalms';
+import { Character, FlawData, FeatData, StatName } from '../types';
 import { MutationData, SelectedMutation } from '../types/mutationsKSP';
 import { applyFlawFeatModifiers, calculateFinalDerivedStats } from '../utils/stats';
 import { getGameConfig } from '../types/games';
@@ -28,8 +27,30 @@ const MutationPicker: React.FC<MutationPickerProps> = ({
   const config = getGameConfig(character.gameId);
 
   const effectiveStats = useMemo(
-    () => applyFlawFeatModifiers(character.stats, character.flaw, character.feat, character.gameId, flawsData, featsData),
-    [character.stats, character.flaw, character.feat, character.gameId, flawsData, featsData],
+    () => {
+      // Apply flaw/feat modifiers first
+      const withFlawFeat = applyFlawFeatModifiers(
+        character.stats,
+        character.flaw,
+        character.feat,
+        character.gameId,
+        flawsData,
+        featsData,
+      );
+
+      // Apply selected mutation stat mods on top
+      const withMutations = { ...withFlawFeat };
+      selectedMutations.forEach((sm) => {
+        (Object.keys(sm.statMods) as StatName[]).forEach((key) => {
+          const delta = sm.statMods[key];
+          if (typeof delta === 'number') {
+            withMutations[key] = (withMutations[key] ?? 0) + delta;
+          }
+        });
+      });
+      return withMutations;
+    },
+    [character.stats, character.flaw, character.feat, character.gameId, flawsData, featsData, selectedMutations],
   );
 
   const isFull = selectedMutations.length >= allowedCount;
@@ -85,7 +106,7 @@ const MutationPicker: React.FC<MutationPickerProps> = ({
       return true;
     });
 
-    // De-duplicate by groupId so we don't double-count group representatives
+    // De-duplicate by groupId — keep just one representative per group for counting purposes
     const seen = new Set<string>();
     const uniqueCandidates = candidates.filter((mut) => {
       const key = mut.groupId ?? mut.id;
@@ -103,7 +124,19 @@ const MutationPicker: React.FC<MutationPickerProps> = ({
     while (remaining > 0 && pool.length > 0) {
       const idx = Math.floor(Math.random() * pool.length);
       const chosen = pool.splice(idx, 1)[0];
-      current = [...current, { id: chosen.id, name: chosen.name, statMods: chosen.statMods }];
+
+      let finalChosen = chosen;
+      if (chosen.groupId) {
+        // Pick a random variant within the group rather than always the first
+        const groupVariants = mutations.filter(
+          (m) => m.groupId === chosen.groupId && !alreadySelectedIds.has(m.id),
+        );
+        if (groupVariants.length > 0) {
+          finalChosen = groupVariants[Math.floor(Math.random() * groupVariants.length)];
+        }
+      }
+
+      current = [...current, { id: finalChosen.id, name: finalChosen.name, statMods: finalChosen.statMods }];
       remaining--;
     }
 
@@ -154,6 +187,7 @@ const MutationPicker: React.FC<MutationPickerProps> = ({
           className="btn-random"
           onClick={handleRandomize}
           disabled={isFull}
+          aria-label={isFull ? 'Mutation allowance is already full' : 'Randomly fill remaining mutation slots'}
           title={isFull ? 'Mutation allowance is already full' : 'Randomly fill remaining mutation slots'}
           type="button"
         >
@@ -175,8 +209,19 @@ const MutationPicker: React.FC<MutationPickerProps> = ({
         <div className="current-stats-divider" />
         <div className="current-stats-derived">
           {(() => {
+            // Compute mutation-adjusted base stats, then pass to calculateFinalDerivedStats
+            // so that flaw/feat mods and equipment mods are applied correctly on top.
+            const mutationAdjustedBase = { ...character.stats };
+            selectedMutations.forEach((sm) => {
+              (Object.keys(sm.statMods) as StatName[]).forEach((key) => {
+                const delta = sm.statMods[key];
+                if (typeof delta === 'number') {
+                  mutationAdjustedBase[key] = (mutationAdjustedBase[key] ?? 0) + delta;
+                }
+              });
+            });
             const derived = calculateFinalDerivedStats(
-              character.stats,
+              mutationAdjustedBase,
               character.flaw,
               character.feat,
               character.equipment,

@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { Character, CharacterPreset, Equipment, Stats, Flaw, Feat, TechLevel, FlawType, FeatType, GameId } from '../types';
+import { Character, CharacterPreset, Equipment, Stats, Flaw, Feat, TechLevel, FlawType, FeatType, GameId, StatName } from '../types';
 import { getGameConfig } from '../types/games';
 import StatDistributionPicker from './StatDistributionPicker';
 import FlawsAndFeatsPicker from './FlawsAndFeatsPicker';
@@ -84,10 +84,19 @@ const CharacterCreationFlow: React.FC<CharacterCreationFlowProps> = ({
         initialCharacter?.cybermods ?? initialPreset?.cybermods ?? [],
     );
 
-    // KSP mutation selection state
-    const [selectedMutations, setSelectedMutations] = useState<SelectedMutation[]>(
-        initialCharacter?.mutations ?? initialPreset?.mutations ?? [],
-    );
+    // KSP mutation selection state — normalize from persisted string[] format if needed
+    const [selectedMutations, setSelectedMutations] = useState<SelectedMutation[]>(() => {
+        const raw = initialCharacter?.mutations ?? initialPreset?.mutations ?? [];
+        if (raw.length === 0) return [];
+        // Backwards-compat: old format stored mutation IDs as plain strings
+        if (typeof raw[0] === 'string') {
+            return (raw as unknown as string[]).flatMap((id) => {
+                const data = mutationsKSP.find((m) => m.id === id);
+                return data ? [{ id: data.id, name: data.name, statMods: data.statMods }] : [];
+            });
+        }
+        return raw as SelectedMutation[];
+    });
 
     // KSP augmentation counts
     const cybermodCount = selectedCybermods.length;
@@ -314,8 +323,20 @@ const CharacterCreationFlow: React.FC<CharacterCreationFlowProps> = ({
 
     const effectiveStats = useMemo(() => {
         if (!stats) return null;
-        return applyFlawFeatModifiers(stats, flaw, feat, resolvedGameId, gameData.flaws, gameData.feats);
-    }, [stats, flaw, feat, resolvedGameId, gameData]);
+        const withFlawFeat = applyFlawFeatModifiers(stats, flaw, feat, resolvedGameId, gameData.flaws, gameData.feats);
+        if (!isKSP || selectedMutations.length === 0) return withFlawFeat;
+        // Apply mutation stat mods on top of flaw/feat mods for display purposes
+        const withMutations: Stats = { ...withFlawFeat };
+        selectedMutations.forEach((sm) => {
+            (Object.keys(sm.statMods) as StatName[]).forEach((key) => {
+                const delta = sm.statMods[key];
+                if (typeof delta === 'number') {
+                    withMutations[key] = withMutations[key] + delta;
+                }
+            });
+        });
+        return withMutations;
+    }, [stats, flaw, feat, resolvedGameId, gameData, isKSP, selectedMutations]);
 
     // KSP augmentation selection — recalculates whenever flaw/feat/mutations change
     const augmentationSelection = useMemo(
@@ -578,7 +599,20 @@ const CharacterCreationFlow: React.FC<CharacterCreationFlowProps> = ({
                             <div className="review-section-card">
                                 <h3>Stats</h3>
                                 {effectiveStats && (() => {
-                                    const derived = calculateFinalDerivedStats(stats!, flaw, feat, equipment, resolvedGameId, gameData.flaws, gameData.feats);
+                                    // Build mutation-adjusted base stats so calculateFinalDerivedStats
+                                    // can apply flaw/feat and equipment mods correctly on top.
+                                    const mutationAdjustedBase: Stats = { ...stats! };
+                                    if (isKSP) {
+                                        selectedMutations.forEach((sm) => {
+                                            (Object.keys(sm.statMods) as StatName[]).forEach((key) => {
+                                                const delta = sm.statMods[key];
+                                                if (typeof delta === 'number') {
+                                                    mutationAdjustedBase[key] = mutationAdjustedBase[key] + delta;
+                                                }
+                                            });
+                                        });
+                                    }
+                                    const derived = calculateFinalDerivedStats(mutationAdjustedBase, flaw, feat, equipment, resolvedGameId, gameData.flaws, gameData.feats);
                                     const fmt = (v: number) => v > 0 ? `+${v}` : `${v}`;
                                     return (
                                         <ul className="stats-list">

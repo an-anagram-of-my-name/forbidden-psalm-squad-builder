@@ -1,5 +1,6 @@
 import { Flaw, Feat, GameId } from '../types';
 import { AugmentationAllowance, AugmentationSelection, AugmentationDeficiency } from '../types/augmentations';
+import { mutationsKSP } from '../types/mutationsKSP';
 
 /**
  * Base KSP augmentation allowances before any modifier is applied.
@@ -104,9 +105,14 @@ export function calculateAugmentationSelection(
     allowances.mutations - (cybermodCount > 0 ? cybermodCount : 0),
   );
 
-  // Rejection mutation: −1 additional cybermod allowance ("All CyberMods are lost")
-  if (selectedMutationIds?.includes('rejection')) {
-    cybermodAllowed = Math.max(0, cybermodAllowed - 1);
+  // Data-driven: any selected mutation that has reducesCybermods:true applies −1 to cybermod allowance.
+  // This drives the rule from the mutation data itself rather than a hardcoded ID check.
+  const cybermodReductions = (selectedMutationIds ?? []).filter((id) => {
+    const mut = mutationsKSP.find((m) => m.id === id);
+    return mut?.reducesCybermods === true;
+  }).length;
+  if (cybermodReductions > 0) {
+    cybermodAllowed = Math.max(0, cybermodAllowed - cybermodReductions);
   }
 
   // Count current selections
@@ -138,31 +144,31 @@ export function calculateAugmentationSelection(
     incompleteItems: [],
   };
 
-  // Identify deficiencies
+  // Identify deficiencies — both under-limit (selected < allowed) and over-limit (selected > allowed)
   const incompleteItems: AugmentationDeficiency[] = [];
 
-  if (selection.feats.selected < selection.feats.allowed) {
+  if (selection.feats.selected !== selection.feats.allowed) {
     incompleteItems.push({
       type: 'feats',
       selected: selection.feats.selected,
       allowed: selection.feats.allowed,
     });
   }
-  if (selection.flaws.selected < selection.flaws.allowed) {
+  if (selection.flaws.selected !== selection.flaws.allowed) {
     incompleteItems.push({
       type: 'flaws',
       selected: selection.flaws.selected,
       allowed: selection.flaws.allowed,
     });
   }
-  if (selection.cybermods.selected < selection.cybermods.allowed) {
+  if (selection.cybermods.selected !== selection.cybermods.allowed) {
     incompleteItems.push({
       type: 'cybermods',
       selected: selection.cybermods.selected,
       allowed: selection.cybermods.allowed,
     });
   }
-  if (selection.mutations.selected < selection.mutations.allowed) {
+  if (selection.mutations.selected !== selection.mutations.allowed) {
     incompleteItems.push({
       type: 'mutations',
       selected: selection.mutations.selected,
