@@ -137,7 +137,7 @@ export interface Feat {
   description: string;
 }
 
-export type EquipmentCategory = 'weapon' | 'armor' | 'item' | 'ammo' | 'consumable';
+export type EquipmentCategory = 'weapon' | 'armor' | 'item' | 'ammo' | 'consumable' | 'drone' | 'cyber-ammo';
 
 export interface BaseEquipment {
   id: string;
@@ -146,6 +146,8 @@ export interface BaseEquipment {
   slots: number;
   category: EquipmentCategory;
   techLevel?: TechLevel;
+  /** Modifiers applied to derived stats (HP/Movement/EquipmentSlots). Used e.g. by Unicorn Backpack. */
+  statModifiers?: DerivedStatModifiers;
 }
 
 export interface Item extends BaseEquipment {
@@ -178,11 +180,24 @@ export interface Weapon extends BaseEquipment {
   ammoTypeId?: string;
 }
 
-export type Equipment = Item | Ammo | Armor | Weapon | Consumable;
+export type Equipment = Item | Ammo | Armor | Weapon | Consumable | Drone | CyberAmmo;
 
 export interface Consumable extends BaseEquipment {
   category: 'consumable';
   ability: string;
+}
+
+export interface Drone extends BaseEquipment {
+  category: 'drone';
+  hp: number;
+  av: number;
+  specialRules?: string;
+}
+
+export interface CyberAmmo extends BaseEquipment {
+  category: 'cyber-ammo';
+  shots: number;
+  description: string;
 }
 
 export interface Character {

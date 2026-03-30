@@ -49,10 +49,11 @@ const EquipmentPicker: React.FC<EquipmentPickerProps> = ({ character, selectedEq
     return selectedEquipment.reduce((total, eq) => total + eq.slots, 0);
   }, [selectedEquipment]);
 
-  // Calculate slot capacity: 5 + Strength modifier (using effective stats)
+  // Calculate slot capacity using calculateFinalDerivedStats so that equipment-based bonuses
+  // (e.g. Unicorn Backpack's +3 equipmentSlots statModifier) are reflected immediately.
   const slotCapacity = useMemo(() => {
-    return 5 + effectiveStats.strength;
-  }, [effectiveStats.strength]);
+    return calculateFinalDerivedStats(character.stats, character.flaw, character.feat, selectedEquipment, character.gameId, flawsData, featsData).equipmentSlots;
+  }, [character.stats, character.flaw, character.feat, selectedEquipment, character.gameId, flawsData, featsData]);
 
   const remainingSlots = slotCapacity - slotsUsed;
 
