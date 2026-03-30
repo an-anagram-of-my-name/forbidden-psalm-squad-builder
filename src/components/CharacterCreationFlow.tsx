@@ -253,17 +253,26 @@ const CharacterCreationFlow: React.FC<CharacterCreationFlowProps> = ({
                     ...kspCybermods,
                 };
 
-                setIsGeneratingPortrait(true);
-                const portraitResult = await generateCharacterPortrait(characterForPortrait);
-                setIsGeneratingPortrait(false);
+                // Only generate a new portrait if the character doesn't already have one.
+                // This preserves portrait URLs loaded from localStorage and avoids
+                // unnecessary API calls when editing existing characters.
+                let portraitUrl = initialCharacter.portraitUrl;
 
-                if (!portraitResult.success) {
-                    setPortraitGenerationError(portraitResult.error ?? 'Portrait generation failed');
+                if (!portraitUrl) {
+                    setIsGeneratingPortrait(true);
+                    const portraitResult = await generateCharacterPortrait(characterForPortrait);
+                    setIsGeneratingPortrait(false);
+
+                    if (!portraitResult.success) {
+                        setPortraitGenerationError(portraitResult.error ?? 'Portrait generation failed');
+                    } else {
+                        portraitUrl = portraitResult.url;
+                    }
                 }
 
                 const updatedCharacter: Character = {
                     ...characterForPortrait,
-                    portraitUrl: portraitResult.url ?? initialCharacter.portraitUrl,
+                    portraitUrl,
                 };
                 onCharacterUpdated?.(updatedCharacter);
             }
