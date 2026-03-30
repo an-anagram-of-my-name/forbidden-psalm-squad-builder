@@ -4,6 +4,7 @@ import { getGameConfig } from '../types/games';
 import StatDistributionPicker from './StatDistributionPicker';
 import FlawsAndFeatsPicker from './FlawsAndFeatsPicker';
 import EquipmentPicker from './EquipmentPicker';
+import CybermodPicker from './CybermodPicker';
 import CharacterPortrait from './CharacterPortrait';
 import AugmentationAllowanceBox from './AugmentationAllowanceBox';
 import PortraitGeneratingModal from './PortraitGeneratingModal';
@@ -11,6 +12,7 @@ import { applyFlawFeatModifiers, calculateFinalDerivedStats, getDefaultFlawsData
 import { calculateAugmentationSelection } from '../utils/augmentationAllowances';
 import { generateCharacterPortrait } from '../services/portraitGenerationService';
 import { characterNames28Psalms } from '../types/characterNames28Psalms';
+import { cybermodsKSP, SelectedCybermod } from '../types/cybermodsKSP';
 import './CharacterCreationFlow.css';
 
 interface CharacterCreationFlowProps {
@@ -30,7 +32,7 @@ interface CharacterCreationFlowProps {
     onCancel: () => void;
 }
 
-type CreationStep = 'stats' | 'flaws-feats' | 'equipment' | 'review';
+type CreationStep = 'stats' | 'flaws-feats' | 'cybermods' | 'equipment' | 'review';
 
 const CharacterCreationFlow: React.FC<CharacterCreationFlowProps> = ({
     mode = 'squad',
@@ -75,8 +77,13 @@ const CharacterCreationFlow: React.FC<CharacterCreationFlowProps> = ({
     const [isGeneratingPortrait, setIsGeneratingPortrait] = useState(false);
     const [portraitGenerationError, setPortraitGenerationError] = useState<string | null>(null);
 
-    // KSP augmentation state (placeholder counts until selection UI is added)
-    const cybermodCount = (initialCharacter?.cybermods ?? initialPreset?.cybermods)?.length ?? 0;
+    // KSP cybermod selection state
+    const [selectedCybermods, setSelectedCybermods] = useState<SelectedCybermod[]>(
+        initialCharacter?.cybermods ?? initialPreset?.cybermods ?? [],
+    );
+
+    // KSP augmentation counts
+    const cybermodCount = selectedCybermods.length;
     const mutationCount = (initialCharacter?.mutations ?? initialPreset?.mutations)?.length ?? 0;
     const additionalFlaws = useMemo(
         () => initialCharacter?.additionalFlaws ?? initialPreset?.additionalFlaws ?? [],
@@ -116,8 +123,16 @@ const CharacterCreationFlow: React.FC<CharacterCreationFlowProps> = ({
 
     const handleConfirmFlawFeat = () => {
         if (flaw && feat) {
-            setCurrentStep('equipment');
+            setCurrentStep(isKSP ? 'cybermods' : 'equipment');
         }
+    };
+
+    const handleCybermodsChange = (cybermods: SelectedCybermod[]) => {
+        setSelectedCybermods(cybermods);
+    };
+
+    const handleConfirmCybermods = () => {
+        setCurrentStep('equipment');
     };
 
     const handleConfirmEquipment = () => {
@@ -161,6 +176,9 @@ const CharacterCreationFlow: React.FC<CharacterCreationFlowProps> = ({
     const handleCreateCharacter = async () => {
         setPortraitGenerationError(null);
 
+        // For KSP, always carry the selected cybermods into the saved object.
+        const kspCybermods = isKSP ? { cybermods: selectedCybermods } : {};
+
         if (mode === 'preset') {
             if (characterName.trim() && stats && flaw && feat && selectedTechLevel) {
                 // Build the character object to use for portrait generation
@@ -193,6 +211,7 @@ const CharacterCreationFlow: React.FC<CharacterCreationFlowProps> = ({
                     gameId: gameId,
                     techLevel: selectedTechLevel,
                     portraitUrl: portraitResult.url,
+                    ...kspCybermods,
                     createdAt: initialPreset?.createdAt ?? new Date(),
                     updatedAt: new Date(),
                 };
@@ -207,6 +226,7 @@ const CharacterCreationFlow: React.FC<CharacterCreationFlowProps> = ({
                     flaw,
                     feat,
                     equipment,
+                    ...kspCybermods,
                 };
 
                 setIsGeneratingPortrait(true);
@@ -234,6 +254,7 @@ const CharacterCreationFlow: React.FC<CharacterCreationFlowProps> = ({
                     equipment,
                     gameId: gameId,
                     techLevel: techLevel ?? undefined,
+                    ...kspCybermods,
                 };
 
                 setIsGeneratingPortrait(true);
@@ -256,8 +277,10 @@ const CharacterCreationFlow: React.FC<CharacterCreationFlowProps> = ({
     const handleBack = () => {
         if (currentStep === 'flaws-feats') {
             setCurrentStep('stats');
-        } else if (currentStep === 'equipment') {
+        } else if (currentStep === 'cybermods') {
             setCurrentStep('flaws-feats');
+        } else if (currentStep === 'equipment') {
+            setCurrentStep(isKSP ? 'cybermods' : 'flaws-feats');
         } else if (currentStep === 'review') {
             setCurrentStep('equipment');
         }
@@ -267,7 +290,9 @@ const CharacterCreationFlow: React.FC<CharacterCreationFlowProps> = ({
         characterName.trim().length > 0 &&
         (mode !== 'preset' || !!selectedTechLevel);
 
-    const stepOrder: CreationStep[] = ['stats', 'flaws-feats', 'equipment', 'review'];
+    const stepOrder: CreationStep[] = isKSP
+        ? ['stats', 'flaws-feats', 'cybermods', 'equipment', 'review']
+        : ['stats', 'flaws-feats', 'equipment', 'review'];
     const currentStepIndex = stepOrder.indexOf(currentStep);
 
     const effectiveStats = useMemo(() => {
@@ -343,13 +368,32 @@ const CharacterCreationFlow: React.FC<CharacterCreationFlowProps> = ({
                         2. Flaws &amp; Feats
                     </div>
                     <div className="step-connector"></div>
-                    <div className={`step ${currentStep === 'equipment' ? 'active' : currentStepIndex > 2 ? 'completed' : ''}`}>
-                        3. Equipment
-                    </div>
-                    <div className="step-connector"></div>
-                    <div className={`step ${currentStep === 'review' ? 'active' : ''}`}>
-                        4. Review
-                    </div>
+                    {isKSP && (
+                        <>
+                            <div className={`step ${currentStep === 'cybermods' ? 'active' : currentStepIndex > 2 ? 'completed' : ''}`}>
+                                3. Cybermods
+                            </div>
+                            <div className="step-connector"></div>
+                            <div className={`step ${currentStep === 'equipment' ? 'active' : currentStepIndex > 3 ? 'completed' : ''}`}>
+                                4. Equipment
+                            </div>
+                            <div className="step-connector"></div>
+                            <div className={`step ${currentStep === 'review' ? 'active' : ''}`}>
+                                5. Review
+                            </div>
+                        </>
+                    )}
+                    {!isKSP && (
+                        <>
+                            <div className={`step ${currentStep === 'equipment' ? 'active' : currentStepIndex > 2 ? 'completed' : ''}`}>
+                                3. Equipment
+                            </div>
+                            <div className="step-connector"></div>
+                            <div className={`step ${currentStep === 'review' ? 'active' : ''}`}>
+                                4. Review
+                            </div>
+                        </>
+                    )}
                 </div>
             </div>
 
@@ -383,6 +427,27 @@ const CharacterCreationFlow: React.FC<CharacterCreationFlowProps> = ({
                                 />
                             </div>
                         ) : undefined}
+                    />
+                )}
+
+                {currentStep === 'cybermods' && isKSP && stats && flaw && feat && (
+                    <CybermodPicker
+                        character={{
+                            id: '',
+                            name: '',
+                            stats,
+                            flaw,
+                            feat,
+                            equipment,
+                            gameId: resolvedGameId,
+                            techLevel: effectiveTechLevel,
+                        }}
+                        cybermods={cybermodsKSP}
+                        selectedCybermods={selectedCybermods}
+                        allowedCount={augmentationSelection.cybermods.allowed}
+                        onCybermodsChange={handleCybermodsChange}
+                        flawsData={gameData.flaws}
+                        featsData={gameData.feats}
                     />
                 )}
 
@@ -523,6 +588,20 @@ const CharacterCreationFlow: React.FC<CharacterCreationFlowProps> = ({
                                     </ul>
                                 </div>
                             )}
+
+                            {isKSP && selectedCybermods.length > 0 && (
+                                <div className="review-section-card">
+                                    <h3>Cybermods</h3>
+                                    <ul className="equipment-list">
+                                        {selectedCybermods.map((cm) => (
+                                            <li key={cm.id}>
+                                                {cm.name} ({cm.cost} cr)
+                                                {cm.isFlawed && <span className="review-flawed-tag"> ⚠ FLAWED</span>}
+                                            </li>
+                                        ))}
+                                    </ul>
+                                </div>
+                            )}
                         </div>
                     </div>
                 )}
@@ -553,6 +632,14 @@ const CharacterCreationFlow: React.FC<CharacterCreationFlowProps> = ({
                         className="btn-confirm"
                     >
                         Confirm Selection →
+                    </button>
+                )}
+                {currentStep === 'cybermods' && (
+                    <button
+                        onClick={handleConfirmCybermods}
+                        className="btn-confirm"
+                    >
+                        Confirm Cybermods →
                     </button>
                 )}
                 {currentStep === 'equipment' && (

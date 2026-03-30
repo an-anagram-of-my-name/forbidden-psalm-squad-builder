@@ -198,7 +198,7 @@ export interface Character {
   // KSP-specific augmentations
   additionalFlaws?: Flaw[];
   additionalFeats?: Feat[];
-  cybermods?: string[];   // Array of cybermod IDs (placeholder until equipment data exists)
+  cybermods?: import('./cybermodsKSP').SelectedCybermod[];
   mutations?: string[];   // Array of mutation names/IDs
   injuries?: string[];    // Array of injury states (optional, for future use)
 }
@@ -216,7 +216,7 @@ export interface CharacterPreset {
   // KSP-specific augmentations
   additionalFlaws?: Flaw[];
   additionalFeats?: Feat[];
-  cybermods?: string[];   // Array of cybermod IDs (placeholder until equipment data exists)
+  cybermods?: import('./cybermodsKSP').SelectedCybermod[];
   mutations?: string[];   // Array of mutation names/IDs
   injuries?: string[];    // Array of injury states (optional, for future use)
   createdAt: Date;
