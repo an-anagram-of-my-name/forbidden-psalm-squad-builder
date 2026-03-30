@@ -377,6 +377,10 @@
     margin-top: 6px;
 }
 
+.review-stat-mods .review-stat-mod-tag {
+    margin-left: 0;
+}
+
 .review-stat-mod-tag.positive {
     color: #2e7d32;
     background-color: #e8f5e9;

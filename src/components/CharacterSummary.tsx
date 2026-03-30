@@ -1,5 +1,5 @@
 import React from 'react';
-import { Character } from '../types';
+import { Character, Stats, StatName } from '../types';
 import { applyFlawFeatModifiers, calculateFinalDerivedStats } from '../utils/stats';
 import { calculateTotalCost } from '../utils/equipment';
 import { getGameConfig } from '../types/games';
@@ -12,8 +12,27 @@ interface CharacterSummaryProps {
 
 const CharacterSummary: React.FC<CharacterSummaryProps> = ({ character }) => {
   const config = getGameConfig(character.gameId);
-  const effectiveStats = applyFlawFeatModifiers(character.stats, character.flaw, character.feat, character.gameId);
-  const derived = calculateFinalDerivedStats(character.stats, character.flaw, character.feat, character.equipment, character.gameId);
+  const isKSP = character.gameId === 'kill-sample-process';
+
+  // For KSP characters, apply mutation stat mods to base stats before flaw/feat modifiers
+  const mutationAdjustedBase: Stats = React.useMemo(() => {
+    if (!isKSP || !character.mutations || character.mutations.length === 0) {
+      return character.stats;
+    }
+    const adjusted = { ...character.stats };
+    character.mutations.forEach((mut) => {
+      (Object.keys(mut.statMods) as StatName[]).forEach((key) => {
+        const delta = mut.statMods[key];
+        if (typeof delta === 'number') {
+          adjusted[key] = (adjusted[key] ?? 0) + delta;
+        }
+      });
+    });
+    return adjusted;
+  }, [character.stats, character.mutations, isKSP]);
+
+  const effectiveStats = applyFlawFeatModifiers(mutationAdjustedBase, character.flaw, character.feat, character.gameId);
+  const derived = calculateFinalDerivedStats(mutationAdjustedBase, character.flaw, character.feat, character.equipment, character.gameId);
   const equipmentCost = calculateTotalCost(character.equipment);
   const slotCapacity = derived.equipmentSlots;
   const slotsUsed = character.equipment.reduce((sum, eq) => sum + eq.slots, 0);
@@ -82,7 +101,7 @@ const CharacterSummary: React.FC<CharacterSummaryProps> = ({ character }) => {
             <div className="augmentation-subsection">
               <span className="augmentation-label">Cybermods:</span>
               <span className="augmentation-names">
-                {character.cybermods.map((cm) => `${cm.name}${cm.isFlawed ? ' ⚠' : ''}`).join(', ')}
+                {character.cybermods.map((cm) => `${cm.name}${cm.isFlawed ? ' ⚠ (FLAWED)' : ''}`).join(', ')}
               </span>
             </div>
           )}

@@ -689,6 +689,7 @@ const CharacterCreationFlow: React.FC<CharacterCreationFlowProps> = ({
                                 <>
                                     {selectedMutations.map((mut) => {
                                         const mutData = mutationsKSP.find((m) => m.id === mut.id);
+                                        const statModEntries = Object.entries(mut.statMods).filter(([, v]) => v !== 0);
                                         return (
                                             <div key={mut.id} className="review-section-card">
                                                 <h3>Mutation</h3>
@@ -700,9 +701,9 @@ const CharacterCreationFlow: React.FC<CharacterCreationFlowProps> = ({
                                                             {mutData.drawback && ` Drawback: ${mutData.drawback}`}
                                                         </p>
                                                     )}
-                                                    {Object.entries(mut.statMods).filter(([, v]) => v !== 0).length > 0 && (
+                                                    {statModEntries.length > 0 && (
                                                         <div className="review-stat-mods">
-                                                            {Object.entries(mut.statMods).filter(([, v]) => v !== 0).map(([stat, value]) => {
+                                                            {statModEntries.map(([stat, value]) => {
                                                                 const label = gameConfig.statShortLabels[stat as keyof typeof gameConfig.statShortLabels] ?? stat.toUpperCase();
                                                                 return (
                                                                     <span

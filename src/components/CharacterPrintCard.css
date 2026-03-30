@@ -64,12 +64,6 @@
   grid-row: 1;
 }
 
-.print-hp-section {
-  grid-column: 1;
-  grid-row: 2;
-  margin-top: 0;
-}
-
 /* Portrait: 150px square in right column spanning both rows */
 .print-card-portrait {
   grid-column: 2;
@@ -162,9 +156,11 @@
   display: block;
 }
 
-/* HP tracking section */
+/* HP tracking section — grid placement set in .print-stats-portrait-block */
 .print-hp-section {
-  margin-top: 3px;
+  grid-column: 1;
+  grid-row: 2;
+  margin-top: 0;
 }
 
 .print-hp-label {
