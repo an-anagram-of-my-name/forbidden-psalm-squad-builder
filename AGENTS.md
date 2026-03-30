@@ -4461,3 +4461,89 @@ Dependencies
     Depends on equipment modifier system to ensure proper stacking (mutations before equipment)
     Requires stat-box display component from CybermodPicker/EquipmentPicker for reuse
 
+
+
+## KSP Weapons System
+
+### Overview
+KSP weapons differ from 28 Psalms in several key ways:
+- **No tech levels** — all weapons are available at any tech level
+- **Handedness matters** — weapons are 1-handed (1 slot) or 2-handed (2 slots)
+- **Damage format** — typically DX notation ("D6", "D8"), special cases: "-" for non-lethal, "∞" for game-ending effects
+- **Special rules** — stored as string array, kept exactly as written ("Ranged 6", "Reload", etc.)
+- **Stat modifiers** — each weapon modifies a specific stat (Strength, Agility, Presence, Knowledge, Toughness, GTS)
+
+### Weapon Categories
+1. **One-Handed Ranged** (4 weapons) ✅
+2. **One-Handed Melee** (~5-7 weapons) — *Pending*
+3. **Two-Handed Ranged** (~5-7 weapons) — *Pending*
+4. **Two-Handed Melee** (~5-7 weapons) — *Pending*
+5. **Consumables** (8 items) — *Pending*
+
+### Weapon Interface
+
+```typescript
+export interface Weapon extends BaseEquipment {
+  category: 'weapon';
+  damage: string; // "D6", "D8", "D10", "-", "∞"
+  modifier: StatName; // stat this weapon modifies
+  specialRules: string[]; // e.g., ["Ranged", "Reload 5", "Cyber"]
+  slots: number; // 1 or 2 (one-handed vs two-handed)
+  isTwoHanded: boolean; // true if 2 slots
+  isRanged?: boolean; // Inferred from "Ranged" in specialRules
+  // NO techLevel in KSP
+}
+```
+
+### Implementation Notes
+
+- **Handedness Determination:** Section headers in source data indicate handedness (e.g., "One-Handed Ranged")
+  - One-handed → `slots: 1`, `isTwoHanded: false`
+  - Two-handed → `slots: 2`, `isTwoHanded: true`
+
+- **Ranged Detection:** Set `isRanged: true` if:
+  - "Ranged" keyword in specialRules, OR
+  - "Reload" keyword in specialRules (indicates ammo-based weapon)
+  - Melee weapons will have `isRanged: false`
+
+- **Special Rules Preservation:** Keep special rules exactly as written:
+  - "Reload 5", "Reload 6", "Reload" (not translated)
+  - "Ranged 6" (range + ranged in one rule)
+  - "Cyber" keyword preserved
+
+- **Damage Values:**
+  - Standard: "D6", "D8", "D10", "D12", "D20"
+  - Special: "-" (non-lethal, usually paired with Tazer)
+  - Extreme: "∞" (ΑΩ Bomb — destroys world)
+
+- **Cost Offset for Ammo:** Future enhancement
+  - Each ranged weapon should offset cost of 1 stack of ammo
+  - Implementation deferred until ammo system is finalized
+
+### Data Organization
+
+```typescript
+// src/types/equipmentKSP.ts
+
+// Organized by category and handedness
+export const weaponsKSP1HandedRanged: Weapon[] = [ ... ];
+export const weaponsKSP1HandedMelee: Weapon[] = [ ... ];
+export const weaponsKSP2HandedRanged: Weapon[] = [ ... ];
+export const weaponsKSP2HandedMelee: Weapon[] = [ ... ];
+
+// Consolidated export for game config
+export const allWeaponsKSP = [
+  ...weaponsKSP1HandedRanged,
+  ...weaponsKSP1HandedMelee,
+  ...weaponsKSP2HandedRanged,
+  ...weaponsKSP2HandedMelee,
+];
+```
+
+### Future Work
+
+- [ ] Add remaining melee and two-handed weapons
+- [ ] Create ammo system (see Ammo section)
+- [ ] Implement ammo cost offset for ranged weapons
+- [ ] Add weapon attachment logic for drones (Military Drone can equip any weapon)
+- [ ] EquipmentPicker validation: prevent 2-handed weapons if insufficient slots
