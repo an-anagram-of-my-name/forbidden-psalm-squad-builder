@@ -14,6 +14,7 @@ interface CybermodPickerProps {
   onCybermodsChange: (cybermods: SelectedCybermod[]) => void;
   flawsData?: FlawData[];
   featsData?: FeatData[];
+  afterStats?: React.ReactNode;
 }
 
 const CybermodPicker: React.FC<CybermodPickerProps> = ({
@@ -24,6 +25,7 @@ const CybermodPicker: React.FC<CybermodPickerProps> = ({
   onCybermodsChange,
   flawsData,
   featsData,
+  afterStats,
 }) => {
   const config = getGameConfig(character.gameId);
 
@@ -149,6 +151,8 @@ const CybermodPicker: React.FC<CybermodPickerProps> = ({
         {selectedCybermods.length}/{allowedCount} cybermods selected
         {isFull && allowedCount > 0 && <span className="allowance-full-badge"> (full)</span>}
       </div>
+
+      {afterStats}
 
       {/* Cybermod grid */}
       <div className="cybermod-grid">

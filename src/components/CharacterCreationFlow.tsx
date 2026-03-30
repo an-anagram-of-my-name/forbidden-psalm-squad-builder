@@ -380,8 +380,10 @@ const CharacterCreationFlow: React.FC<CharacterCreationFlowProps> = ({
             equipment,
             gameId: resolvedGameId,
             techLevel: effectiveTechLevel,
+            // Preserve existing portraitUrl so the Review step shows it when editing a saved character.
+            portraitUrl: initialCharacter?.portraitUrl ?? initialPreset?.portraitUrl,
         };
-    }, [stats, flaw, feat, equipment, resolvedGameId, effectiveTechLevel, initialCharacter?.id, initialPreset?.id]);
+    }, [stats, flaw, feat, equipment, resolvedGameId, effectiveTechLevel, initialCharacter?.id, initialPreset?.id, initialCharacter?.portraitUrl, initialPreset?.portraitUrl]);
 
     const getHeaderTitle = (): string => {
         if (mode === 'preset') {
@@ -500,6 +502,15 @@ const CharacterCreationFlow: React.FC<CharacterCreationFlowProps> = ({
                         onCybermodsChange={handleCybermodsChange}
                         flawsData={gameData.flaws}
                         featsData={gameData.feats}
+                        afterStats={
+                            <div className="augmentation-allowance-wrapper">
+                                <AugmentationAllowanceBox
+                                    selection={augmentationSelection}
+                                    isKSP={isKSP}
+                                    variant="compact"
+                                />
+                            </div>
+                        }
                     />
                 )}
 
@@ -521,6 +532,15 @@ const CharacterCreationFlow: React.FC<CharacterCreationFlowProps> = ({
                         onMutationsChange={handleMutationsChange}
                         flawsData={gameData.flaws}
                         featsData={gameData.feats}
+                        afterStats={
+                            <div className="augmentation-allowance-wrapper">
+                                <AugmentationAllowanceBox
+                                    selection={augmentationSelection}
+                                    isKSP={isKSP}
+                                    variant="compact"
+                                />
+                            </div>
+                        }
                     />
                 )}
 
