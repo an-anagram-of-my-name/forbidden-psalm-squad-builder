@@ -4159,15 +4159,98 @@ export interface SelectedMutation {
   isFlawed?: boolean;     // If mutations can be flawed
 }
 ```
-Mutation List (TBD - pending game rules): To be defined based on KSP game mechanics. Placeholder structure:
+Full Mutation List (12 mutations):
 
-    Adrenaline Surge — +2 Agility, +1 Guts
-    Iron Skin — +2 Strength, -1 Agility
-    Heightened Senses — +2 Knowledge, +1 Intellect
-    Charismatic — +2 Presence
-    Mental Fortress — +2 Guts, +1 Intellect
-    Quick Reflexes — +2 Agility
-    (Additional mutations as defined by KSP rules)
+1. X-ray
+
+    Effect: Crewmember can target models that are behind 1 inch or less thick terrain with ranged weapons.
+    Drawback: -3 to attack models in line of sight.
+    Stat Mods: -3 to ranged attacks against visible targets
+    Trigger Type: Passive (always applies)
+
+2. Xeno
+
+    Effect: Blood is replaced with acid. Whenever crewmember takes damage, any model within 1 inch takes 1 damage that ignores armor.
+    Drawback: Cannot be healed by Trauma Kits.
+    Stat Mods: None (passive retaliation effect)
+    Trigger Type: Reaction (when damage taken)
+
+3. Thick Skull
+
+    Effect: Immune to being Dazed and Stunned.
+    Drawback: -1 Presence and -2 Knowledge.
+    Stat Mods: -1 Presence, -2 Knowledge
+    Trigger Type: Passive (status immunity)
+
+4. Hairy Eyes
+
+    Effect: Hair grows from the crewmember's eyes.
+    Drawback: -1 to all Presence tests.
+    Stat Mods: -1 Presence
+    Trigger Type: Passive (appearance change, affects tests)
+
+5. Croc
+
+    Effect: Gains a bite attack (Strength, 1D6) and +1 Natural Armor that stacks with Armor.
+    Drawback: Cannot use hacking Programmes.
+    Stat Mods: None (grants natural armor + bite action)
+    Trigger Type: Action (bite attack option in combat)
+
+6. Mustela gulo
+
+    Effect: Heals 1 damage per round. Gains a Claw Attack (Agility, 1D4).
+    Drawback: All other crewmembers in same crew refuse to heal them as they are rude.
+    Stat Mods: None (passive healing + claw action)
+    Trigger Type: Passive (healing) + Action (claw attack)
+
+7. Precog
+
+    Effect: Sees the future and when targeted by an attack can move 6 inches in any direction. If this move moves them out of range the attack fails.
+    Drawback: Whenever it uses this ability must make a Guts check. It starts to ponder free will vs predetermination.
+    Stat Mods: None (reactive ability)
+    Trigger Type: Reaction (when attacked, spend action + Guts test)
+
+8. Telekinetic
+
+    Effect: Can move an item or model 3 inches as an action.
+    Drawback: Easier to shoot. Those targeting them gain +3 to ranged attacks. Their head grows in size!
+    Stat Mods: +3 difficulty to shoot at (opponent gains +3 ranged attacks)
+    Trigger Type: Action (move object/model)
+
+9. Cat Eyes
+
+    Effect: Ignores Darkness condition.
+    Drawback: -6 to attack models with a torch.
+    Stat Mods: -6 ranged/melee attacks against torch-wielding targets
+    Trigger Type: Passive (vision immunity, accuracy penalty)
+
+10. Boneitis
+
+    Effect: Totally fine.
+    Drawback: If crewmember ever Fumbles any Toughness test they are immediately killed.
+    Stat Mods: None (hidden drawback: instant death on fumble)
+    Trigger Type: Passive (deadly drawback condition)
+
+11. Rejection
+
+    Effect: Model is immune to Disease and Poisons.
+    Drawback: All CyberMods are lost.
+    Stat Mods: Removes all selected cybermods (CR cost recovered)
+    Trigger Type: Permanent (disables cybermods if selected)
+
+12. Mutable Form
+
+    Effect: Ignores the effects of Critical hits dealt to them.
+    Drawback: At the start of each Scenario roll a D6 and apply result:
+            Strength and Presence are swapped.
+            Agility and Knowledge are swapped.
+            This Mutation is lost and roll a new Mutation.
+            Gains the benefit of another random Mutation for this Scenario.
+            Must pick one additional Mutation to gain the benefit and drawback of for this Scenario.
+            Legs become gel-like and suffers -4 Agility this Scenario.
+    Stat Mods: Variable (depends on D6 roll each scenario)
+    Trigger Type: Passive (critical immunity) + Scenario start (random effect roll)
+
 
 UI Components
 
