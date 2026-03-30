@@ -199,7 +199,7 @@ export interface Character {
   additionalFlaws?: Flaw[];
   additionalFeats?: Feat[];
   cybermods?: import('./cybermodsKSP').SelectedCybermod[];
-  mutations?: string[];   // Array of mutation names/IDs
+  mutations?: import('./mutationsKSP').SelectedMutation[];
   injuries?: string[];    // Array of injury states (optional, for future use)
 }
 
@@ -217,7 +217,7 @@ export interface CharacterPreset {
   additionalFlaws?: Flaw[];
   additionalFeats?: Feat[];
   cybermods?: import('./cybermodsKSP').SelectedCybermod[];
-  mutations?: string[];   // Array of mutation names/IDs
+  mutations?: import('./mutationsKSP').SelectedMutation[];
   injuries?: string[];    // Array of injury states (optional, for future use)
   createdAt: Date;
   updatedAt: Date;

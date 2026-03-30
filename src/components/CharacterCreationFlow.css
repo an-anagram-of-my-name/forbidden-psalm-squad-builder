@@ -362,6 +362,24 @@
     margin-left: 6px;
 }
 
+.review-stat-mod-tag {
+    font-size: 11px;
+    font-weight: bold;
+    margin-left: 4px;
+    padding: 1px 4px;
+    border-radius: 3px;
+}
+
+.review-stat-mod-tag.positive {
+    color: #2e7d32;
+    background-color: #e8f5e9;
+}
+
+.review-stat-mod-tag.negative {
+    color: #c62828;
+    background-color: #ffebee;
+}
+
 /* Wrapper for the augmentation allowance box shown in flow steps */
 .augmentation-allowance-wrapper {
     max-width: 1200px;

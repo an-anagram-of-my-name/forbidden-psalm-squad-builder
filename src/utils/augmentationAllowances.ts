@@ -73,6 +73,7 @@ export function calculateAugmentationSelection(
   cybermodCount: number,
   mutationCount: number,
   gameId: GameId,
+  selectedMutationIds?: string[],
 ): AugmentationSelection {
   // Only applies to KSP
   if (gameId !== 'kill-sample-process') {
@@ -102,6 +103,11 @@ export function calculateAugmentationSelection(
     0,
     allowances.mutations - (cybermodCount > 0 ? cybermodCount : 0),
   );
+
+  // Rejection mutation: −1 additional cybermod allowance ("All CyberMods are lost")
+  if (selectedMutationIds?.includes('rejection')) {
+    cybermodAllowed = Math.max(0, cybermodAllowed - 1);
+  }
 
   // Count current selections
   const featCount = (primaryFeat ? 1 : 0) + (additionalFeats?.length ?? 0);
