@@ -173,7 +173,7 @@ export interface Weapon extends BaseEquipment {
   modifier: StatName;
   specialRules: string[];
   isTwoHanded: boolean;
-  isRanged: boolean;
+  isRanged?: boolean;
   includesAmmoId?: string;
   ammoTypeId?: string;
 }
