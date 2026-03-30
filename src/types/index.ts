@@ -146,6 +146,14 @@ export interface BaseEquipment {
   slots: number;
   category: EquipmentCategory;
   techLevel?: TechLevel;
+  /**
+   * Unified stat modifier system (same approach as Feats, Flaws, Mutations).
+   * Keys can be primary stat names (agility, presence, strength, toughness, knowledge)
+   * or derived stat names (movement, hp, equipmentSlots).
+   * Primary stat keys modify the base stat, which then cascades into derived stats.
+   * Derived stat keys apply directly as offsets after derived stat calculation.
+   */
+  statModifiers?: { [key: string]: number };
 }
 
 export interface Item extends BaseEquipment {
@@ -163,8 +171,6 @@ export interface Armor extends BaseEquipment {
   category: 'armor';
   av: number;
   specialRules?: string;
-  movementModifier?: number;
-  requiredStrength?: number;
 }
 
 export interface Weapon extends BaseEquipment {

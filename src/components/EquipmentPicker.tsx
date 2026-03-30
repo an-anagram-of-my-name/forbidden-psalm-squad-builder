@@ -1,7 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { Character, Equipment, Item, Ammo, Armor, Weapon, Consumable } from '../types';
 import { FlawData, FeatData } from '../types/featsandflaws28Psalms';
-import { canUseArmor, calculateTotalCost } from '../utils/equipment';
+import { calculateTotalCost } from '../utils/equipment';
 import { applyFlawFeatModifiers, calculateFinalDerivedStats } from '../utils/stats';
 import { getGameConfig } from '../types/games';
 import './EquipmentPicker.css';
@@ -144,13 +144,10 @@ const EquipmentPicker: React.FC<EquipmentPickerProps> = ({ character, selectedEq
     const instanceCount = isStackable ? selectedEquipment.filter((eq) => eq.id === equipment.id).length : 0;
 
     let canAdd: boolean;
-    let strengthFails = false;
 
     if (equipment.category === 'armor') {
-      const requiredStr = (equipment as Armor).requiredStrength;
-      strengthFails = requiredStr !== undefined && !canUseArmor(effectiveStats.strength, requiredStr);
       const blockedByOtherArmor = isArmorSelected && !isSelected;
-      canAdd = !strengthFails && !blockedByOtherArmor;
+      canAdd = !blockedByOtherArmor;
     } else if (isStackable) {
       canAdd = slotsUsed + equipment.slots <= slotCapacity;
     } else {
@@ -195,9 +192,6 @@ const EquipmentPicker: React.FC<EquipmentPickerProps> = ({ character, selectedEq
               <div className="detail">Slots: {equipment.slots}</div>
               {(equipment as Armor).specialRules && (
                 <div className="detail special-rules">{(equipment as Armor).specialRules}</div>
-              )}
-              {strengthFails && (
-                <div className="detail requirement">Requires {(equipment as Armor).requiredStrength}+ Strength</div>
               )}
             </>
           )}
