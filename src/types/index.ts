@@ -137,7 +137,7 @@ export interface Feat {
   description: string;
 }
 
-export type EquipmentCategory = 'weapon' | 'armor' | 'item' | 'ammo' | 'consumable';
+export type EquipmentCategory = 'weapon' | 'armor' | 'item' | 'ammo' | 'consumable' | 'drone';
 
 export interface BaseEquipment {
   id: string;
