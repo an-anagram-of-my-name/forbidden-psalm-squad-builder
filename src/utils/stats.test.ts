@@ -431,7 +431,7 @@ describe('calculateFinalDerivedStats', () => {
             av: 3,
             statModifiers: { agility: -3, movement: 3 },
         };
-        const result = calculateFinalDerivedStats(baseStats, null, null, [plateCarrier]);
+        const result = calculateFinalDerivedStats(baseStats, null, null, [plateCarrier], { gameId: 'kill-sample-process' });
         // agility reduced by 3 via primary mod: base movement = 5 + (agility - 3)
         // then derived movement offset +3: net movement = 5 + agility
         expect(result.movement).toBe(5 + baseStats.agility);
