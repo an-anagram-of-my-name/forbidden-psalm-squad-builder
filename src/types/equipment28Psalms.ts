@@ -158,7 +158,6 @@ export const armor28Psalms: Armor[] = [
     cost: 2,
     slots: 1,
     category: 'armor',
-    specialRules: '',
     techLevel: undefined,
   },
   {
@@ -168,7 +167,6 @@ export const armor28Psalms: Armor[] = [
     cost: 10,
     slots: 1,
     category: 'armor',
-    specialRules: '',
     techLevel: undefined,
   },
   {
@@ -178,7 +176,6 @@ export const armor28Psalms: Armor[] = [
     cost: 20,
     slots: 1,
     category: 'armor',
-    specialRules: '',
     techLevel: undefined,
   },
   {
@@ -188,8 +185,7 @@ export const armor28Psalms: Armor[] = [
     cost: 50,
     slots: 1,
     category: 'armor',
-    specialRules: 'Must have 2+ Strength to use',
-    requiredStrength: 2,
+    specialRules: 'Requires Strength 2+ to use.',
     techLevel: undefined,
   },
   {
@@ -200,7 +196,7 @@ export const armor28Psalms: Armor[] = [
     slots: 1,
     category: 'armor',
     specialRules: '-1 movement',
-    movementModifier: -1,
+    statModifiers: { movement: -1 },
     techLevel: undefined,
   },
 ];

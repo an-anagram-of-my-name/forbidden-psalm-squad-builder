@@ -29,20 +29,6 @@ function renderEquipmentDetails(item: Equipment): React.ReactNode {
         </div>
       );
     }
-    if (armor.movementModifier !== undefined) {
-      details.push(
-        <div key="mov" className="print-equipment-detail">
-          <strong>Movement:</strong> {armor.movementModifier > 0 ? '+' : ''}{armor.movementModifier}
-        </div>
-      );
-    }
-    if (armor.requiredStrength !== undefined) {
-      details.push(
-        <div key="str" className="print-equipment-detail">
-          <strong>Req. STR:</strong> {armor.requiredStrength}+
-        </div>
-      );
-    }
   } else if (item.category === 'weapon') {
     const weapon = item as Weapon;
     details.push(

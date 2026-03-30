@@ -150,10 +150,36 @@ export function calculateFinalDerivedStats(
   featsData?: FeatData[]
 ): DerivedStats {
   const resolvedGameId = gameId ?? DEFAULT_GAME_ID;
-  const effectiveStats = applyFlawFeatModifiers(baseStats, flaw, feat, resolvedGameId, flawsData, featsData);
+
+  // Step 1: Apply flaw/feat primary stat modifiers
+  let effectiveStats = applyFlawFeatModifiers(baseStats, flaw, feat, resolvedGameId, flawsData, featsData);
+
+  // Step 2: Apply equipment primary stat modifiers from statModifiers
+  // (e.g. KSP Home Made: { agility: -1 } reduces agility which cascades to movement)
+  const equipmentPrimaryMods: Partial<Record<StatName, number>> = {};
+  equipment.forEach((item) => {
+    const sm = item.statModifiers;
+    if (sm) {
+      ALL_STAT_NAMES.forEach((stat) => {
+        if (sm[stat] !== undefined) {
+          equipmentPrimaryMods[stat] = (equipmentPrimaryMods[stat] ?? 0) + sm[stat];
+        }
+      });
+    }
+  });
+  if (Object.keys(equipmentPrimaryMods).length > 0) {
+    effectiveStats = { ...effectiveStats };
+    ALL_STAT_NAMES.forEach((stat) => {
+      if (equipmentPrimaryMods[stat] !== undefined) {
+        effectiveStats[stat] = (effectiveStats[stat] ?? 0) + (equipmentPrimaryMods[stat] ?? 0);
+      }
+    });
+  }
+
+  // Step 3: Calculate base derived stats from modified primary stats
   const derived = calculateDerivedStats(effectiveStats, resolvedGameId);
 
-  // Apply flaw/feat derived stat modifiers (e.g. S.A.S. keeps Movement despite -2 Agility)
+  // Step 4: Apply flaw/feat derived stat modifiers (e.g. S.A.S. keeps Movement despite -2 Agility)
   const flawFeatDerivedModifiers = { movement: 0, hp: 0, equipmentSlots: 0 };
 
   if (flaw) {
@@ -176,29 +202,25 @@ export function calculateFinalDerivedStats(
     }
   }
 
-  const equipmentModifiers = {
-    movement: 0,
-    hp: 0,
-    equipmentSlots: 0,
-  };
-
+  // Step 5: Apply equipment derived stat modifiers from statModifiers
+  // (e.g. 28P Homemade: { movement: -1 }, KSP Plate Carrier: { agility: -3, movement: +3 })
+  const DERIVED_STAT_KEYS = ['movement', 'hp', 'equipmentSlots'] as const;
+  const equipmentDerivedMods = { movement: 0, hp: 0, equipmentSlots: 0 };
   equipment.forEach((item) => {
-    const it = item as { movementModifier?: number; hpModifier?: number; slotsModifier?: number };
-    if (it.movementModifier !== undefined) {
-      equipmentModifiers.movement += it.movementModifier;
-    }
-    if (it.hpModifier !== undefined) {
-      equipmentModifiers.hp += it.hpModifier;
-    }
-    if (it.slotsModifier !== undefined) {
-      equipmentModifiers.equipmentSlots += it.slotsModifier;
+    const sm = item.statModifiers;
+    if (sm) {
+      DERIVED_STAT_KEYS.forEach((key) => {
+        if (sm[key] !== undefined) {
+          equipmentDerivedMods[key] += sm[key];
+        }
+      });
     }
   });
 
   return {
-    hp: derived.hp + flawFeatDerivedModifiers.hp + equipmentModifiers.hp,
-    movement: derived.movement + flawFeatDerivedModifiers.movement + equipmentModifiers.movement,
-    equipmentSlots: derived.equipmentSlots + flawFeatDerivedModifiers.equipmentSlots + equipmentModifiers.equipmentSlots,
+    hp: derived.hp + flawFeatDerivedModifiers.hp + equipmentDerivedMods.hp,
+    movement: derived.movement + flawFeatDerivedModifiers.movement + equipmentDerivedMods.movement,
+    equipmentSlots: derived.equipmentSlots + flawFeatDerivedModifiers.equipmentSlots + equipmentDerivedMods.equipmentSlots,
   };
 }
 
