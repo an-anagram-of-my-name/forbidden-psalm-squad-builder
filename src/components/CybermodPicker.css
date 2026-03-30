@@ -7,6 +7,42 @@
     font-family: Arial, sans-serif;
 }
 
+.cybermod-picker .picker-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 20px;
+}
+
+.cybermod-picker .picker-header h2 {
+    margin: 0;
+}
+
+.cybermod-picker .btn-random {
+    background: none;
+    border: none;
+    font-size: 22px;
+    cursor: pointer;
+    padding: 4px 8px;
+    border-radius: 4px;
+    transition: background-color 0.2s, transform 0.2s;
+    line-height: 1;
+}
+
+.cybermod-picker .btn-random:hover:not(:disabled) {
+    background-color: #f0f0f0;
+    transform: scale(1.1);
+}
+
+.cybermod-picker .btn-random:active:not(:disabled) {
+    transform: scale(0.95);
+}
+
+.cybermod-picker .btn-random:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+}
+
 .cybermod-allowance {
     display: inline-flex;
     align-items: center;

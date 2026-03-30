@@ -209,7 +209,73 @@ describe('calculateAugmentationSelection — KSP', () => {
     expect(result.cybermods.allowed).toBe(1);
     // isFull is selected >= allowed, so still true
     expect(result.cybermods.isFull).toBe(true);
-    // incompleteItems only records selected < allowed, not over
-    expect(result.incompleteItems.some((i) => i.type === 'cybermods')).toBe(false);
+    // Over-limit is now treated as incomplete (not just under-limit)
+    expect(result.incompleteItems.some((i) => i.type === 'cybermods')).toBe(true);
+    expect(result.isComplete).toBe(false);
+  });
+
+  it('Rejection mutation reduces cybermod allowance by 1', () => {
+    // Base: 1 cybermod allowed, 1 mutation allowed
+    // Select 1 mutation (Rejection) → cybermod trade-off: 1 - 1 = 0, then Rejection -1 → 0 (clamped)
+    // But first, 0 mutations selected (we pass mutationCount=0, just mutationIds=['rejection'])
+    const result = calculateAugmentationSelection(
+      makeFlaw('ghost'),
+      makeFeat('marine'),
+      [],
+      [],
+      0, // no cybermods selected
+      1, // 1 mutation selected (Rejection)
+      KSP,
+      ['rejection'],
+    );
+    // With 1 mutation: base cybermod allowance = 1, trade-off -1 = 0, Rejection -1 → 0 (clamped)
+    expect(result.cybermods.allowed).toBe(0);
+    expect(result.cybermods.isFull).toBe(true);
+    expect(result.mutations.selected).toBe(1);
+    expect(result.mutations.allowed).toBe(1);
+    expect(result.isComplete).toBe(true);
+  });
+
+  it('Rejection with Priest of Tech: reduces cybermod allowance from 3 toward 0', () => {
+    // Priest of Tech gives +2 cybermods → base=3
+    // With 1 mutation: trade-off -1 = 2, Rejection -1 = 1 remaining
+    const result = calculateAugmentationSelection(
+      makeFlaw('ghost'),
+      makeFeat('priest-of-tech'),
+      [],
+      [],
+      1, // 1 cybermod selected
+      1, // 1 mutation selected (Rejection)
+      KSP,
+      ['rejection'],
+    );
+    // cybermods base=3, trade-off -1 (mutation selected) = 2, Rejection -1 = 1
+    expect(result.cybermods.allowed).toBe(1);
+    expect(result.cybermods.selected).toBe(1);
+    expect(result.cybermods.isFull).toBe(true);
+    // mutations: base=1, trade-off -1 (cybermod selected) = 0, but we have 1 selected → over-limit? 
+    // Actually: mutationAllowed = max(0, 1 - 1(cybermods)) = 0, but we have 1 mutation → over-limit
+    // This case tests the interaction: with cybermods AND mutations both selected
+    expect(result.mutations.selected).toBe(1);
+    expect(result.mutations.allowed).toBe(0);
+    expect(result.isComplete).toBe(false); // mutations over-limit
+  });
+
+  it('non-Rejection mutation does not reduce cybermod allowance', () => {
+    const result = calculateAugmentationSelection(
+      makeFlaw('ghost'),
+      makeFeat('marine'),
+      [],
+      [],
+      0,
+      1, // 1 mutation (not Rejection)
+      KSP,
+      ['thick-skull'], // has stat mods but reducesCybermods is not set
+    );
+    // With 1 mutation: trade-off only — cybermod allowance = 1 - 1 = 0
+    // No Rejection penalty on top
+    expect(result.cybermods.allowed).toBe(0);
+    expect(result.mutations.allowed).toBe(1);
+    expect(result.isComplete).toBe(true);
   });
 });

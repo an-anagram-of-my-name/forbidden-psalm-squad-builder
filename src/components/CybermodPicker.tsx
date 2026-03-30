@@ -42,6 +42,27 @@ const CybermodPicker: React.FC<CybermodPickerProps> = ({
   const isSelected = (mod: CybermodData) =>
     selectedCybermods.some((cm) => cm.id === mod.id);
 
+  const handleRandomize = () => {
+    if (selectedCybermods.length >= allowedCount) return;
+
+    const alreadySelectedIds = new Set(selectedCybermods.map((cm) => cm.id));
+    const candidates = cybermods.filter((mod) => !alreadySelectedIds.has(mod.id));
+    if (candidates.length === 0) return;
+
+    let current = [...selectedCybermods];
+    let remaining = allowedCount - current.length;
+    const pool = [...candidates];
+
+    while (remaining > 0 && pool.length > 0) {
+      const idx = Math.floor(Math.random() * pool.length);
+      const chosen = pool.splice(idx, 1)[0];
+      current = [...current, { id: chosen.id, name: chosen.name, cost: chosen.cost, isFlawed: false }];
+      remaining--;
+    }
+
+    onCybermodsChange(current);
+  };
+
   const handleToggle = (mod: CybermodData) => {
     if (isSelected(mod)) {
       // Deselect: remove
@@ -68,6 +89,16 @@ const CybermodPicker: React.FC<CybermodPickerProps> = ({
     <div className="cybermod-picker">
       <div className="picker-header">
         <h2>Select Cybermods</h2>
+        <button
+          className="btn-random"
+          onClick={handleRandomize}
+          disabled={isFull}
+          aria-label={isFull ? 'Cybermod allowance is already full' : 'Randomly fill remaining cybermod slots'}
+          title={isFull ? 'Cybermod allowance is already full' : 'Randomly fill remaining cybermod slots'}
+          type="button"
+        >
+          🎲
+        </button>
       </div>
 
       {/* Stats row */}

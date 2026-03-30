@@ -1,0 +1,248 @@
+.mutation-picker {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    background-color: #f9f9f9;
+    padding: 20px;
+    font-family: Arial, sans-serif;
+}
+
+.mutation-picker .picker-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 20px;
+}
+
+.mutation-picker .picker-header h2 {
+    margin: 0;
+}
+
+.mutation-picker .btn-random {
+    background: none;
+    border: none;
+    font-size: 22px;
+    cursor: pointer;
+    padding: 4px 8px;
+    border-radius: 4px;
+    transition: background-color 0.2s, transform 0.2s;
+    line-height: 1;
+}
+
+.mutation-picker .btn-random:hover:not(:disabled) {
+    background-color: #f0f0f0;
+    transform: scale(1.1);
+}
+
+.mutation-picker .btn-random:active:not(:disabled) {
+    transform: scale(0.95);
+}
+
+.mutation-picker .btn-random:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+}
+
+.mutation-allowance {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    margin-bottom: 20px;
+    font-size: 14px;
+    font-weight: bold;
+    color: #555;
+    background-color: #fff;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    padding: 8px 14px;
+}
+
+.mutation-allowance.full {
+    color: #7b1fa2;
+    border-color: #7b1fa2;
+    background-color: #f3e5f5;
+}
+
+.allowance-full-badge {
+    font-size: 12px;
+    font-weight: normal;
+    color: #7b1fa2;
+}
+
+/* Stats row — reuses global stat-box styles from CharacterCreationFlow.css */
+.mutation-picker .current-stats-divider {
+    width: 2px;
+    height: 40px;
+    background-color: #ddd;
+    border-radius: 1px;
+    flex-shrink: 0;
+}
+
+.mutation-picker .current-stats-derived {
+    display: flex;
+    gap: 10px;
+}
+
+/* Mutation grid */
+.mutation-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 15px;
+}
+
+/* Individual card */
+.mutation-card {
+    position: relative;
+    padding: 15px;
+    border: 2px solid #ddd;
+    border-radius: 4px;
+    background-color: #fff;
+    cursor: pointer;
+    transition: all 0.2s;
+    user-select: none;
+}
+
+.mutation-card:hover:not(.disabled) {
+    border-color: #7b1fa2;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.mutation-card:focus-visible {
+    outline: 2px solid #7b1fa2;
+    outline-offset: 2px;
+}
+
+.mutation-card.selected {
+    border-color: #7b1fa2;
+    background-color: #f3e5f5;
+    box-shadow: 0 4px 12px rgba(123, 31, 162, 0.2);
+}
+
+.mutation-card.disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+    background-color: #f5f5f5;
+}
+
+/* Card header */
+.mutation-header {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    margin-bottom: 8px;
+    flex-wrap: wrap;
+}
+
+.mutation-number {
+    font-size: 11px;
+    font-weight: bold;
+    color: #999;
+    min-width: 28px;
+    padding-top: 2px;
+    flex-shrink: 0;
+}
+
+.mutation-name {
+    flex: 1;
+    font-size: 15px;
+    font-weight: bold;
+    color: #333;
+    word-break: break-word;
+}
+
+.mutation-description {
+    font-size: 13px;
+    color: #555;
+    line-height: 1.4;
+    margin-bottom: 6px;
+}
+
+.mutation-drawback {
+    font-size: 12px;
+    color: #c62828;
+    font-style: italic;
+    line-height: 1.4;
+    margin-top: 4px;
+}
+
+/* Stat mod badges */
+.mutation-stat-mods {
+    display: flex;
+    gap: 4px;
+    flex-wrap: wrap;
+    margin-top: 2px;
+}
+
+.mutation-stat-mod-badge {
+    font-size: 11px;
+    font-weight: bold;
+    padding: 2px 6px;
+    border-radius: 3px;
+    white-space: nowrap;
+}
+
+.mutation-stat-mod-badge.positive {
+    background-color: #e8f5e9;
+    color: #2e7d32;
+    border: 1px solid #a5d6a7;
+}
+
+.mutation-stat-mod-badge.negative {
+    background-color: #ffebee;
+    color: #c62828;
+    border: 1px solid #ef9a9a;
+}
+
+/* Selection indicator */
+.mutation-card .checkmark {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    font-size: 18px;
+    color: #7b1fa2;
+    font-weight: bold;
+    pointer-events: none;
+}
+
+/* Grouped mutations (Mutable Form) */
+.mutation-group {
+    grid-column: 1 / -1;
+    border: 2px solid #e0e0e0;
+    border-radius: 6px;
+    padding: 16px;
+    background-color: #fafafa;
+}
+
+.mutation-group-label {
+    font-size: 15px;
+    font-weight: bold;
+    color: #333;
+    margin-bottom: 12px;
+}
+
+.mutation-group-subtitle {
+    font-size: 13px;
+    font-weight: normal;
+    color: #888;
+}
+
+.mutation-group-variants {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: 10px;
+}
+
+.mutation-variant {
+    padding: 10px 12px;
+}
+
+.mutation-variant .mutation-header {
+    flex-direction: row;
+    gap: 6px;
+}
+
+.mutation-variant .mutation-description {
+    font-size: 12px;
+    flex: 1;
+    margin-bottom: 0;
+}

@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { Character, CharacterPreset, Equipment, Stats, Flaw, Feat, TechLevel, FlawType, FeatType, GameId } from '../types';
+import { Character, CharacterPreset, Equipment, Stats, Flaw, Feat, TechLevel, FlawType, FeatType, GameId, StatName } from '../types';
 import { getGameConfig } from '../types/games';
 import StatDistributionPicker from './StatDistributionPicker';
 import FlawsAndFeatsPicker from './FlawsAndFeatsPicker';
@@ -13,6 +13,8 @@ import { calculateAugmentationSelection } from '../utils/augmentationAllowances'
 import { generateCharacterPortrait } from '../services/portraitGenerationService';
 import { characterNames28Psalms } from '../types/characterNames28Psalms';
 import { cybermodsKSP, SelectedCybermod } from '../types/cybermodsKSP';
+import { mutationsKSP, SelectedMutation } from '../types/mutationsKSP';
+import MutationPicker from './MutationPicker';
 import './CharacterCreationFlow.css';
 
 interface CharacterCreationFlowProps {
@@ -32,7 +34,7 @@ interface CharacterCreationFlowProps {
     onCancel: () => void;
 }
 
-type CreationStep = 'stats' | 'flaws-feats' | 'cybermods' | 'equipment' | 'review';
+type CreationStep = 'stats' | 'flaws-feats' | 'cybermods' | 'mutations' | 'equipment' | 'review';
 
 const CharacterCreationFlow: React.FC<CharacterCreationFlowProps> = ({
     mode = 'squad',
@@ -82,9 +84,23 @@ const CharacterCreationFlow: React.FC<CharacterCreationFlowProps> = ({
         initialCharacter?.cybermods ?? initialPreset?.cybermods ?? [],
     );
 
+    // KSP mutation selection state — normalize from persisted string[] format if needed
+    const [selectedMutations, setSelectedMutations] = useState<SelectedMutation[]>(() => {
+        const raw = initialCharacter?.mutations ?? initialPreset?.mutations ?? [];
+        if (raw.length === 0) return [];
+        // Backwards-compat: old format stored mutation IDs as plain strings
+        if (typeof raw[0] === 'string') {
+            return (raw as unknown as string[]).flatMap((id) => {
+                const data = mutationsKSP.find((m) => m.id === id);
+                return data ? [{ id: data.id, name: data.name, statMods: data.statMods }] : [];
+            });
+        }
+        return raw as SelectedMutation[];
+    });
+
     // KSP augmentation counts
     const cybermodCount = selectedCybermods.length;
-    const mutationCount = (initialCharacter?.mutations ?? initialPreset?.mutations)?.length ?? 0;
+    const mutationCount = selectedMutations.length;
     const additionalFlaws = useMemo(
         () => initialCharacter?.additionalFlaws ?? initialPreset?.additionalFlaws ?? [],
         [initialCharacter?.additionalFlaws, initialPreset?.additionalFlaws]
@@ -132,6 +148,14 @@ const CharacterCreationFlow: React.FC<CharacterCreationFlowProps> = ({
     };
 
     const handleConfirmCybermods = () => {
+        setCurrentStep(isKSP ? 'mutations' : 'equipment');
+    };
+
+    const handleMutationsChange = (mutations: SelectedMutation[]) => {
+        setSelectedMutations(mutations);
+    };
+
+    const handleConfirmMutations = () => {
         setCurrentStep('equipment');
     };
 
@@ -176,8 +200,8 @@ const CharacterCreationFlow: React.FC<CharacterCreationFlowProps> = ({
     const handleCreateCharacter = async () => {
         setPortraitGenerationError(null);
 
-        // For KSP, always carry the selected cybermods into the saved object.
-        const kspCybermods = isKSP ? { cybermods: selectedCybermods } : {};
+        // For KSP, always carry the selected cybermods and mutations into the saved object.
+        const kspCybermods = isKSP ? { cybermods: selectedCybermods, mutations: selectedMutations } : {};
 
         if (mode === 'preset') {
             if (characterName.trim() && stats && flaw && feat && selectedTechLevel) {
@@ -279,8 +303,10 @@ const CharacterCreationFlow: React.FC<CharacterCreationFlowProps> = ({
             setCurrentStep('stats');
         } else if (currentStep === 'cybermods') {
             setCurrentStep('flaws-feats');
+        } else if (currentStep === 'mutations') {
+            setCurrentStep('cybermods');
         } else if (currentStep === 'equipment') {
-            setCurrentStep(isKSP ? 'cybermods' : 'flaws-feats');
+            setCurrentStep(isKSP ? 'mutations' : 'flaws-feats');
         } else if (currentStep === 'review') {
             setCurrentStep('equipment');
         }
@@ -291,16 +317,28 @@ const CharacterCreationFlow: React.FC<CharacterCreationFlowProps> = ({
         (mode !== 'preset' || !!selectedTechLevel);
 
     const stepOrder: CreationStep[] = isKSP
-        ? ['stats', 'flaws-feats', 'cybermods', 'equipment', 'review']
+        ? ['stats', 'flaws-feats', 'cybermods', 'mutations', 'equipment', 'review']
         : ['stats', 'flaws-feats', 'equipment', 'review'];
     const currentStepIndex = stepOrder.indexOf(currentStep);
 
     const effectiveStats = useMemo(() => {
         if (!stats) return null;
-        return applyFlawFeatModifiers(stats, flaw, feat, resolvedGameId, gameData.flaws, gameData.feats);
-    }, [stats, flaw, feat, resolvedGameId, gameData]);
+        const withFlawFeat = applyFlawFeatModifiers(stats, flaw, feat, resolvedGameId, gameData.flaws, gameData.feats);
+        if (!isKSP || selectedMutations.length === 0) return withFlawFeat;
+        // Apply mutation stat mods on top of flaw/feat mods for display purposes
+        const withMutations: Stats = { ...withFlawFeat };
+        selectedMutations.forEach((sm) => {
+            (Object.keys(sm.statMods) as StatName[]).forEach((key) => {
+                const delta = sm.statMods[key];
+                if (typeof delta === 'number') {
+                    withMutations[key] = withMutations[key] + delta;
+                }
+            });
+        });
+        return withMutations;
+    }, [stats, flaw, feat, resolvedGameId, gameData, isKSP, selectedMutations]);
 
-    // KSP augmentation selection — recalculates whenever flaw/feat change
+    // KSP augmentation selection — recalculates whenever flaw/feat/mutations change
     const augmentationSelection = useMemo(
         () =>
             calculateAugmentationSelection(
@@ -311,8 +349,9 @@ const CharacterCreationFlow: React.FC<CharacterCreationFlowProps> = ({
                 cybermodCount,
                 mutationCount,
                 resolvedGameId,
+                selectedMutations.map((m) => m.id),
             ),
-        [flaw, feat, additionalFlaws, additionalFeats, cybermodCount, mutationCount, resolvedGameId],
+        [flaw, feat, additionalFlaws, additionalFeats, cybermodCount, mutationCount, resolvedGameId, selectedMutations],
     );
 
     const canSave = canProceed && (!isKSP || augmentationSelection.isComplete) && !isGeneratingPortrait;
@@ -374,12 +413,16 @@ const CharacterCreationFlow: React.FC<CharacterCreationFlowProps> = ({
                                 3. Cybermods
                             </div>
                             <div className="step-connector"></div>
-                            <div className={`step ${currentStep === 'equipment' ? 'active' : currentStepIndex > 3 ? 'completed' : ''}`}>
-                                4. Equipment
+                            <div className={`step ${currentStep === 'mutations' ? 'active' : currentStepIndex > 3 ? 'completed' : ''}`}>
+                                4. Mutations
+                            </div>
+                            <div className="step-connector"></div>
+                            <div className={`step ${currentStep === 'equipment' ? 'active' : currentStepIndex > 4 ? 'completed' : ''}`}>
+                                5. Equipment
                             </div>
                             <div className="step-connector"></div>
                             <div className={`step ${currentStep === 'review' ? 'active' : ''}`}>
-                                5. Review
+                                6. Review
                             </div>
                         </>
                     )}
@@ -446,6 +489,27 @@ const CharacterCreationFlow: React.FC<CharacterCreationFlowProps> = ({
                         selectedCybermods={selectedCybermods}
                         allowedCount={augmentationSelection.cybermods.allowed}
                         onCybermodsChange={handleCybermodsChange}
+                        flawsData={gameData.flaws}
+                        featsData={gameData.feats}
+                    />
+                )}
+
+                {currentStep === 'mutations' && isKSP && stats && flaw && feat && (
+                    <MutationPicker
+                        character={{
+                            id: '',
+                            name: '',
+                            stats,
+                            flaw,
+                            feat,
+                            equipment,
+                            gameId: resolvedGameId,
+                            techLevel: effectiveTechLevel,
+                        }}
+                        mutations={mutationsKSP}
+                        selectedMutations={selectedMutations}
+                        allowedCount={augmentationSelection.mutations.allowed}
+                        onMutationsChange={handleMutationsChange}
                         flawsData={gameData.flaws}
                         featsData={gameData.feats}
                     />
@@ -535,7 +599,20 @@ const CharacterCreationFlow: React.FC<CharacterCreationFlowProps> = ({
                             <div className="review-section-card">
                                 <h3>Stats</h3>
                                 {effectiveStats && (() => {
-                                    const derived = calculateFinalDerivedStats(stats!, flaw, feat, equipment, resolvedGameId, gameData.flaws, gameData.feats);
+                                    // Build mutation-adjusted base stats so calculateFinalDerivedStats
+                                    // can apply flaw/feat and equipment mods correctly on top.
+                                    const mutationAdjustedBase: Stats = { ...stats! };
+                                    if (isKSP) {
+                                        selectedMutations.forEach((sm) => {
+                                            (Object.keys(sm.statMods) as StatName[]).forEach((key) => {
+                                                const delta = sm.statMods[key];
+                                                if (typeof delta === 'number') {
+                                                    mutationAdjustedBase[key] = mutationAdjustedBase[key] + delta;
+                                                }
+                                            });
+                                        });
+                                    }
+                                    const derived = calculateFinalDerivedStats(mutationAdjustedBase, flaw, feat, equipment, resolvedGameId, gameData.flaws, gameData.feats);
                                     const fmt = (v: number) => v > 0 ? `+${v}` : `${v}`;
                                     return (
                                         <ul className="stats-list">
@@ -602,6 +679,30 @@ const CharacterCreationFlow: React.FC<CharacterCreationFlowProps> = ({
                                     </ul>
                                 </div>
                             )}
+
+                            {isKSP && selectedMutations.length > 0 && (
+                                <div className="review-section-card">
+                                    <h3>Mutations</h3>
+                                    <ul className="equipment-list">
+                                        {selectedMutations.map((mut) => (
+                                            <li key={mut.id}>
+                                                {mut.name}
+                                                {Object.entries(mut.statMods).filter(([, v]) => v !== 0).map(([stat, value]) => {
+                                                    const label = gameConfig.statShortLabels[stat as keyof typeof gameConfig.statShortLabels] ?? stat.toUpperCase();
+                                                    return (
+                                                        <span
+                                                            key={stat}
+                                                            className={`review-stat-mod-tag ${(value ?? 0) >= 0 ? 'positive' : 'negative'}`}
+                                                        >
+                                                            {' '}{(value ?? 0) > 0 ? `+${value}` : value} {label}
+                                                        </span>
+                                                    );
+                                                })}
+                                            </li>
+                                        ))}
+                                    </ul>
+                                </div>
+                            )}
                         </div>
                     </div>
                 )}
@@ -640,6 +741,14 @@ const CharacterCreationFlow: React.FC<CharacterCreationFlowProps> = ({
                         className="btn-confirm"
                     >
                         Confirm Cybermods →
+                    </button>
+                )}
+                {currentStep === 'mutations' && (
+                    <button
+                        onClick={handleConfirmMutations}
+                        className="btn-confirm"
+                    >
+                        Confirm Mutations →
                     </button>
                 )}
                 {currentStep === 'equipment' && (
