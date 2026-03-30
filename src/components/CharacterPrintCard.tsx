@@ -3,6 +3,8 @@ import { Character, Equipment, Armor, Weapon } from '../types';
 import { applyFlawFeatModifiers, calculateFinalDerivedStats } from '../utils/stats';
 import { getGameConfig } from '../types/games';
 import { flaws28Psalms, feats28Psalms, FlawData, FeatData } from '../types/featsandflaws28Psalms';
+import { cybermodsKSP } from '../types/cybermodsKSP';
+import { mutationsKSP } from '../types/mutationsKSP';
 import HPTrackingBar from './HPTrackingBar';
 import AmmoTracker from './AmmoTracker';
 import './CharacterPrintCard.css';
@@ -11,6 +13,7 @@ interface CharacterPrintCardProps {
   character: Character;
   flawsData?: FlawData[];
   featsData?: FeatData[];
+  characterNumber?: number;
 }
 
 function fmt(v: number): string {
@@ -98,8 +101,9 @@ function renderEquipmentDetails(item: Equipment): React.ReactNode {
   return details;
 }
 
-const CharacterPrintCard: React.FC<CharacterPrintCardProps> = ({ character, flawsData, featsData }) => {
+const CharacterPrintCard: React.FC<CharacterPrintCardProps> = ({ character, flawsData, featsData, characterNumber }) => {
   const config = getGameConfig(character.gameId);
+  const isKSP = character.gameId === 'kill-sample-process';
   const flawsToUse = flawsData ?? flaws28Psalms;
   const featsToUse = featsData ?? feats28Psalms;
   const effectiveStats = applyFlawFeatModifiers(character.stats, character.flaw, character.feat, character.gameId, flawsToUse, featsToUse);
@@ -117,6 +121,14 @@ const CharacterPrintCard: React.FC<CharacterPrintCardProps> = ({ character, flaw
   const flawData = flawsToUse.find((f) => f.type === character.flaw.type);
   const featData = featsToUse.find((f) => f.type === character.feat.type);
 
+  // Portrait state for fallback initials
+  const initials = character.name
+    .split(' ')
+    .slice(0, 2)
+    .map((w) => w[0] ?? '')
+    .join('')
+    .toUpperCase();
+
   // Sort equipment: armor first, then rest
   const sortedEquipment = [...character.equipment].sort((a, b) => {
     if (a.category === 'armor' && b.category !== 'armor') return -1;
@@ -127,14 +139,14 @@ const CharacterPrintCard: React.FC<CharacterPrintCardProps> = ({ character, flaw
   return (
     <div className="character-print-card">
       <div className="print-card-header">
-        <h2>{character.name}</h2>
+        <h2>{characterNumber !== undefined ? `${characterNumber}. ` : ''}{character.name}</h2>
         {character.techLevel && <span className="print-tech-badge">{character.techLevel}</span>}
       </div>
 
       <div className="print-card-body">
-        {/* Stats column */}
-        <div>
-          <div className="print-section">
+        {/* Stats + portrait block */}
+        <div className="print-stats-portrait-block">
+          <div className="print-section print-stats-section">
             <div className="print-section-title">Stats</div>
             <div className="print-stats-grid">
               <div className="print-stats-row-base">
@@ -169,6 +181,19 @@ const CharacterPrintCard: React.FC<CharacterPrintCardProps> = ({ character, flaw
             <div className="print-section-title">HP Tracker</div>
             <HPTrackingBar maxHP={derived.hp} />
           </div>
+
+          {/* Portrait: 150px square to the right of stats */}
+          <div className="print-card-portrait">
+            {character.portraitUrl ? (
+              <img
+                src={character.portraitUrl}
+                alt={`Portrait of ${character.name}`}
+                className="print-portrait-img"
+              />
+            ) : (
+              <div className="print-portrait-initials">{initials || '?'}</div>
+            )}
+          </div>
         </div>
 
         {/* Traits column */}
@@ -192,6 +217,46 @@ const CharacterPrintCard: React.FC<CharacterPrintCardProps> = ({ character, flaw
               </div>
             </div>
           </div>
+
+          {/* Cybermods & Mutations (KSP only) */}
+          {isKSP && character.cybermods && character.cybermods.length > 0 && (
+            <div className="print-section">
+              <div className="print-section-title">Cybermods</div>
+              {character.cybermods.map((cm) => {
+                const cmData = cybermodsKSP.find((c) => c.id === cm.id);
+                return (
+                  <div key={cm.id} className="print-trait">
+                    <div className="print-trait-name">
+                      {cm.name}{cm.isFlawed ? ' ⚠ FLAWED' : ''}
+                    </div>
+                    {cmData && (
+                      <div className="print-trait-description">{cmData.description}</div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          )}
+
+          {isKSP && character.mutations && character.mutations.length > 0 && (
+            <div className="print-section">
+              <div className="print-section-title">Mutations</div>
+              {character.mutations.map((mut) => {
+                const mutData = mutationsKSP.find((m) => m.id === mut.id);
+                return (
+                  <div key={mut.id} className="print-trait">
+                    <div className="print-trait-name">{mut.name}</div>
+                    {mutData && (
+                      <div className="print-trait-description">
+                        {mutData.description}
+                        {mutData.drawback && ` Drawback: ${mutData.drawback}`}
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          )}
         </div>
 
         {/* Equipment spanning full width */}

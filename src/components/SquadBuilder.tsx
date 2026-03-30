@@ -163,12 +163,8 @@ const SquadBuilder: React.FC<SquadBuilderProps> = ({
     if (!squad || squad.characters.length >= 5) return;
 
     const newCharacter: Character = {
+      ...preset,
       id: Date.now().toString(),
-      name: preset.name,
-      stats: preset.stats,
-      flaw: preset.flaw,
-      feat: preset.feat,
-      equipment: preset.equipment,
       gameId,
       techLevel: squad.techLevel,
     };

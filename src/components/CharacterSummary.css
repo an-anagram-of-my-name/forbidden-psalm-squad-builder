@@ -168,3 +168,23 @@
 .info-value.over-limit {
   color: #f44336;
 }
+
+.augmentation-subsection {
+  display: flex;
+  gap: 6px;
+  font-size: 13px;
+  padding: 4px 8px;
+  background-color: #f9f9f9;
+  border-radius: 3px;
+  margin-bottom: 4px;
+}
+
+.augmentation-label {
+  font-weight: bold;
+  color: #666;
+  white-space: nowrap;
+}
+
+.augmentation-names {
+  color: #333;
+}

@@ -676,41 +676,60 @@ const CharacterCreationFlow: React.FC<CharacterCreationFlowProps> = ({
                             )}
 
                             {isKSP && selectedCybermods.length > 0 && (
-                                <div className="review-section-card">
-                                    <h3>Cybermods</h3>
-                                    <ul className="equipment-list">
-                                        {selectedCybermods.map((cm) => (
-                                            <li key={cm.id}>
-                                                {cm.name} ({cm.cost} cr)
-                                                {cm.isFlawed && <span className="review-flawed-tag"> ⚠ FLAWED</span>}
-                                            </li>
-                                        ))}
-                                    </ul>
-                                </div>
+                                <>
+                                    {selectedCybermods.map((cm) => {
+                                        const cmData = cybermodsKSP.find((c) => c.id === cm.id);
+                                        return (
+                                            <div key={cm.id} className="review-section-card">
+                                                <h3>Cybermod</h3>
+                                                <div>
+                                                    <p className="type">
+                                                        {cm.name}{cm.isFlawed && <span className="review-flawed-tag"> ⚠ FLAWED</span>}
+                                                    </p>
+                                                    {cmData && <p className="description">{cmData.description}</p>}
+                                                </div>
+                                            </div>
+                                        );
+                                    })}
+                                </>
                             )}
 
                             {isKSP && selectedMutations.length > 0 && (
-                                <div className="review-section-card">
-                                    <h3>Mutations</h3>
-                                    <ul className="equipment-list">
-                                        {selectedMutations.map((mut) => (
-                                            <li key={mut.id}>
-                                                {mut.name}
-                                                {Object.entries(mut.statMods).filter(([, v]) => v !== 0).map(([stat, value]) => {
-                                                    const label = gameConfig.statShortLabels[stat as keyof typeof gameConfig.statShortLabels] ?? stat.toUpperCase();
-                                                    return (
-                                                        <span
-                                                            key={stat}
-                                                            className={`review-stat-mod-tag ${(value ?? 0) >= 0 ? 'positive' : 'negative'}`}
-                                                        >
-                                                            {' '}{(value ?? 0) > 0 ? `+${value}` : value} {label}
-                                                        </span>
-                                                    );
-                                                })}
-                                            </li>
-                                        ))}
-                                    </ul>
-                                </div>
+                                <>
+                                    {selectedMutations.map((mut) => {
+                                        const mutData = mutationsKSP.find((m) => m.id === mut.id);
+                                        const statModEntries = Object.entries(mut.statMods).filter(([, v]) => v !== 0);
+                                        return (
+                                            <div key={mut.id} className="review-section-card">
+                                                <h3>Mutation</h3>
+                                                <div>
+                                                    <p className="type">{mut.name}</p>
+                                                    {mutData && (
+                                                        <p className="description">
+                                                            {mutData.description}
+                                                            {mutData.drawback && ` Drawback: ${mutData.drawback}`}
+                                                        </p>
+                                                    )}
+                                                    {statModEntries.length > 0 && (
+                                                        <div className="review-stat-mods">
+                                                            {statModEntries.map(([stat, value]) => {
+                                                                const label = gameConfig.statShortLabels[stat as keyof typeof gameConfig.statShortLabels] ?? stat.toUpperCase();
+                                                                return (
+                                                                    <span
+                                                                        key={stat}
+                                                                        className={`review-stat-mod-tag ${(value ?? 0) >= 0 ? 'positive' : 'negative'}`}
+                                                                    >
+                                                                        {(value ?? 0) > 0 ? `+${value}` : value} {label}
+                                                                    </span>
+                                                                );
+                                                            })}
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            </div>
+                                        );
+                                    })}
+                                </>
                             )}
                         </div>
                     </div>
