@@ -75,6 +75,28 @@ const CharacterSummary: React.FC<CharacterSummaryProps> = ({ character }) => {
         </div>
       </div>
 
+      {((character.cybermods && character.cybermods.length > 0) || (character.mutations && character.mutations.length > 0)) && (
+        <div className="summary-section">
+          <h4>Augmentations</h4>
+          {character.cybermods && character.cybermods.length > 0 && (
+            <div className="augmentation-subsection">
+              <span className="augmentation-label">Cybermods:</span>
+              <span className="augmentation-names">
+                {character.cybermods.map((cm) => `${cm.name}${cm.isFlawed ? ' ⚠' : ''}`).join(', ')}
+              </span>
+            </div>
+          )}
+          {character.mutations && character.mutations.length > 0 && (
+            <div className="augmentation-subsection">
+              <span className="augmentation-label">Mutations:</span>
+              <span className="augmentation-names">
+                {character.mutations.map((mut) => mut.name).join(', ')}
+              </span>
+            </div>
+          )}
+        </div>
+      )}
+
       <div className="summary-section">
         <h4>Equipment</h4>
         <div className="equipment-info">

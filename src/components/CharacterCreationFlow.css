@@ -370,6 +370,13 @@
     border-radius: 3px;
 }
 
+.review-stat-mods {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    margin-top: 6px;
+}
+
 .review-stat-mod-tag.positive {
     color: #2e7d32;
     background-color: #e8f5e9;

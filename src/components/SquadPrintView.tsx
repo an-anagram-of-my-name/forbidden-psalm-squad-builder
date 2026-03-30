@@ -50,8 +50,8 @@ const SquadPrintView: React.FC<SquadPrintViewProps> = ({ squad, onClose }) => {
         {squad.characters.length === 0 ? (
           <div className="print-no-characters">No characters in this squad.</div>
         ) : (
-          squad.characters.map((character) => (
-            <CharacterPrintCard key={character.id} character={character} />
+          squad.characters.map((character, index) => (
+            <CharacterPrintCard key={character.id} character={character} characterNumber={index + 1} />
           ))
         )}
       </div>
