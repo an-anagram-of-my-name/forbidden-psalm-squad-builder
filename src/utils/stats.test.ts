@@ -451,7 +451,7 @@ describe('calculateFinalDerivedStats', () => {
             av: 2,
             statModifiers: { strength: 3 },
         };
-        const result = calculateFinalDerivedStats(baseStats, null, null, [exoSkeleton]);
+        const result = calculateFinalDerivedStats(baseStats, null, null, [exoSkeleton], { gameId: 'kill-sample-process' });
         // strength increased by 3: equipmentSlots = 5 + (strength + 3)
         expect(result.equipmentSlots).toBe(5 + baseStats.strength + 3);
         // other derived stats unchanged
