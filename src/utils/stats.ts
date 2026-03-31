@@ -150,17 +150,20 @@ export function calculateFinalDerivedStats(
   featsData?: FeatData[]
 ): DerivedStats {
   const resolvedGameId = gameId ?? DEFAULT_GAME_ID;
+  const config = getGameConfig(resolvedGameId);
 
   // Step 1: Apply flaw/feat primary stat modifiers
   let effectiveStats = applyFlawFeatModifiers(baseStats, flaw, feat, resolvedGameId, flawsData, featsData);
 
   // Step 2: Apply equipment primary stat modifiers from statModifiers
   // (e.g. KSP Home Made: { agility: -1 } reduces agility which cascades to movement)
+  // Uses config.statNames to stay consistent with flaw/feat handling and avoid applying
+  // modifiers to stats that don't belong to the current game (e.g. 'knowledge' in 28-psalms).
   const equipmentPrimaryMods: Partial<Record<StatName, number>> = {};
   equipment.forEach((item) => {
     const sm = item.statModifiers;
     if (sm) {
-      ALL_STAT_NAMES.forEach((stat) => {
+      config.statNames.forEach((stat) => {
         if (sm[stat] !== undefined) {
           equipmentPrimaryMods[stat] = (equipmentPrimaryMods[stat] ?? 0) + sm[stat];
         }
@@ -169,7 +172,7 @@ export function calculateFinalDerivedStats(
   });
   if (Object.keys(equipmentPrimaryMods).length > 0) {
     effectiveStats = { ...effectiveStats };
-    ALL_STAT_NAMES.forEach((stat) => {
+    config.statNames.forEach((stat) => {
       if (equipmentPrimaryMods[stat] !== undefined) {
         effectiveStats[stat] = (effectiveStats[stat] ?? 0) + (equipmentPrimaryMods[stat] ?? 0);
       }

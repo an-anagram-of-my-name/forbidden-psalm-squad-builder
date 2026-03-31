@@ -412,7 +412,7 @@ describe('calculateFinalDerivedStats', () => {
             av: 1,
             statModifiers: { agility: -1 },
         };
-        const result = calculateFinalDerivedStats(baseStats, null, null, [homeMadeKSP]);
+        const result = calculateFinalDerivedStats(baseStats, null, null, [homeMadeKSP], 'kill-sample-process');
         // agility reduced by 1: movement = 5 + (agility - 1)
         expect(result.movement).toBe(5 + baseStats.agility - 1);
         // other derived stats unchanged
@@ -431,7 +431,7 @@ describe('calculateFinalDerivedStats', () => {
             av: 3,
             statModifiers: { agility: -3, movement: 3 },
         };
-        const result = calculateFinalDerivedStats(baseStats, null, null, [plateCarrier], { gameId: 'kill-sample-process' });
+        const result = calculateFinalDerivedStats(baseStats, null, null, [plateCarrier], 'kill-sample-process');
         // agility reduced by 3 via primary mod: base movement = 5 + (agility - 3)
         // then derived movement offset +3: net movement = 5 + agility
         expect(result.movement).toBe(5 + baseStats.agility);
@@ -451,7 +451,7 @@ describe('calculateFinalDerivedStats', () => {
             av: 2,
             statModifiers: { strength: 3 },
         };
-        const result = calculateFinalDerivedStats(baseStats, null, null, [exoSkeleton], { gameId: 'kill-sample-process' });
+        const result = calculateFinalDerivedStats(baseStats, null, null, [exoSkeleton], 'kill-sample-process');
         // strength increased by 3: equipmentSlots = 5 + (strength + 3)
         expect(result.equipmentSlots).toBe(5 + baseStats.strength + 3);
         // other derived stats unchanged

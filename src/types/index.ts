@@ -26,6 +26,13 @@ export type DerivedStatModifiers = {
 /** Partial primary-stat modifiers keyed by StatName. */
 export type StatModifiers = Partial<Record<StatName, number>>;
 
+/**
+ * Combined equipment stat modifier type: may include primary-stat keys (cascading into
+ * derived stats) and/or derived-stat keys (applied directly after calculation).
+ * Provides compile-time validation of allowed modifier keys.
+ */
+export type EquipmentStatModifiers = StatModifiers & DerivedStatModifiers;
+
 export interface FlawData {
   number: number;
   name: string;
@@ -153,7 +160,7 @@ export interface BaseEquipment {
    * Primary stat keys modify the base stat, which then cascades into derived stats.
    * Derived stat keys apply directly as offsets after derived stat calculation.
    */
-  statModifiers?: { [key: string]: number };
+  statModifiers?: EquipmentStatModifiers;
 }
 
 export interface Item extends BaseEquipment {
