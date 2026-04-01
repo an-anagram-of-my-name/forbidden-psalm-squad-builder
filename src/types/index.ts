@@ -189,7 +189,7 @@ export interface Drone extends BaseEquipment {
   hp?: number | null;
   av?: number | null;
   specialRules?: string;
-  statModifiers?: Partial<Record<StatName, number>>;
+  statModifiers?: BaseEquipment['statModifiers'];
   allowAI?: boolean;
   isAI?: boolean;
 }
