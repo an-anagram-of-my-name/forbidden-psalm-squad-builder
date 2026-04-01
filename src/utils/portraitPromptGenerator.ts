@@ -75,8 +75,9 @@ export function generatePortraitPrompt(character: Character): string {
   }
 
   // --- Part D: Style closing ---
+  const stylePhrase = character.characterStyle ?? 'tactical gear';
   sentences.push(
-    'Do NOT add any writing or labels on armour or equipment. Style is corrupted, grim, gritty, tactical gear with classic cyberpunk neon background. Despite dark subject, the character should be well-lit. Overall light cartoon/animation effect, rather than full realism.  Add some glitch to the picture.',
+    `Do NOT add any writing or labels on armour or equipment. Style is corrupted, grim, gritty, ${stylePhrase} with classic cyberpunk neon background. Despite dark subject, the character should be well-lit. Overall light cartoon/animation effect, rather than full realism.  Add some glitch to the picture.`,
   );
 
   return sentences.join(' ');

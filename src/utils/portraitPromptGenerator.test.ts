@@ -34,6 +34,19 @@ describe('generatePortraitPrompt', () => {
     expect(prompt).toContain('the character should be well-lit.');
   });
 
+  it('uses the selected characterStyle when defined', () => {
+    const c = makeCharacter({ characterStyle: 'Acid panda' });
+    const prompt = generatePortraitPrompt(c);
+    expect(prompt).toContain('Style is corrupted, grim, gritty, Acid panda with classic cyberpunk neon background.');
+    expect(prompt).not.toContain('tactical gear');
+  });
+
+  it('falls back to tactical gear when characterStyle is undefined', () => {
+    const c = makeCharacter({ characterStyle: undefined });
+    const prompt = generatePortraitPrompt(c);
+    expect(prompt).toContain('Style is corrupted, grim, gritty, tactical gear with classic cyberpunk neon background.');
+  });
+
   it('uses "presence/acuity" for the presence stat', () => {
     const c = makeCharacter({ stats: { agility: 0, presence: 2, strength: 0, toughness: 0, knowledge: 0 } });
     expect(generatePortraitPrompt(c)).toContain('high presence/acuity');

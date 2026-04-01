@@ -95,8 +95,9 @@ export function generateCharacterPrompt(character: Character): string {
   }
 
   // --- Final style qualifier ---
+  const stylePhrase = character.characterStyle ?? 'tactical gear';
   parts.push(
-    'style is grim, dark, gritty, tactical gear with classic cyberpunk neon background',
+    `style is grim, dark, gritty, ${stylePhrase} with classic cyberpunk neon background`,
   );
 
   return parts.join(', ') + '.';

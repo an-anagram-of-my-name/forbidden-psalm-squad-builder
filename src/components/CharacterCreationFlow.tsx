@@ -14,6 +14,7 @@ import { generateCharacterPortrait } from '../services/portraitGenerationService
 import { characterNames28Psalms } from '../types/characterNames28Psalms';
 import { cybermodsKSP, SelectedCybermod } from '../types/cybermodsKSP';
 import { mutationsKSP, SelectedMutation } from '../types/mutationsKSP';
+import { CHARACTER_STYLES } from '../types/characterStyles';
 import MutationPicker from './MutationPicker';
 import './CharacterCreationFlow.css';
 
@@ -79,6 +80,11 @@ const CharacterCreationFlow: React.FC<CharacterCreationFlowProps> = ({
     const [isGeneratingPortrait, setIsGeneratingPortrait] = useState(false);
     const [portraitGenerationError, setPortraitGenerationError] = useState<string | null>(null);
 
+    // Character style for portrait generation
+    const [characterStyle, setCharacterStyle] = useState<string | undefined>(
+        initialPreset?.characterStyle ?? initialCharacter?.characterStyle ?? undefined
+    );
+
     // KSP cybermod selection state
     const [selectedCybermods, setSelectedCybermods] = useState<SelectedCybermod[]>(
         initialCharacter?.cybermods ?? initialPreset?.cybermods ?? [],
@@ -112,6 +118,11 @@ const CharacterCreationFlow: React.FC<CharacterCreationFlowProps> = ({
 
     const handleStatsChange = (newStats: Stats | null) => {
         setStats(newStats);
+    };
+
+    const handleRandomizeStyle = () => {
+        const randomIndex = Math.floor(Math.random() * CHARACTER_STYLES.length);
+        setCharacterStyle(CHARACTER_STYLES[randomIndex]);
     };
 
     const handleTechLevelSelected = (level: TechLevel) => {
@@ -215,6 +226,7 @@ const CharacterCreationFlow: React.FC<CharacterCreationFlowProps> = ({
                     equipment,
                     gameId: gameId,
                     techLevel: selectedTechLevel,
+                    characterStyle,
                 };
 
                 setIsGeneratingPortrait(true);
@@ -235,6 +247,7 @@ const CharacterCreationFlow: React.FC<CharacterCreationFlowProps> = ({
                     gameId: gameId,
                     techLevel: selectedTechLevel,
                     portraitUrl: portraitResult.url,
+                    characterStyle,
                     ...kspCybermods,
                     createdAt: initialPreset?.createdAt ?? new Date(),
                     updatedAt: new Date(),
@@ -250,6 +263,7 @@ const CharacterCreationFlow: React.FC<CharacterCreationFlowProps> = ({
                     flaw,
                     feat,
                     equipment,
+                    characterStyle,
                     ...kspCybermods,
                 };
 
@@ -287,6 +301,7 @@ const CharacterCreationFlow: React.FC<CharacterCreationFlowProps> = ({
                     equipment,
                     gameId: gameId,
                     techLevel: techLevel ?? undefined,
+                    characterStyle,
                     ...kspCybermods,
                 };
 
@@ -601,23 +616,49 @@ const CharacterCreationFlow: React.FC<CharacterCreationFlowProps> = ({
                             </div>
                         )}
 
-                        <div className="character-name-input">
-                            <label>Character Name</label>
-                            <div className="name-input-row">
-                                <input
-                                    type="text"
-                                    value={characterName}
-                                    onChange={handleCharacterNameChange}
-                                    placeholder="Enter character name"
-                                    className="name-input"
-                                />
-                                <button
-                                    onClick={handleGenerateName}
-                                    className="btn-generate-name"
-                                    type="button"
-                                >
-                                    Generate Name
-                                </button>
+                        <div className="character-controls-row">
+                            <div className="character-name-input">
+                                <label>Character Name</label>
+                                <div className="name-input-row">
+                                    <input
+                                        type="text"
+                                        value={characterName}
+                                        onChange={handleCharacterNameChange}
+                                        placeholder="Enter character name"
+                                        className="name-input"
+                                    />
+                                    <button
+                                        onClick={handleGenerateName}
+                                        className="btn-generate-name"
+                                        type="button"
+                                    >
+                                        Generate Name
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div className="character-style-picker">
+                                <label>Character Style</label>
+                                <div className="style-picker-row">
+                                    <select
+                                        className="style-select"
+                                        value={characterStyle ?? ''}
+                                        onChange={(e) => setCharacterStyle(e.target.value === '' ? undefined : e.target.value)}
+                                    >
+                                        <option value="">No style selected</option>
+                                        {CHARACTER_STYLES.map((style) => (
+                                            <option key={style} value={style}>{style}</option>
+                                        ))}
+                                    </select>
+                                    <button
+                                        onClick={handleRandomizeStyle}
+                                        className="btn-randomize-style"
+                                        type="button"
+                                        title="Pick a random style"
+                                    >
+                                        🎲
+                                    </button>
+                                </div>
                             </div>
                         </div>
 
