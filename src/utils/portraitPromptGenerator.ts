@@ -40,7 +40,7 @@ export function generatePortraitPrompt(character: Character): string {
       highStats.push(`very high ${label}`);
     } else if (value >= 1) {
       highStats.push(`high ${label}`);
-    } else if (value = -1) {
+    } else if (value == -1) {
       lowStats.push(`low ${label}`);
     } else if (value <= -2) {
       lowStats.push(`low ${label}`);
@@ -65,7 +65,7 @@ export function generatePortraitPrompt(character: Character): string {
     .map((e) => e.name);
   const armorPieces = visibleEquipment
     .filter((e) => e.category === 'armor')
-    .map((e) => `{e.name} armour`);
+    .map((e) => `${e.name} armour`);
 
   if (weapons.length > 0 && armorPieces.length > 0) {
     sentences.push(
