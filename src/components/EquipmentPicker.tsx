@@ -178,6 +178,10 @@ const EquipmentPicker: React.FC<EquipmentPickerProps> = ({ character, selectedEq
       canAdd = canAddMore || isSelected;
     }
 
+    const renderCost = equipment.category === 'drone' && isSelected
+      ? ((selectedEquipment.find((eq) => eq.id === equipment.id) as import('../types').Drone | undefined)?.cost ?? equipment.cost)
+      : equipment.cost;
+
     return (
       <div
         key={equipment.id}
@@ -193,7 +197,7 @@ const EquipmentPicker: React.FC<EquipmentPickerProps> = ({ character, selectedEq
             {equipment.name}
             {isStackable && instanceCount > 0 && <span className="instance-count"> [x{instanceCount}]</span>}
           </div>
-          <div className="equipment-cost">{equipment.cost} cr</div>
+          <div className="equipment-cost">{renderCost} cr</div>
         </div>
 
         <div className="equipment-details">
