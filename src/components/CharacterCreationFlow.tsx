@@ -15,6 +15,7 @@ import { characterNames28Psalms } from '../types/characterNames28Psalms';
 import { cybermodsKSP, SelectedCybermod } from '../types/cybermodsKSP';
 import { mutationsKSP, SelectedMutation } from '../types/mutationsKSP';
 import { CHARACTER_STYLES } from '../types/characterStyles';
+import { CHARACTER_FEATURES } from '../types/characterFeatures';
 import MutationPicker from './MutationPicker';
 import './CharacterCreationFlow.css';
 
@@ -85,6 +86,11 @@ const CharacterCreationFlow: React.FC<CharacterCreationFlowProps> = ({
         initialPreset?.characterStyle ?? initialCharacter?.characterStyle ?? undefined
     );
 
+    // Character feature for portrait generation
+    const [characterFeature, setCharacterFeature] = useState<string | undefined>(
+        initialPreset?.characterFeature ?? initialCharacter?.characterFeature ?? undefined
+    );
+
     // KSP cybermod selection state
     const [selectedCybermods, setSelectedCybermods] = useState<SelectedCybermod[]>(
         initialCharacter?.cybermods ?? initialPreset?.cybermods ?? [],
@@ -123,6 +129,11 @@ const CharacterCreationFlow: React.FC<CharacterCreationFlowProps> = ({
     const handleRandomizeStyle = () => {
         const randomIndex = Math.floor(Math.random() * CHARACTER_STYLES.length);
         setCharacterStyle(CHARACTER_STYLES[randomIndex]);
+    };
+
+    const handleRandomizeFeature = () => {
+        const randomIndex = Math.floor(Math.random() * CHARACTER_FEATURES.length);
+        setCharacterFeature(CHARACTER_FEATURES[randomIndex]);
     };
 
     const handleTechLevelSelected = (level: TechLevel) => {
@@ -227,6 +238,7 @@ const CharacterCreationFlow: React.FC<CharacterCreationFlowProps> = ({
                     gameId: gameId,
                     techLevel: selectedTechLevel,
                     characterStyle,
+                    characterFeature,
                 };
 
                 setIsGeneratingPortrait(true);
@@ -248,6 +260,7 @@ const CharacterCreationFlow: React.FC<CharacterCreationFlowProps> = ({
                     techLevel: selectedTechLevel,
                     portraitUrl: portraitResult.url,
                     characterStyle,
+                    characterFeature,
                     ...kspCybermods,
                     createdAt: initialPreset?.createdAt ?? new Date(),
                     updatedAt: new Date(),
@@ -264,6 +277,7 @@ const CharacterCreationFlow: React.FC<CharacterCreationFlowProps> = ({
                     feat,
                     equipment,
                     characterStyle,
+                    characterFeature,
                     ...kspCybermods,
                 };
 
@@ -302,6 +316,7 @@ const CharacterCreationFlow: React.FC<CharacterCreationFlowProps> = ({
                     gameId: gameId,
                     techLevel: techLevel ?? undefined,
                     characterStyle,
+                    characterFeature,
                     ...kspCybermods,
                 };
 
@@ -655,6 +670,30 @@ const CharacterCreationFlow: React.FC<CharacterCreationFlowProps> = ({
                                         className="btn-randomize-style"
                                         type="button"
                                         title="Pick a random style"
+                                    >
+                                        🎲
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div className="character-style-picker">
+                                <label>Character Feature</label>
+                                <div className="style-picker-row">
+                                    <select
+                                        className="style-select"
+                                        value={characterFeature ?? ''}
+                                        onChange={(e) => setCharacterFeature(e.target.value === '' ? undefined : e.target.value)}
+                                    >
+                                        <option value="">No feature selected</option>
+                                        {CHARACTER_FEATURES.map((feature) => (
+                                            <option key={feature} value={feature}>{feature}</option>
+                                        ))}
+                                    </select>
+                                    <button
+                                        onClick={handleRandomizeFeature}
+                                        className="btn-randomize-style"
+                                        type="button"
+                                        title="Pick a random feature"
                                     >
                                         🎲
                                     </button>
