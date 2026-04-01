@@ -231,6 +231,21 @@ const EquipmentPicker: React.FC<EquipmentPickerProps> = ({ character, selectedEq
             </>
           )}
 
+          {equipment.category === 'consumable' && (() => {
+            const consumable = equipment as Consumable;
+            return (
+              <>
+                {consumable.damage && <div className="detail">Damage: {consumable.damage}</div>}
+                {consumable.modifier && <div className="detail">Modifier: {consumable.modifier}</div>}
+                <div className="detail">Slots: {equipment.slots}</div>
+                {consumable.specialRules && consumable.specialRules.length > 0 && (
+                  <div className="detail special-rules">{consumable.specialRules.join(', ')}</div>
+                )}
+                {consumable.ability && <div className="detail">{consumable.ability}</div>}
+              </>
+            );
+          })()}
+
           {equipment.category === 'ammo' && (
             <>
               <div className="detail">Shots: {(equipment as Ammo).shots}</div>

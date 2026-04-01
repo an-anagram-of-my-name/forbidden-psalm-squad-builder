@@ -1,5 +1,5 @@
 import React from 'react';
-import { Character, Equipment, Armor, Weapon } from '../types';
+import { Character, Equipment, Armor, Weapon, Consumable } from '../types';
 import { applyFlawFeatModifiers, calculateFinalDerivedStats } from '../utils/stats';
 import { getGameConfig } from '../types/games';
 import { flaws28Psalms, feats28Psalms, FlawData, FeatData } from '../types/featsandflaws28Psalms';
@@ -56,13 +56,43 @@ function renderEquipmentDetails(item: Equipment): React.ReactNode {
         <div key="2h" className="print-equipment-detail">Two-handed</div>
       );
     }
-  } else if (item.category === 'item' || item.category === 'consumable') {
+  } else if (item.category === 'item') {
     const itemWithAbility = item as { ability: string };
     details.push(
       <div key="ability" className="print-equipment-detail">
         {itemWithAbility.ability}
       </div>
     );
+  } else if (item.category === 'consumable') {
+    const consumable = item as Consumable;
+    if (consumable.damage) {
+      details.push(
+        <div key="damage" className="print-equipment-detail">
+          <strong>Damage:</strong> {consumable.damage}
+        </div>
+      );
+    }
+    if (consumable.modifier) {
+      details.push(
+        <div key="modifier" className="print-equipment-detail">
+          <strong>Modifier:</strong> {consumable.modifier}
+        </div>
+      );
+    }
+    if (consumable.specialRules && consumable.specialRules.length > 0) {
+      details.push(
+        <div key="rules" className="print-equipment-detail">
+          <strong>Rules:</strong> {consumable.specialRules.join(', ')}
+        </div>
+      );
+    }
+    if (consumable.ability) {
+      details.push(
+        <div key="ability" className="print-equipment-detail">
+          {consumable.ability}
+        </div>
+      );
+    }
   } else if (item.category === 'ammo') {
     const ammo = item as { shots: number; compatibleWeapons: string[] };
     details.push(
