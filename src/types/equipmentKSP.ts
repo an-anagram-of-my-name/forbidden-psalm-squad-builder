@@ -5,10 +5,11 @@
 import { Weapon, Armor, Item, Ammo, Consumable, Drone } from './index';
 
 // ============================================================================
-// ONE-HANDED RANGED WEAPONS
+// WEAPONS
 // ============================================================================
 
 export const weaponsKSP: Weapon[] = [
+  // ============ ONE-HANDED RANGED ============
   {
     id: 'revolver',
     name: 'Revolver',
@@ -57,19 +58,104 @@ export const weaponsKSP: Weapon[] = [
     specialRules: ['Non-lethal', 'Ranged 6', 'Reload'],
     isRanged: true,
   },
-];
 
-// Placeholder arrays for remaining weapons (to be added in future PRs)
-export const weaponsKSPMelee1Handed: Weapon[] = [];
-export const weaponsKSPRanged2Handed: Weapon[] = [];
-export const weaponsKSPMelee2Handed: Weapon[] = [];
-
-// Export all weapons (will expand as more categories are added)
-export const allWeaponsKSP: Weapon[] = [
-  ...weaponsKSP, // One-handed ranged
-  ...weaponsKSPMelee1Handed, // One-handed melee (future)
-  ...weaponsKSPRanged2Handed, // Two-handed ranged (future)
-  ...weaponsKSPMelee2Handed, // Two-handed melee (future)
+  // ============ TWO-HANDED RANGED ============
+  {
+    id: 'ancient-rifle',
+    name: 'Ancient Rifle',
+    damage: 'D8',
+    modifier: 'presence',
+    cost: 200,
+    slots: 2,
+    isTwoHanded: true,
+    category: 'weapon',
+    specialRules: ['AF2', 'Ranged', 'Jam', 'Reload 5'],
+    isRanged: true,
+  },
+  {
+    id: 'sawed-off',
+    name: 'Sawed-off',
+    damage: 'D8',
+    modifier: 'presence',
+    cost: 150,
+    slots: 2,
+    isTwoHanded: true,
+    category: 'weapon',
+    specialRules: ['Explode', 'Ranged 6', 'Reload 2'],
+    isRanged: true,
+  },
+  {
+    id: 'smart-rifle',
+    name: 'Smart Rifle',
+    damage: 'D8',
+    modifier: 'presence',
+    cost: 250,
+    slots: 2,
+    isTwoHanded: true,
+    category: 'weapon',
+    specialRules: ['AF2', 'Ranged 15', 'Cyber', 'Reload 4'],
+    isRanged: true,
+  },
+  {
+    id: 'smart-smg',
+    name: 'Smart SMG',
+    damage: 'D6',
+    modifier: 'presence',
+    cost: 225,
+    slots: 2,
+    isTwoHanded: true,
+    category: 'weapon',
+    specialRules: ['AF2', 'Ranged', 'Cyber', 'Reload 4'],
+    isRanged: true,
+  },
+  {
+    id: 'pulse-rifle',
+    name: 'Pulse Rifle',
+    damage: 'D10',
+    modifier: 'presence',
+    cost: 300,
+    slots: 2,
+    isTwoHanded: true,
+    category: 'weapon',
+    specialRules: ['AF3', 'Ranged 15', 'Cyber', 'Reload 5', 'Can be loaded with a Consumable in addition to ammo which can be fired up to 12 inches'],
+    isRanged: true,
+  },
+  {
+    id: 'arc-gun',
+    name: 'Arc Gun',
+    damage: '2D10',
+    modifier: 'strength',
+    cost: 500,
+    slots: 2,
+    isTwoHanded: true,
+    category: 'weapon',
+    specialRules: ['Bulky', 'Ranged', 'Cyber', 'Reload', 'Explode', 'AP'],
+    isRanged: true,
+  },
+  {
+    id: 'guided-rifle',
+    name: 'Guided Rifle',
+    damage: '2D10',
+    modifier: 'presence',
+    cost: 600,
+    slots: 2,
+    isTwoHanded: true,
+    category: 'weapon',
+    specialRules: ['Jam', 'Ranged 24', 'Cyber', 'Reload', 'When used with a Smart link or Augmented Helmet does not need line of sight to target.'],
+    isRanged: true,
+  },
+  {
+    id: 'cyber-crossbow',
+    name: 'Cyber Crossbow',
+    damage: '1D10',
+    modifier: 'presence',
+    cost: 250,
+    slots: 2,
+    isTwoHanded: true,
+    category: 'weapon',
+    specialRules: ['Ranged', 'Cyber', 'Reload'],
+    isRanged: true,
+  },
 ];
 
 export const armorKSP: Armor[] = [
