@@ -25,7 +25,7 @@ export function generatePortraitPrompt(character: Character): string {
 
   // --- Part A: General opener ---
   const stylePhrase = character.characterStyle ?? 'grimdark';
-  sentences.push(`A torso and head image of a ${stylePhrase}/cyberpunk character.`);
+  sentences.push(`A torso and head image of a ${stylePhrase} character.`);
 
   // --- Part B: Stats qualifiers ---
   const highStats: string[] = [];
@@ -36,12 +36,16 @@ export function generatePortraitPrompt(character: Character): string {
     // Use "presence/acuity" for the presence stat
     const label = stat === 'presence' ? 'presence/acuity' : stat;
 
-    if (value > 1) {
+    if (value >= 2) {
+      highStats.push(`very high ${label}`);
+    } else if (value >= 1) {
       highStats.push(`high ${label}`);
-    } else if (value < 0) {
+    } else if (value = -1) {
+      lowStats.push(`low ${label}`);
+    } else if (value <= -2) {
       lowStats.push(`low ${label}`);
     }
-    // Skip 0 and 1
+    
   }
 
   if (highStats.length > 0 && lowStats.length > 0) {
@@ -61,7 +65,7 @@ export function generatePortraitPrompt(character: Character): string {
     .map((e) => e.name);
   const armorPieces = visibleEquipment
     .filter((e) => e.category === 'armor')
-    .map((e) => e.name);
+    .map((e) => `{e.name} armour`);
 
   if (weapons.length > 0 && armorPieces.length > 0) {
     sentences.push(
@@ -72,13 +76,13 @@ export function generatePortraitPrompt(character: Character): string {
   } else if (armorPieces.length > 0) {
     sentences.push(`The character is wearing ${armorPieces.join(' and ')}.`);
   } else {
-    sentences.push('The character is not wearing armor.');
+    sentences.push('The character is not wearing armour.');
   }
 
   // --- Part D: Style closing ---
   
   sentences.push(
-    `Do NOT add any writing or labels on armour or equipment. Style is corrupted, grim, gritty, ${stylePhrase} with classic cyberpunk neon background. Despite dark subject, the character should be well-lit. Overall light cartoon/animation effect, rather than full realism.  Add some glitch to the picture.`,
+    `Do NOT add any writing or labels on the character. Style is corrupted, grim, gritty, ${stylePhrase} with classic cyberpunk neon background. Despite dark subject, the character should be well-lit. Overall light cartoon/animation effect, rather than full realism.  Add some glitch to the picture.`,
   );
 
   return sentences.join(' ');
