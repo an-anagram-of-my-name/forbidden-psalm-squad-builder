@@ -43,11 +43,11 @@
   border: 1px solid #ccc;
 }
 
-/* Two-column body layout */
+/* Single-column body layout: stats+portrait row, then traits, then equipment */
 .print-card-body {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 10px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
 }
 
 /* Stats + portrait side-by-side block (spans left column) */
@@ -187,9 +187,8 @@
   margin-top: 1px;
 }
 
-/* Equipment spanning full width */
+/* Equipment — full width naturally in flex-column layout */
 .print-equipment-section {
-  grid-column: 1 / -1;
   margin-bottom: 0;
 }
 
