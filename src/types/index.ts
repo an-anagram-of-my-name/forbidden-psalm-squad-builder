@@ -198,7 +198,10 @@ export type Equipment = Item | Ammo | Armor | Weapon | Consumable | Drone;
 
 export interface Consumable extends BaseEquipment {
   category: 'consumable';
-  ability: string;
+  ability?: string;
+  damage?: string;
+  modifier?: StatName;
+  specialRules?: string[];
 }
 
 export interface Character {

@@ -345,7 +345,88 @@ export const armorKSP: Armor[] = [
 
 export const itemsKSP: Item[] = [];
 export const ammoKSP: Ammo[] = [];
-export const consumablesKSP: Consumable[] = [];
+export const consumablesKSP: Consumable[] = [
+  {
+    id: 'molotov',
+    name: 'Molotov',
+    damage: 'D6',
+    modifier: 'agility',
+    cost: 50,
+    slots: 1,
+    category: 'consumable',
+    specialRules: ['Burn', 'Explode', 'Thrown'],
+  },
+  {
+    id: 'smoke-grenade',
+    name: 'Smoke Grenade',
+    damage: '-',
+    modifier: 'agility',
+    cost: 50,
+    slots: 1,
+    category: 'consumable',
+    specialRules: ['Smoke', 'Template', 'Thrown'],
+  },
+  {
+    id: 'tear-gas-grenade',
+    name: 'TearGas Grenade',
+    damage: '-',
+    modifier: 'agility',
+    cost: 60,
+    slots: 1,
+    category: 'consumable',
+    specialRules: ['Gas', 'Template', 'Thrown'],
+  },
+  {
+    id: 'homemade-bomb',
+    name: 'Homemade bomb',
+    damage: 'D6',
+    modifier: 'strength',
+    cost: 20,
+    slots: 1,
+    category: 'consumable',
+    specialRules: ['Explode', 'Thrown'],
+  },
+  {
+    id: 'grenade',
+    name: 'Grenade',
+    damage: 'D8',
+    modifier: 'agility',
+    cost: 50,
+    slots: 1,
+    category: 'consumable',
+    specialRules: ['Explode', 'Called Shot', 'Thrown'],
+  },
+  {
+    id: 'stun-grenade',
+    name: 'Stun Grenade',
+    damage: '-',
+    modifier: 'agility',
+    cost: 50,
+    slots: 1,
+    category: 'consumable',
+    specialRules: ['Non-lethal', 'Thrown'],
+  },
+  {
+    id: 'c9',
+    name: 'C9',
+    damage: '1D10',
+    modifier: 'presence',
+    cost: 90,
+    slots: 1,
+    category: 'consumable',
+    specialRules: ['Explode', 'Thrown', 'As an action can be placed on a piece of terrain smaller than 6x6 to remove it from play.'],
+  },
+  {
+    id: 'omega-bomb',
+    name: 'ΑΩ Bomb',
+    damage: '∞',
+    modifier: 'knowledge',
+    cost: 99000,
+    slots: 1,
+    category: 'consumable',
+    specialRules: ['Destroys the whole world, kills everyone'],
+  },
+];
 
 export const dronesKSP: Drone[] = [
   {
