@@ -83,6 +83,19 @@ describe('generateCharacterPrompt', () => {
     expect(prompt).toContain('style is grim, dark, gritty');
   });
 
+  it('uses the selected characterStyle when defined', () => {
+    const c = makeCharacter({ characterStyle: 'Cybercrust' });
+    const prompt = generateCharacterPrompt(c);
+    expect(prompt).toContain('style is grim, dark, gritty, Cybercrust with classic cyberpunk neon background');
+    expect(prompt).not.toContain('tactical gear');
+  });
+
+  it('falls back to tactical gear when characterStyle is undefined', () => {
+    const c = makeCharacter({ characterStyle: undefined });
+    const prompt = generateCharacterPrompt(c);
+    expect(prompt).toContain('style is grim, dark, gritty, tactical gear with classic cyberpunk neon background');
+  });
+
   it('includes "high agility" for agility +2', () => {
     const c = makeCharacter({ stats: { agility: 2, presence: 0, strength: 0, toughness: 0, knowledge: 0 } });
     expect(generateCharacterPrompt(c)).toContain('high agility');

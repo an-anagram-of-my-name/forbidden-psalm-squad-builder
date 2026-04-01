@@ -211,6 +211,7 @@ export interface Character {
   gameId: GameId;
   techLevel?: TechLevel;
   portraitUrl?: string;
+  characterStyle?: string;
   // KSP-specific augmentations
   additionalFlaws?: Flaw[];
   additionalFeats?: Feat[];
@@ -229,6 +230,7 @@ export interface CharacterPreset {
   gameId: GameId;
   techLevel?: TechLevel;
   portraitUrl?: string;
+  characterStyle?: string;
   // KSP-specific augmentations
   additionalFlaws?: Flaw[];
   additionalFeats?: Feat[];
