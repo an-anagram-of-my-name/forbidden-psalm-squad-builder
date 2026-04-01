@@ -135,7 +135,11 @@ const EquipmentPicker: React.FC<EquipmentPickerProps> = ({ character, selectedEq
   const handleDroneAIToggle = (drone: Drone) => {
     const existing = selectedEquipment.find((eq) => eq.id === drone.id) as Drone | undefined;
     if (!existing) return;
-    const updated = { ...existing, isAI: !existing.isAI, cost: existing.isAI ? drone.cost : drone.cost + 200 };
+    const updated = {
+      ...existing,
+      isAI: !existing.isAI,
+      cost: existing.isAI ? existing.cost - 200 : existing.cost + 200,
+    };
     onEquipmentChange(selectedEquipment.map((eq) => (eq.id === drone.id ? updated : eq)));
   };
 
