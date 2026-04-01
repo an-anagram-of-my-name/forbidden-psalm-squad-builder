@@ -22,7 +22,7 @@ function promptEquipment(equipment: Equipment[]): Equipment[] {
  */
 export function generatePortraitPrompt(character: Character): string {
   const sentences: string[] = [];
-
+  
   // --- Part A: General opener ---
   const stylePhrase = character.characterStyle ?? 'grimdark';
   sentences.push(`A torso and head image of a ${stylePhrase} character.`);
@@ -80,9 +80,12 @@ export function generatePortraitPrompt(character: Character): string {
   }
 
   // --- Part D: Style closing ---
+
+  const featurePhrase = character.characterFeature ?? 'intense glare';
   
   sentences.push(
     `Do NOT add any writing or labels on the character. Style is corrupted, grim, gritty, ${stylePhrase} with classic cyberpunk neon background. Despite dark subject, the character should be well-lit. Overall light cartoon/animation effect, rather than full realism.  Add some glitch to the picture.`,
+    `The character has prominent '${featurePhrase}' feature.`,
   );
 
   return sentences.join(' ');
