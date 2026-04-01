@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { Character, Equipment, Item, Ammo, Armor, Weapon, Consumable } from '../types';
+import { Character, Equipment, Item, Ammo, Armor, Weapon, Consumable, Drone } from '../types';
 import { FlawData, FeatData } from '../types/featsandflaws28Psalms';
 import { calculateTotalCost } from '../utils/equipment';
 import { applyFlawFeatModifiers, calculateFinalDerivedStats } from '../utils/stats';
@@ -18,16 +18,17 @@ interface EquipmentPickerProps {
   itemsData?: Item[];
   ammoData?: Ammo[];
   consumablesData?: Consumable[];
+  dronesData?: Drone[];
   flawsData?: FlawData[];
   featsData?: FeatData[];
   afterStats?: React.ReactNode;
 }
 
-type EquipmentTab = 'weapons' | 'armor' | 'items' | 'ammo-consumables';
+type EquipmentTab = 'weapons' | 'armor' | 'items' | 'ammo-consumables' | 'drones';
 
 const CONSUMABLE_IDS = ['molotov', 'black-powder-bomb', 'grenade', 'future-molotov'];
 
-const EquipmentPicker: React.FC<EquipmentPickerProps> = ({ character, selectedEquipment, onEquipmentChange, weaponsData, armorData, itemsData, ammoData, consumablesData, flawsData, featsData, afterStats }) => {
+const EquipmentPicker: React.FC<EquipmentPickerProps> = ({ character, selectedEquipment, onEquipmentChange, weaponsData, armorData, itemsData, ammoData, consumablesData, dronesData, flawsData, featsData, afterStats }) => {
   const [activeTab, setActiveTab] = useState<EquipmentTab>('weapons');
   const config = getGameConfig(character.gameId);
 
@@ -39,6 +40,7 @@ const EquipmentPicker: React.FC<EquipmentPickerProps> = ({ character, selectedEq
   const itemsList = itemsData ?? gameEquipment.items;
   const ammoList = ammoData ?? gameEquipment.ammo;
   const consumablesList = consumablesData ?? gameEquipment.consumables;
+  const dronesList = dronesData ?? gameEquipment.drones ?? [];
 
   const effectiveStats = useMemo(() => {
     return applyFlawFeatModifiers(character.stats, character.flaw, character.feat, character.gameId, flawsData, featsData);
@@ -101,6 +103,11 @@ const EquipmentPicker: React.FC<EquipmentPickerProps> = ({ character, selectedEq
     return [...weaponDerived, ...fromData];
   }, [character.techLevel, pastTechWeapons, futureTechWeapons, consumablesList]);
 
+  // Get all available drones
+  const availableDrones = useMemo(() => {
+    return dronesList.filter((drone) => canEquipTech(drone.techLevel));
+  }, [character.techLevel, dronesList]);
+
   const isAmmoOrConsumable = (equipment: Equipment): boolean => {
     return equipment.category === 'ammo' || equipment.category === 'consumable' || CONSUMABLE_IDS.includes(equipment.id);
   };
@@ -124,6 +131,18 @@ const EquipmentPicker: React.FC<EquipmentPickerProps> = ({ character, selectedEq
     }
   };
 
+  // Toggle AI upgrade on a selected drone (+200 cost when isAI=true)
+  const handleDroneAIToggle = (drone: Drone) => {
+    const existing = selectedEquipment.find((eq) => eq.id === drone.id) as Drone | undefined;
+    if (!existing) return;
+    const updated = {
+      ...existing,
+      isAI: !existing.isAI,
+      cost: existing.isAI ? existing.cost - 200 : existing.cost + 200,
+    };
+    onEquipmentChange(selectedEquipment.map((eq) => (eq.id === drone.id ? updated : eq)));
+  };
+
   const handleRemoveAll = (equipment: Equipment) => {
     onEquipmentChange(selectedEquipment.filter((eq) => eq.id !== equipment.id));
   };
@@ -137,6 +156,11 @@ const EquipmentPicker: React.FC<EquipmentPickerProps> = ({ character, selectedEq
   }, [selectedEquipment]);
 
   const canAddMore = remainingSlots > 0;
+
+  const tabs = useMemo((): EquipmentTab[] => {
+    const base: EquipmentTab[] = ['weapons', 'armor', 'items', 'ammo-consumables'];
+    return availableDrones.length > 0 ? [...base, 'drones'] : base;
+  }, [availableDrones.length]);
 
   const renderEquipmentCard = (equipment: Equipment) => {
     const isSelected = isEquipmentSelected(equipment);
@@ -154,6 +178,10 @@ const EquipmentPicker: React.FC<EquipmentPickerProps> = ({ character, selectedEq
       canAdd = canAddMore || isSelected;
     }
 
+    const renderCost = equipment.category === 'drone' && isSelected
+      ? ((selectedEquipment.find((eq) => eq.id === equipment.id) as import('../types').Drone | undefined)?.cost ?? equipment.cost)
+      : equipment.cost;
+
     return (
       <div
         key={equipment.id}
@@ -169,7 +197,7 @@ const EquipmentPicker: React.FC<EquipmentPickerProps> = ({ character, selectedEq
             {equipment.name}
             {isStackable && instanceCount > 0 && <span className="instance-count"> [x{instanceCount}]</span>}
           </div>
-          <div className="equipment-cost">{equipment.cost} cr</div>
+          <div className="equipment-cost">{renderCost} cr</div>
         </div>
 
         <div className="equipment-details">
@@ -209,6 +237,27 @@ const EquipmentPicker: React.FC<EquipmentPickerProps> = ({ character, selectedEq
               <div className="detail">Slots: {equipment.slots}</div>
             </>
           )}
+
+          {equipment.category === 'drone' && (() => {
+            const drone = equipment as Drone;
+            return (
+              <>
+                {drone.hp != null && <div className="detail">HP: {drone.hp}</div>}
+                {drone.av != null && <div className="detail">AV: {drone.av}</div>}
+                {drone.slots > 0 && <div className="detail">Slots: {drone.slots}</div>}
+                {drone.slots === 0 && <div className="detail">Slots: 0 (no slot cost)</div>}
+                {drone.specialRules && <div className="detail special-rules">{drone.specialRules}</div>}
+                {drone.statModifiers && Object.keys(drone.statModifiers).length > 0 && (
+                  <div className="detail">
+                    Stat mods:{' '}
+                    {Object.entries(drone.statModifiers)
+                      .map(([k, v]) => `${k.charAt(0).toUpperCase() + k.slice(1)} ${v > 0 ? '+' : ''}${v}`)
+                      .join(', ')}
+                  </div>
+                )}
+              </>
+            );
+          })()}
         </div>
 
         {!isStackable && isSelected && <div className="checkmark">✓</div>}
@@ -223,6 +272,19 @@ const EquipmentPicker: React.FC<EquipmentPickerProps> = ({ character, selectedEq
           >
             ✕
           </button>
+        )}
+        {equipment.category === 'drone' && isSelected && (equipment as Drone).allowAI && (
+          <label
+            className="drone-ai-label"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <input
+              type="checkbox"
+              checked={!!(selectedEquipment.find((eq) => eq.id === equipment.id) as Drone | undefined)?.isAI}
+              onChange={() => handleDroneAIToggle(equipment as Drone)}
+            />
+            {' '}Upgrade to AI Drone (+200 cr)
+          </label>
         )}
       </div>
     );
@@ -277,7 +339,7 @@ const EquipmentPicker: React.FC<EquipmentPickerProps> = ({ character, selectedEq
       </div>
 
       <div className="picker-tabs">
-        {(['weapons', 'armor', 'items', 'ammo-consumables'] as EquipmentTab[]).map((tab) => (
+        {tabs.map((tab) => (
           <button
             key={tab}
             className={`tab ${activeTab === tab ? 'active' : ''}`}
@@ -334,6 +396,18 @@ const EquipmentPicker: React.FC<EquipmentPickerProps> = ({ character, selectedEq
             </div>
             {availableAmmo.length === 0 && availableConsumables.length === 0 && (
               <div className="no-equipment">No ammo or consumables available for your tech level</div>
+            )}
+          </div>
+        )}
+
+        {activeTab === 'drones' && (
+          <div className="equipment-section">
+            <h3>Drones</h3>
+            <div className="equipment-grid">
+              {availableDrones.map((drone) => renderEquipmentCard(drone))}
+            </div>
+            {availableDrones.length === 0 && (
+              <div className="no-equipment">No drones available</div>
             )}
           </div>
         )}
