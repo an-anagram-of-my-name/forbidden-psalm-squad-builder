@@ -25,7 +25,7 @@ export function generatePortraitPrompt(character: Character): string {
 
   // --- Part A: General opener ---
   const stylePhrase = character.characterStyle ?? 'grimdark';
-  sentences.push('A torso and head image of a ${stylePhrase}/cyberpunk character.');
+  sentences.push(`A torso and head image of a ${stylePhrase}/cyberpunk character.`);
 
   // --- Part B: Stats qualifiers ---
   const highStats: string[] = [];
