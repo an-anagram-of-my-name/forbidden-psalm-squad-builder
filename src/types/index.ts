@@ -212,6 +212,7 @@ export interface Character {
   techLevel?: TechLevel;
   portraitUrl?: string;
   characterStyle?: string;
+  characterFeature?: string;
   // KSP-specific augmentations
   additionalFlaws?: Flaw[];
   additionalFeats?: Feat[];
@@ -231,6 +232,7 @@ export interface CharacterPreset {
   techLevel?: TechLevel;
   portraitUrl?: string;
   characterStyle?: string;
+  characterFeature?: string;
   // KSP-specific augmentations
   additionalFlaws?: Flaw[];
   additionalFeats?: Feat[];
