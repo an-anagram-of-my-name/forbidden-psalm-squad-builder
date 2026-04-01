@@ -256,7 +256,7 @@ describe('calculateFinalDerivedStats', () => {
                 derivedStatModifiers: { hp: 4 },
             },
         ];
-        const armor: Armor = { id: 'a', name: 'A', cost: 1, slots: 1, category: 'armor', av: 1, movementModifier: -1 };
+        const armor: Armor = { id: 'a', name: 'A', cost: 1, slots: 1, category: 'armor', av: 1, statModifiers: { movement: -1 } };
         const flaw: Flaw = { type: 'xeno', description: '' };
         const feat: Feat = { type: 'marine', description: '' };
         const result = calculateFinalDerivedStats(baseStats, flaw, feat, [armor], undefined, customFlaws, customFeats);
@@ -272,7 +272,7 @@ describe('calculateFinalDerivedStats', () => {
             slots: 1,
             category: 'armor',
             av: 1,
-            movementModifier: -1,
+            statModifiers: { movement: -1 },
         };
         const result = calculateFinalDerivedStats(baseStats, null, null, [homemadeArmor]);
         const baseMovement = 5 + baseStats.agility; // 7
@@ -282,8 +282,8 @@ describe('calculateFinalDerivedStats', () => {
     });
 
     it('stacks multiple equipment movement modifiers', () => {
-        const armor1: Armor = { id: 'a1', name: 'A1', cost: 1, slots: 1, category: 'armor', av: 1, movementModifier: -1 };
-        const armor2: Armor = { id: 'a2', name: 'A2', cost: 1, slots: 1, category: 'armor', av: 1, movementModifier: -2 };
+        const armor1: Armor = { id: 'a1', name: 'A1', cost: 1, slots: 1, category: 'armor', av: 1, statModifiers: { movement: -1 } };
+        const armor2: Armor = { id: 'a2', name: 'A2', cost: 1, slots: 1, category: 'armor', av: 1, statModifiers: { movement: -2 } };
         const result = calculateFinalDerivedStats(baseStats, null, null, [armor1, armor2]);
         const baseMovement = 5 + baseStats.agility; // 7
         expect(result.movement).toBe(baseMovement - 3); // 4
@@ -304,7 +304,7 @@ describe('calculateFinalDerivedStats', () => {
             slots: 1,
             category: 'armor',
             av: 1,
-            movementModifier: -1,
+            statModifiers: { movement: -1 },
         };
         const result = calculateFinalDerivedStats(baseStats, flaw, null, [homemadeArmor]);
         // too-many-teeth: -2 presence (no agility change), movement = 7 - 1 = 6
@@ -312,16 +312,15 @@ describe('calculateFinalDerivedStats', () => {
     });
 
     it('applies equipment hp and slots modifiers', () => {
-        const equipmentWithHpAndSlots = {
+        const equipmentWithHpAndSlots: Armor = {
             id: 'eq-hp-slots-1',
             name: 'HP & Slots Booster',
             cost: 1,
             slots: 1,
             category: 'armor',
             av: 1,
-            hpModifier: 3,
-            slotsModifier: 2,
-        } as Armor & { hpModifier: number; slotsModifier: number };
+            statModifiers: { hp: 3, equipmentSlots: 2 },
+        };
 
         const result = calculateFinalDerivedStats(baseStats, null, null, [equipmentWithHpAndSlots]);
 
@@ -333,27 +332,25 @@ describe('calculateFinalDerivedStats', () => {
     });
 
     it('stacks multiple equipment hp and slots modifiers', () => {
-        const equipment1 = {
+        const equipment1: Armor = {
             id: 'eq-hp-slots-2',
             name: 'HP & Slots Booster 1',
             cost: 1,
             slots: 1,
             category: 'armor',
             av: 1,
-            hpModifier: 2,
-            slotsModifier: 1,
-        } as Armor & { hpModifier: number; slotsModifier: number };
+            statModifiers: { hp: 2, equipmentSlots: 1 },
+        };
 
-        const equipment2 = {
+        const equipment2: Armor = {
             id: 'eq-hp-slots-3',
             name: 'HP & Slots Booster 2',
             cost: 1,
             slots: 1,
             category: 'armor',
             av: 1,
-            hpModifier: -1,
-            slotsModifier: 3,
-        } as Armor & { hpModifier: number; slotsModifier: number };
+            statModifiers: { hp: -1, equipmentSlots: 3 },
+        };
 
         const result = calculateFinalDerivedStats(baseStats, null, null, [equipment1, equipment2]);
 
@@ -396,12 +393,70 @@ describe('calculateFinalDerivedStats', () => {
               statModifiers: { agility: -2 }, derivedStatModifiers: { movement: 2 } },
         ];
         const homemadeArmor: Armor = {
-            id: 'homemade', name: 'Homemade', cost: 1, slots: 1, category: 'armor', av: 1, movementModifier: -1,
+            id: 'homemade', name: 'Homemade', cost: 1, slots: 1, category: 'armor', av: 1, statModifiers: { movement: -1 },
         };
         const flaw: Flaw = { type: 'sas', description: '' };
         const result = calculateFinalDerivedStats(baseStats, flaw, null, [homemadeArmor], undefined, customFlaws);
         // base movement 5+2=7, sas agility-2 -> 5+0=5, derivedMod+2->7, equipment-1->6
         expect(result.movement).toBe(5 + baseStats.agility - 1);
+    });
+
+    it('applies equipment primary stat modifier (agility) cascading to movement', () => {
+        // KSP Home Made armor: { agility: -1 } reduces agility primary stat which cascades to movement
+        const homeMadeKSP: Armor = {
+            id: 'home-made-ksp',
+            name: 'Home Made',
+            cost: 0,
+            slots: 1,
+            category: 'armor',
+            av: 1,
+            statModifiers: { agility: -1 },
+        };
+        const result = calculateFinalDerivedStats(baseStats, null, null, [homeMadeKSP]);
+        // agility reduced by 1: movement = 5 + (agility - 1)
+        expect(result.movement).toBe(5 + baseStats.agility - 1);
+        // other derived stats unchanged
+        expect(result.hp).toBe(8 + baseStats.toughness);
+        expect(result.equipmentSlots).toBe(5 + baseStats.strength);
+    });
+
+    it('applies mixed primary and derived stat modifiers (KSP Plate Carrier)', () => {
+        // Plate Carrier: { agility: -3, movement: +3 } → agility drops but movement offset keeps it the same
+        const plateCarrier: Armor = {
+            id: 'plate-carrier',
+            name: 'Plate Carrier',
+            cost: 500,
+            slots: 1,
+            category: 'armor',
+            av: 3,
+            statModifiers: { agility: -3, movement: 3 },
+        };
+        const result = calculateFinalDerivedStats(baseStats, null, null, [plateCarrier], 'kill-sample-process');
+        // agility reduced by 3 via primary mod: base movement = 5 + (agility - 3)
+        // then derived movement offset +3: net movement = 5 + agility
+        expect(result.movement).toBe(5 + baseStats.agility);
+        // strength-based derived stats unchanged
+        expect(result.equipmentSlots).toBe(5 + baseStats.strength);
+        expect(result.hp).toBe(8 + baseStats.toughness);
+    });
+
+    it('applies equipment strength modifier to equipmentSlots (KSP Exo Skeleton)', () => {
+        // Exo Skeleton: { strength: +3 } increases strength which cascades to equipmentSlots
+        const exoSkeleton: Armor = {
+            id: 'exo-skeleton',
+            name: 'Exo Skeleton',
+            cost: 1500,
+            slots: 1,
+            category: 'armor',
+            av: 2,
+            statModifiers: { strength: 3 },
+        };
+        const result = calculateFinalDerivedStats(baseStats, null, null, [exoSkeleton], 'kill-sample-process');
+        // strength increased by 3: equipmentSlots = 5 + (strength + 3)
+        expect(result.equipmentSlots).toBe(5 + baseStats.strength + 3);
+        // other derived stats unchanged
+        expect(result.movement).toBe(5 + baseStats.agility);
+        expect(result.hp).toBe(8 + baseStats.toughness);
     });
 });
 

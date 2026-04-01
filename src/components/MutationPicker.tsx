@@ -13,6 +13,7 @@ interface MutationPickerProps {
   onMutationsChange: (mutations: SelectedMutation[]) => void;
   flawsData?: FlawData[];
   featsData?: FeatData[];
+  afterStats?: React.ReactNode;
 }
 
 const MutationPicker: React.FC<MutationPickerProps> = ({
@@ -23,6 +24,7 @@ const MutationPicker: React.FC<MutationPickerProps> = ({
   onMutationsChange,
   flawsData,
   featsData,
+  afterStats,
 }) => {
   const config = getGameConfig(character.gameId);
 
@@ -249,6 +251,8 @@ const MutationPicker: React.FC<MutationPickerProps> = ({
         {selectedMutations.length}/{allowedCount} mutations selected
         {isFull && allowedCount > 0 && <span className="allowance-full-badge"> (full)</span>}
       </div>
+
+      {afterStats}
 
       {/* Mutation grid — ungrouped */}
       <div className="mutation-grid">

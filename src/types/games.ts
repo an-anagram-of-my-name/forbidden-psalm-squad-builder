@@ -92,8 +92,8 @@ export const GAME_CONFIGS: Record<GameId, GameConfig> = {
     }),
     equipmentData: {
       weapons: {
-        pastTech: weaponsKSP.pastTech,
-        futureTech: weaponsKSP.futureTech,
+        pastTech: allWeaponsKSP,
+        futureTech: [],
       },
       armor: armorKSP,
       items: itemsKSP,

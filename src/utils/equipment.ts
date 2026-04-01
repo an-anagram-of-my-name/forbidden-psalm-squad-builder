@@ -1,6 +1,6 @@
 // equipment.ts
 
-import { Equipment, Armor, Weapon, TechLevel, Ammo } from '../types';
+import { Equipment, Weapon, TechLevel, Ammo } from '../types';
 import { ammo28Psalms } from '../types/equipment28Psalms';
 
 // Calculate used slots based on equipped items
@@ -25,17 +25,17 @@ export function canUseArmor(characterStrength: number, armorStrength: number): b
 
 /**
  * @deprecated Use calculateFinalDerivedStats() from utils/stats instead.
- * This only handles armor movement penalties and is not part of the full stat modification chain.
+ * This only handles movement modifiers and is not part of the full stat modification chain.
  */
 export function getCharacterMovement(baseMovement: number, equippedItems: Equipment[]): number {
-    let penalty = 0;
+    let movementChange = 0;
     equippedItems.forEach((item) => {
-        if (item.category === 'armor') {
-            const armor = item as Armor;
-            penalty += armor.movementModifier ? Math.abs(armor.movementModifier) : 0;
+        const sm = item.statModifiers;
+        if (sm?.movement !== undefined) {
+            movementChange += sm.movement;
         }
     });
-    return baseMovement - penalty;
+    return baseMovement + movementChange;
 }
 
 // Calculate total cost of equipped items

@@ -365,23 +365,22 @@ const CharacterCreationFlow: React.FC<CharacterCreationFlowProps> = ({
 
     const canSave = canProceed && (!isKSP || augmentationSelection.isComplete) && !isGeneratingPortrait;
 
-    // Stable preview character for portrait generation in the review step.
-    // characterName is intentionally excluded: it is not part of the image hash
-    // or prompt, so including it would cause CharacterPortrait's useMemo to
-    // recompute the hash on every keystroke without changing its value.
+    // Stable preview character for the Review step portrait display.
     const previewCharacter = useMemo<Character | null>(() => {
         if (!stats || !flaw || !feat) return null;
         return {
             id: initialCharacter?.id ?? initialPreset?.id ?? 'preview',
-            name: '',   // excluded intentionally — see note above
+            name: characterName,
             stats,
             flaw,
             feat,
             equipment,
             gameId: resolvedGameId,
             techLevel: effectiveTechLevel,
+            // Preserve existing portraitUrl so the Review step shows it when editing a saved character.
+            portraitUrl: initialCharacter?.portraitUrl ?? initialPreset?.portraitUrl,
         };
-    }, [stats, flaw, feat, equipment, resolvedGameId, effectiveTechLevel, initialCharacter?.id, initialPreset?.id]);
+    }, [stats, flaw, feat, equipment, resolvedGameId, effectiveTechLevel, characterName, initialCharacter?.id, initialPreset?.id, initialCharacter?.portraitUrl, initialPreset?.portraitUrl]);
 
     const getHeaderTitle = (): string => {
         if (mode === 'preset') {
@@ -500,6 +499,15 @@ const CharacterCreationFlow: React.FC<CharacterCreationFlowProps> = ({
                         onCybermodsChange={handleCybermodsChange}
                         flawsData={gameData.flaws}
                         featsData={gameData.feats}
+                        afterStats={
+                            <div className="augmentation-allowance-wrapper">
+                                <AugmentationAllowanceBox
+                                    selection={augmentationSelection}
+                                    isKSP={isKSP}
+                                    variant="compact"
+                                />
+                            </div>
+                        }
                     />
                 )}
 
@@ -521,6 +529,15 @@ const CharacterCreationFlow: React.FC<CharacterCreationFlowProps> = ({
                         onMutationsChange={handleMutationsChange}
                         flawsData={gameData.flaws}
                         featsData={gameData.feats}
+                        afterStats={
+                            <div className="augmentation-allowance-wrapper">
+                                <AugmentationAllowanceBox
+                                    selection={augmentationSelection}
+                                    isKSP={isKSP}
+                                    variant="compact"
+                                />
+                            </div>
+                        }
                     />
                 )}
 
