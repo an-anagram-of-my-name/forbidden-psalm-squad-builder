@@ -343,7 +343,65 @@ export const armorKSP: Armor[] = [
   },
 ];
 
-export const itemsKSP: Item[] = [];
+export const itemsKSP: Item[] = [
+  {
+    id: 'adrenaline-shot',
+    name: 'Adrenaline Shot',
+    ability: "Increase model's Strength by +1. Can be used to end Poisoned state. Effects last until end of Scenario.",
+    cost: 50,
+    slots: 1,
+    category: 'item',
+  },
+  {
+    id: 'trauma-kit',
+    name: 'Trauma Kit',
+    ability: 'Can be used to heal a model 1D6 (including Downed models). Also removes Bleeding, Dazed and Diseased conditions.',
+    cost: 100,
+    slots: 1,
+    category: 'item',
+  },
+  {
+    id: 'air-filter',
+    name: 'Air Filter',
+    ability: 'Prevents effects of Gas and Smoke.',
+    cost: 50,
+    slots: 1,
+    category: 'item',
+  },
+  {
+    id: 'led-torch',
+    name: 'LED Torch',
+    ability: 'Provides light (see Darkness pg. 85).',
+    cost: 50,
+    slots: 1,
+    category: 'item',
+  },
+  {
+    id: 'unicorn-backpack',
+    name: 'Unicorn Backpack',
+    ability: 'Counts as 1 equipment slot but provides 3 extra slots.',
+    cost: 50,
+    slots: 1,
+    category: 'item',
+    statModifiers: { equipmentSlots: 3 },
+  },
+  {
+    id: 'whisky',
+    name: 'Whisky',
+    ability: 'After drinking, auto-pass Guts checks for the Scenario.',
+    cost: 50,
+    slots: 1,
+    category: 'item',
+  },
+  {
+    id: 'drone-control',
+    name: 'Drone Control',
+    ability: 'Allows a model to control a friendly Drone.',
+    cost: 100,
+    slots: 1,
+    category: 'item',
+  },
+];
 export const ammoKSP: Ammo[] = [];
 export const consumablesKSP: Consumable[] = [];
 
