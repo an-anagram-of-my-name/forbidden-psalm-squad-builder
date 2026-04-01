@@ -178,7 +178,17 @@ export interface Weapon extends BaseEquipment {
   ammoTypeId?: string;
 }
 
-export type Equipment = Item | Ammo | Armor | Weapon | Consumable;
+export interface Drone extends BaseEquipment {
+  category: 'drone';
+  hp?: number | null;
+  av?: number | null;
+  specialRules?: string;
+  statModifiers?: Partial<Record<StatName, number>>;
+  allowAI?: boolean;
+  isAI?: boolean;
+}
+
+export type Equipment = Item | Ammo | Armor | Weapon | Consumable | Drone;
 
 export interface Consumable extends BaseEquipment {
   category: 'consumable';

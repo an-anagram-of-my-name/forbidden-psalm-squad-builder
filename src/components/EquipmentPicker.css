@@ -370,3 +370,24 @@
         font-size: 12px;
     }
 }
+
+.drone-ai-label {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-top: 10px;
+    font-size: 13px;
+    color: #333;
+    cursor: pointer;
+    padding: 6px 8px;
+    background-color: #e8f4e8;
+    border: 1px solid #b0d8b0;
+    border-radius: 4px;
+}
+
+.drone-ai-label input[type="checkbox"] {
+    cursor: pointer;
+    width: 14px;
+    height: 14px;
+    accent-color: #4caf50;
+}

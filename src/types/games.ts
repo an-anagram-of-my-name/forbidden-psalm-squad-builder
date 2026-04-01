@@ -1,6 +1,6 @@
-import { GameId, StatName, Stats, DerivedStats, Weapon, Armor, Item, Ammo, Consumable } from './index';
+import { GameId, StatName, Stats, DerivedStats, Weapon, Armor, Item, Ammo, Consumable, Drone } from './index';
 import { pastTechWeapons28Psalms, futureTechWeapons28Psalms, armor28Psalms, items28Psalms, ammo28Psalms } from './equipment28Psalms';
-import { weaponsKSP, armorKSP, itemsKSP, ammoKSP, consumablesKSP } from './equipmentKSP';
+import { weaponsKSP, armorKSP, itemsKSP, ammoKSP, consumablesKSP, dronesKSP } from './equipmentKSP';
 
 export interface GameConfig {
   id: GameId;
@@ -21,6 +21,7 @@ export interface GameConfig {
     items: Item[];
     ammo: Ammo[];
     consumables: Consumable[];
+    drones?: Drone[];
   };
 }
 
@@ -98,6 +99,7 @@ export const GAME_CONFIGS: Record<GameId, GameConfig> = {
       items: itemsKSP,
       ammo: ammoKSP,
       consumables: consumablesKSP,
+      drones: dronesKSP,
     },
   },
 };
