@@ -1,5 +1,5 @@
 import React from 'react';
-import { Character, Equipment, Armor, Weapon } from '../types';
+import { Character, Equipment, Armor, Weapon, Consumable } from '../types';
 import { applyFlawFeatModifiers, calculateFinalDerivedStats } from '../utils/stats';
 import { getGameConfig } from '../types/games';
 import { flaws28Psalms, feats28Psalms, FlawData, FeatData } from '../types/featsandflaws28Psalms';
@@ -64,11 +64,18 @@ function renderEquipmentDetails(item: Equipment): React.ReactNode {
       </div>
     );
   } else if (item.category === 'consumable') {
-    const consumable = item as { ability?: string; damage?: string; modifier?: string; specialRules?: string[] };
+    const consumable = item as Consumable;
     if (consumable.damage) {
       details.push(
         <div key="damage" className="print-equipment-detail">
           <strong>Damage:</strong> {consumable.damage}
+        </div>
+      );
+    }
+    if (consumable.modifier) {
+      details.push(
+        <div key="modifier" className="print-equipment-detail">
+          <strong>Modifier:</strong> {consumable.modifier}
         </div>
       );
     }
