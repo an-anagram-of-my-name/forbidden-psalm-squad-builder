@@ -76,7 +76,7 @@ export function generatePortraitPrompt(character: Character): string {
   } else if (armorPieces.length > 0) {
     sentences.push(`The character is wearing ${armorPieces.join(' and ')}.`);
   } else {
-    sentences.push('The character is not wearing armour.');
+    sentences.push('The character is wearing plain clothes and/or tekwear. No armour of any kind.');
   }
 
   // --- Part D: Style closing ---
