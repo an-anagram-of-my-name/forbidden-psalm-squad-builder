@@ -12,6 +12,7 @@ import { applyFlawFeatModifiers, calculateFinalDerivedStats, getDefaultFlawsData
 import { calculateAugmentationSelection } from '../utils/augmentationAllowances';
 import { generateCharacterPortrait } from '../services/portraitGenerationService';
 import { characterNames28Psalms } from '../types/characterNames28Psalms';
+import { characterNamesKSP } from '../types/characterNamesKSP';
 import { cybermodsKSP, SelectedCybermod } from '../types/cybermodsKSP';
 import { mutationsKSP, SelectedMutation } from '../types/mutationsKSP';
 import { CHARACTER_STYLES } from '../types/characterStyles';
@@ -194,7 +195,7 @@ const CharacterCreationFlow: React.FC<CharacterCreationFlowProps> = ({
     };
 
     const handleGenerateName = () => {
-        const names = resolvedGameId === '28-psalms' ? characterNames28Psalms : [];
+        const names = resolvedGameId === '28-psalms' ? characterNames28Psalms : characterNamesKSP;
         if (names.length > 0) {
             const randomName = names[Math.floor(Math.random() * names.length)];
             setCharacterName(randomName);
