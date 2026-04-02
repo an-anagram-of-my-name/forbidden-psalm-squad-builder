@@ -347,7 +347,7 @@ export const itemsKSP: Item[] = [
   {
     id: 'adrenaline-shot',
     name: 'Adrenaline Shot',
-    ability: "Increase model's Strength by +1. Can be used to end Poisoned state. Effects last until end of Scenario.",
+    ability: 'Increase model\'s Strength by +1. Can be used to end Poisoned state. Effects last until end of Scenario.',
     cost: 50,
     slots: 1,
     category: 'item',
