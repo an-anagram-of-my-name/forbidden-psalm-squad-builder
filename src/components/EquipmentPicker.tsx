@@ -51,10 +51,11 @@ const EquipmentPicker: React.FC<EquipmentPickerProps> = ({ character, selectedEq
     return selectedEquipment.reduce((total, eq) => total + eq.slots, 0);
   }, [selectedEquipment]);
 
-  // Calculate slot capacity: 5 + Strength modifier (using effective stats)
-  const slotCapacity = useMemo(() => {
-    return 5 + effectiveStats.strength;
-  }, [effectiveStats.strength]);
+  // Calculate slot capacity: 5 +  modifiers (using effective stats)
+const slotCapacity = useMemo(() => {
+  const derived = calculateFinalDerivedStats(character.stats, character.flaw, character.feat, selectedEquipment, character.gameId, flawsData, featsData);
+  return derived.equipmentSlots;
+}, [character.stats, character.flaw, character.feat, selectedEquipment, character.gameId, flawsData, featsData]);
 
   const remainingSlots = slotCapacity - slotsUsed;
 
