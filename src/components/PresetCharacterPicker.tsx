@@ -62,6 +62,7 @@ const PresetCharacterPicker: React.FC<PresetCharacterPickerProps> = ({
                 equipment: preset.equipment,
                 gameId: preset.gameId,
                 techLevel: preset.techLevel,
+                portraitUrl: preset.portraitUrl,
               };
               return (
                 <div
