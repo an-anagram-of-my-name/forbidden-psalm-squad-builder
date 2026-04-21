@@ -165,13 +165,12 @@ const CharacterPrintCard: React.FC<CharacterPrintCardProps> = ({ character, flaw
           <div className="print-section print-stats-section">
             <div className="print-section-title">Stats</div>
             <div className="print-stats-grid">
-              <div className="print-stats-row-base">
                   {config.statNames.map((stat) => {
                     const derivedInfo = config.derivedStatMap[stat];
                     const shortLabel = config.statShortLabels[stat] ?? stat.toUpperCase().slice(0, 4);
                     return (
                       <React.Fragment key={stat}>
-                        <div className="sprint-tat-box">
+                        <div className="print-stat-box">
                           <span className="print-stat-label">{shortLabel}</span>
                           <span className="print-stat-value">{fmt(effectiveStats[stat] ?? 0)}</span>
                         </div>
@@ -189,7 +188,6 @@ const CharacterPrintCard: React.FC<CharacterPrintCardProps> = ({ character, flaw
                     </React.Fragment>
                   );
                 })}
-              </div>
             </div>
           </div>
 
