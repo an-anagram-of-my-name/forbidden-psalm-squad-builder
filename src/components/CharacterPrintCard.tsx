@@ -166,13 +166,27 @@ const CharacterPrintCard: React.FC<CharacterPrintCardProps> = ({ character, flaw
             <div className="print-section-title">Stats</div>
             <div className="print-stats-grid">
               <div className="print-stats-row-base">
-                {config.statNames.map((stat) => {
-                  const shortLabel = config.statShortLabels[stat] ?? stat.toUpperCase().slice(0, 4);
-                  return (
-                    <div key={stat} className="print-stat-box">
-                      <span className="print-stat-label">{shortLabel}</span>
-                      <span className="print-stat-value">{fmt(effectiveStats[stat] ?? 0)}</span>
-                    </div>
+                  {config.statNames.map((stat) => {
+                    const derivedInfo = config.derivedStatMap[stat];
+                    const shortLabel = config.statShortLabels[stat] ?? stat.toUpperCase().slice(0, 4);
+                    return (
+                      <React.Fragment key={stat}>
+                        <div className="sprint-tat-box">
+                          <span className="print-stat-name">{shortLabel}</span>
+                          <span className="print-stat-value">{fmt(effectiveStats[stat] ?? 0)}</span>
+                        </div>
+                        {derivedInfo ? (
+                          <div className="print-stat-box derived">
+                            <span className="print-stat-name">{derivedInfo.label}</span>
+                            <span className="print-stat-value">{derived[derivedInfo.derivedKey]}</span>
+                          </div>
+                        ) : (
+                          <div className="print-stat-box placeholder">
+                            <span className="print-stat-name">—</span>
+                            <span className="print-stat-value">—</span>
+                          </div>
+                        )}
+                    </React.Fragment>
                   );
                 })}
               </div>
