@@ -55,7 +55,7 @@ export const weaponsKSP: Weapon[] = [
     slots: 1,
     isTwoHanded: false,
     category: 'weapon',
-    specialRules: ['Non-lethal', 'Ranged 6', 'Reload'],
+    specialRules: ['Non-lethal (Targeted model must pass a Toughness test or be Stunned.)', 'Ranged 6', 'Reload'],
     isRanged: true,
   },
 
