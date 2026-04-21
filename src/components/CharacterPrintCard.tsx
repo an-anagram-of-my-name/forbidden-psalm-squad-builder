@@ -191,10 +191,7 @@ const CharacterPrintCard: React.FC<CharacterPrintCardProps> = ({ character, flaw
             </div>
           </div>
 
-          <div className="print-section print-hp-section">
-            <div className="print-section-title">HP Tracker</div>
-            <HPTrackingBar maxHP={derived.hp} />
-          </div>
+
 
           {/* Portrait: 150px square to the right of stats */}
           <div className="print-card-portrait">
@@ -208,6 +205,11 @@ const CharacterPrintCard: React.FC<CharacterPrintCardProps> = ({ character, flaw
               <div className="print-portrait-initials">{initials || '?'}</div>
             )}
           </div>
+        </div>
+
+        <div className="print-section print-hp-section">
+          <div className="print-section-title">HP Tracker</div>
+          <HPTrackingBar maxHP={derived.hp} />
         </div>
 
         {/* Traits column */}
