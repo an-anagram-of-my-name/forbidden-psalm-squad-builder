@@ -172,37 +172,23 @@ const CharacterPrintCard: React.FC<CharacterPrintCardProps> = ({ character, flaw
                     return (
                       <React.Fragment key={stat}>
                         <div className="sprint-tat-box">
-                          <span className="print-stat-name">{shortLabel}</span>
+                          <span className="print-stat-label">{shortLabel}</span>
                           <span className="print-stat-value">{fmt(effectiveStats[stat] ?? 0)}</span>
                         </div>
                         {derivedInfo ? (
                           <div className="print-stat-box derived">
-                            <span className="print-stat-name">{derivedInfo.label}</span>
+                            <span className="print-stat-label">{derivedInfo.label}</span>
                             <span className="print-stat-value">{derived[derivedInfo.derivedKey]}</span>
                           </div>
                         ) : (
                           <div className="print-stat-box placeholder">
-                            <span className="print-stat-name">—</span>
+                            <span className="print-stat-label">—</span>
                             <span className="print-stat-value">—</span>
                           </div>
                         )}
                     </React.Fragment>
                   );
                 })}
-              </div>
-              <div className="print-stats-row-derived">
-                {config.statNames
-                  .filter((stat) => !!config.derivedStatMap[stat])
-                  .map((stat) => {
-                    const derivedInfo = config.derivedStatMap[stat]!;
-                    return (
-                      <div key={stat} className="print-stat-box derived">
-                        <span className="print-stat-label">{derivedInfo.label}</span>
-                        <span className="print-stat-value">{derived[derivedInfo.derivedKey]}</span>
-                      </div>
-                    );
-                  })
-                }
               </div>
             </div>
           </div>
