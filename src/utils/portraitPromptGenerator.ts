@@ -78,12 +78,17 @@ export function generatePortraitPrompt(character: Character): string {
   } 
   
   if (weapons.length == 0) {
-    sentences.push('The character is wearing plain clothes or techwear and is unarmoured.');
+    if (character.techLevel === 'past-tech') {
+      sentences.push('The character is unarmoured and in late medieval clothing.');
+    }
+    else {
+      sentences.push('The character is wearing plain clothes or techwear and is unarmoured.');
+    }
   }
 
   // --- Part D: Style closing ---
   const featurePhrase = character.characterFeature ?? 'intense glare';
-  const backgroundPhrase = character.gameId === 'kill-sample-process' ? 'classic cyberpunk neon' : 'apocalyptic urban decay';
+  const backgroundPhrase = character.gameId === 'kill-sample-process' ? 'classic cyberpunk neon' : character.techLevel === 'past-tech' ? 'crumbling medieval gothic' : 'apocalyptic urban decay';
 
   sentences.push(
     `Do NOT add any writing or labels on the character. Style is corrupted, grim, gritty, ${stylePhrase} with ${backgroundPhrase} background. Despite dark subject, the character should be well-lit. Overall light cartoon animation effect, rather than full realism.  Add some glitch to the picture.`,

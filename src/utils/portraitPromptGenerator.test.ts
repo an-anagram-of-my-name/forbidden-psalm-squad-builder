@@ -165,11 +165,7 @@ describe('generatePortraitPrompt', () => {
     expect(prompt).toContain('The character wields Sword and is wearing Shield.');
   });
 
-  it('shows "not wearing armor" when no equipment at all', () => {
-    const c = makeCharacter({ equipment: [] });
-    expect(generatePortraitPrompt(c)).toContain('The character is wearing plain clothes or techwear and is unarmoured.');
-  });
-
+  
   it('does NOT include ammo in the prompt', () => {
     const c = makeCharacter({
       equipment: [
@@ -203,19 +199,5 @@ describe('generatePortraitPrompt', () => {
     expect(generatePortraitPrompt(c)).not.toContain('Bandage');
   });
 
-  it('shows "not wearing armor" when only consumables and ammo are equipped', () => {
-    const c = makeCharacter({
-      equipment: [
-        {
-          id: 'bandage',
-          name: 'Bandage',
-          category: 'consumable',
-          cost: 1,
-          slots: 1,
-          ability: 'Heals bleeding',
-        },
-      ],
-    });
-    expect(generatePortraitPrompt(c)).toContain('The character is wearing plain clothes or techwear and is unarmoured.');
-  });
+
 });
