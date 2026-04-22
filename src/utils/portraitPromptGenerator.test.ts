@@ -167,7 +167,7 @@ describe('generatePortraitPrompt', () => {
 
   it('shows "not wearing armor" when no equipment at all', () => {
     const c = makeCharacter({ equipment: [] });
-    expect(generatePortraitPrompt(c)).toContain('The character is not wearing armor.');
+    expect(generatePortraitPrompt(c)).toContain('The character is wearing plain clothes or techwear and is unarmoured.');
   });
 
   it('does NOT include ammo in the prompt', () => {
@@ -216,6 +216,6 @@ describe('generatePortraitPrompt', () => {
         },
       ],
     });
-    expect(generatePortraitPrompt(c)).toContain('The character is not wearing armor.');
+    expect(generatePortraitPrompt(c)).toContain('The character is wearing plain clothes or techwear and is unarmoured.');
   });
 });

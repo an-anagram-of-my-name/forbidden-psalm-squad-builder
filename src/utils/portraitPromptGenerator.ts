@@ -23,8 +23,6 @@ function promptEquipment(equipment: Equipment[]): Equipment[] {
 export function generatePortraitPrompt(character: Character): string {
   const sentences: string[] = [];
   
-  const backgroundPhrase = character.gameId === 'kill-sample-process' ? 'classic cyberpunk neon' : 'apocalyptic urban decay';
-
   // --- Part A: General opener ---
   const stylePhrase = character.characterStyle ?? 'grimdark';
   sentences.push(`A torso and head image of a ${stylePhrase} character.`);
@@ -77,16 +75,18 @@ export function generatePortraitPrompt(character: Character): string {
     sentences.push(`The character wields ${weapons.join(' and ')}.`);
   } else if (armorPieces.length > 0) {
     sentences.push(`The character is wearing ${armorPieces.join(' and ')}.`);
-  } else {
-    sentences.push('The character is wearing plain clothes or tekwear and is unarmoured. ');
+  } 
+  
+  if (weapons.length == 0) {
+    sentences.push('The character is wearing plain clothes or techwear and is unarmoured.');
   }
 
   // --- Part D: Style closing ---
-
   const featurePhrase = character.characterFeature ?? 'intense glare';
-  
+  const backgroundPhrase = character.gameId === 'kill-sample-process' ? 'classic cyberpunk neon' : 'apocalyptic urban decay';
+
   sentences.push(
-    `Do NOT add any writing or labels on the character. Style is corrupted, grim, gritty, ${stylePhrase} with ${backgroundPhrase} background. Despite dark subject, the character should be well-lit. Overall light cartoon/animation effect, rather than full realism.  Add some glitch to the picture.`,
+    `Do NOT add any writing or labels on the character. Style is corrupted, grim, gritty, ${stylePhrase} with ${backgroundPhrase} background. Despite dark subject, the character should be well-lit. Overall light cartoon animation effect, rather than full realism.  Add some glitch to the picture.`,
     `The character has prominent '${featurePhrase}' feature.`,
   );
 
