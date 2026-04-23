@@ -91,6 +91,13 @@
   color: #aaa;
 }
 
+.squad-print-cost {
+  font-size: 10pt;
+  color: #ffd700;
+  font-weight: bold;
+  margin-left: auto;
+}
+
 .print-no-characters {
   padding: 40px;
   text-align: center;

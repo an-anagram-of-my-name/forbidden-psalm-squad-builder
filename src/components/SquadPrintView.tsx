@@ -10,6 +10,10 @@ interface SquadPrintViewProps {
 }
 
 const SquadPrintView: React.FC<SquadPrintViewProps> = ({ squad, onClose }) => {
+  const squadTotalCost = squad.characters.reduce((sum, char) => {
+    return sum + char.equipment.reduce((eSum, eq) => eSum + eq.cost, 0);
+  }, 0);
+
   // Show the print portal root while this component is mounted
   useEffect(() => {
     const el = document.getElementById('squad-print-root');
@@ -45,6 +49,7 @@ const SquadPrintView: React.FC<SquadPrintViewProps> = ({ squad, onClose }) => {
             {squad.techLevel ? `${squad.techLevel.toUpperCase()} \u00a0|\u00a0 ` : ''}{squad.characters.length} character
             {squad.characters.length !== 1 ? 's' : ''}
           </span>
+          <span className="squad-print-cost">Total Cost: {squadTotalCost} cr</span>
         </div>
 
         {squad.characters.length === 0 ? (
